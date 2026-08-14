@@ -22,7 +22,7 @@ const ru = {
   optional: "необязательно",
 
   // навигация
-  nav_fleet: "Флот",
+  nav_fleet: "Транспорт",
   nav_users: "Пользователи",
   nav_profile: "Профиль",
   sign_out: "Выйти",
@@ -136,9 +136,9 @@ const ru = {
   field_city: "Город",
   first_name_placeholder: "Иван",
   last_name_placeholder: "Иванов",
-  phone_placeholder: "+7 900 000-00-00",
-  position_placeholder: "Менеджер по флоту",
-  city_placeholder: "Москва",
+  phone_placeholder: "000 000 000",
+  position_placeholder: "Менеджер",
+  city_placeholder: "Wroclaw",
   save_changes: "Сохранить изменения",
   profile_updated: "Профиль обновлён",
   not_specified: "не указано",
@@ -165,7 +165,7 @@ const pl: Dict = {
   close: "Zamknij",
   optional: "opcjonalnie",
 
-  nav_fleet: "Flota",
+  nav_fleet: "Pojazd",
   nav_users: "Użytkownicy",
   nav_profile: "Profil",
   sign_out: "Wyloguj",
