@@ -1,3 +1,5 @@
+import type { TranslationKey } from "@/lib/i18n/translations";
+
 export type Role = "ADMIN" | "MANAGER" | "VIEWER";
 
 export function canEdit(role?: string | null) {
@@ -8,8 +10,9 @@ export function isAdmin(role?: string | null) {
   return role === "ADMIN";
 }
 
-export const ROLE_LABELS: Record<Role, string> = {
-  ADMIN: "Администратор",
-  MANAGER: "Менеджер",
-  VIEWER: "Наблюдатель",
+// Ключ перевода для каждой роли — используйте t(ROLE_LABEL_KEYS[role])
+export const ROLE_LABEL_KEYS: Record<Role, TranslationKey> = {
+  ADMIN: "role_admin",
+  MANAGER: "role_manager",
+  VIEWER: "role_viewer",
 };

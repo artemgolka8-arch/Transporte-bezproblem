@@ -23,65 +23,7 @@ async function main() {
 
   console.log(`Готово: администратор ${admin.email}`);
 
-  const existing = await prisma.vehicle.count();
-  if (existing === 0) {
-    const samples = [
-      {
-        code: "BK-001",
-        name: "Городской велосипед №1",
-        type: "BIKE" as const,
-        status: "AVAILABLE" as const,
-        location: "Склад А",
-        keys: [
-          { label: "Ключ от батареи A" },
-          { label: "Ключ от батареи A", isDuplicate: true },
-          { label: "Ключ от замка" },
-        ],
-      },
-      {
-        code: "BK-002",
-        name: "Городской велосипед №2",
-        type: "BIKE" as const,
-        status: "WORKSHOP" as const,
-        problemDescription: "Спущено переднее колесо, требуется замена камеры.",
-        location: "Мастерская",
-        keys: [
-          { label: "Ключ от батареи A" },
-          { label: "Ключ от батареи B" },
-          { label: "Ключ от батареи B", isDuplicate: true },
-          { label: "Ключ от замка" },
-          { label: "Ключ от замка", isDuplicate: true },
-        ],
-      },
-      {
-        code: "SC-014",
-        name: "Электросамокат №14",
-        type: "SCOOTER" as const,
-        status: "RENTED" as const,
-        renter: "Иван Петров",
-        location: "В городе",
-        keys: [{ label: "Ключ от батареи" }, { label: "Ключ от замка" }],
-      },
-    ];
-
-    for (const s of samples) {
-      const { keys, ...vehicleData } = s;
-      await prisma.vehicle.create({
-        data: {
-          ...vehicleData,
-          keys: { create: keys },
-          history: {
-            create: {
-              status: vehicleData.status,
-              note: "Начальное состояние (демо-данные)",
-              userName: "Система",
-            },
-          },
-        },
-      });
-    }
-    console.log("Добавлены демонстрационные единицы техники.");
-  }
+  // Демонстрационные единицы техники больше не создаются — флот стартует пустым (0 единиц).
 }
 
 main()

@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { VehicleCard, VehicleCardData } from "./VehicleCard";
-import { canEdit } from "@/lib/roles";
+import { canEdit, isAdmin } from "@/lib/roles";
+import { useTranslation } from "@/lib/i18n/LanguageProvider";
 
 type StatusFilter = "ALL" | "AVAILABLE" | "WORKSHOP" | "RENTED";
 type TypeFilter = "ALL" | "BIKE" | "SCOOTER";
@@ -16,13 +17,19 @@ export function FleetDashboard({
   role: "ADMIN" | "MANAGER" | "VIEWER";
 }) {
   const router = useRouter();
+  const { t } = useTranslation();
+  const [list, setList] = useState(vehicles);
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("ALL");
   const [modalOpen, setModalOpen] = useState(false);
 
+  useEffect(() => {
+    setList(vehicles);
+  }, [vehicles]);
+
   const filtered = useMemo(() => {
-    return vehicles.filter((v) => {
+    return list.filter((v) => {
       if (statusFilter !== "ALL" && v.status !== statusFilter) return false;
       if (typeFilter !== "ALL" && v.type !== typeFilter) return false;
       if (query.trim()) {
@@ -31,16 +38,29 @@ export function FleetDashboard({
       }
       return true;
     });
-  }, [vehicles, statusFilter, typeFilter, query]);
+  }, [list, statusFilter, typeFilter, query]);
+
+  async function deleteVehicle(id: string) {
+    if (!confirm(t("delete_vehicle_confirm"))) return;
+    const prev = list;
+    setList((cur) => cur.filter((v) => v.id !== id));
+    const res = await fetch(`/api/vehicles/${id}`, { method: "DELETE" });
+    if (!res.ok) {
+      setList(prev);
+      alert(t("delete_vehicle_failed"));
+      return;
+    }
+    router.refresh();
+  }
 
   return (
     <div className="mx-auto max-w-7xl px-5 py-8">
       <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <div className="label-eyebrow mb-1">панель управления</div>
-          <h1 className="font-display text-2xl font-semibold text-ink">Флот техники</h1>
+          <div className="label-eyebrow mb-1">{t("dashboard_eyebrow")}</div>
+          <h1 className="font-display text-2xl font-semibold text-ink">{t("dashboard_title")}</h1>
           <p className="mt-1 text-sm text-muted">
-            {filtered.length} из {vehicles.length} единиц
+            {t("dashboard_count", { filtered: filtered.length, total: list.length })}
           </p>
         </div>
         {canEdit(role) && (
@@ -48,7 +68,7 @@ export function FleetDashboard({
             onClick={() => setModalOpen(true)}
             className="rounded-lg border border-cyan/40 bg-cyanDim/40 px-4 py-2.5 text-sm font-medium text-cyan shadow-glowCyan transition-opacity hover:opacity-90"
           >
-            + Добавить транспорт
+            {t("add_vehicle_btn")}
           </button>
         )}
       </div>
@@ -57,20 +77,20 @@ export function FleetDashboard({
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Поиск по названию или коду…"
+          placeholder={t("search_placeholder")}
           className="w-full max-w-xs rounded-lg border border-line bg-panel px-3.5 py-2 text-sm text-ink outline-none transition-colors focus:border-cyan/50"
         />
 
         <div className="flex items-center gap-1 rounded-lg border border-line bg-panel p-1">
-          {(["ALL", "BIKE", "SCOOTER"] as const).map((t) => (
+          {(["ALL", "BIKE", "SCOOTER"] as const).map((tp) => (
             <button
-              key={t}
-              onClick={() => setTypeFilter(t)}
+              key={tp}
+              onClick={() => setTypeFilter(tp)}
               className={`rounded-md px-3 py-1.5 text-xs transition-colors ${
-                typeFilter === t ? "bg-panel2 text-ink" : "text-muted hover:text-ink"
+                typeFilter === tp ? "bg-panel2 text-ink" : "text-muted hover:text-ink"
               }`}
             >
-              {t === "ALL" ? "Все типы" : t === "BIKE" ? "Велосипеды" : "Самокаты"}
+              {tp === "ALL" ? t("type_all") : tp === "BIKE" ? t("type_bike") : t("type_scooter")}
             </button>
           ))}
         </div>
@@ -85,12 +105,12 @@ export function FleetDashboard({
               }`}
             >
               {s === "ALL"
-                ? "Все статусы"
+                ? t("status_all")
                 : s === "AVAILABLE"
-                ? "Доступен"
+                ? t("status_available")
                 : s === "WORKSHOP"
-                ? "В мастерской"
-                : "В аренде"}
+                ? t("status_workshop")
+                : t("status_rented")}
             </button>
           ))}
         </div>
@@ -98,13 +118,18 @@ export function FleetDashboard({
 
       {filtered.length === 0 ? (
         <div className="panel flex flex-col items-center justify-center gap-2 py-20 text-center">
-          <div className="font-display text-lg text-ink">Ничего не найдено</div>
-          <div className="text-sm text-muted">Измените поиск или фильтры</div>
+          <div className="font-display text-lg text-ink">{t("empty_title")}</div>
+          <div className="text-sm text-muted">{t("empty_subtitle")}</div>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filtered.map((v, i) => (
-            <VehicleCard key={v.id} vehicle={v} index={i} />
+            <VehicleCard
+              key={v.id}
+              vehicle={v}
+              index={i}
+              onDelete={isAdmin(role) ? deleteVehicle : undefined}
+            />
           ))}
         </div>
       )}
@@ -123,6 +148,7 @@ export function FleetDashboard({
 }
 
 function AddVehicleModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
+  const { t } = useTranslation();
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
   const [type, setType] = useState<"BIKE" | "SCOOTER">("BIKE");
@@ -142,7 +168,7 @@ function AddVehicleModal({ onClose, onCreated }: { onClose: () => void; onCreate
     setLoading(false);
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      setError(data.error || "Не удалось создать");
+      setError(data.error || t("create_failed"));
       return;
     }
     onCreated();
@@ -152,7 +178,7 @@ function AddVehicleModal({ onClose, onCreated }: { onClose: () => void; onCreate
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
       <form onSubmit={submit} className="panel w-full max-w-md p-6 animate-rise">
         <div className="mb-5 flex items-center justify-between">
-          <h2 className="font-display text-lg font-semibold text-ink">Новая техника</h2>
+          <h2 className="font-display text-lg font-semibold text-ink">{t("new_vehicle_title")}</h2>
           <button
             type="button"
             onClick={onClose}
@@ -162,7 +188,7 @@ function AddVehicleModal({ onClose, onCreated }: { onClose: () => void; onCreate
           </button>
         </div>
 
-        <label className="mb-1 block label-eyebrow">Код (уникальный)</label>
+        <label className="mb-1 block label-eyebrow">{t("field_code")}</label>
         <input
           required
           value={code}
@@ -171,38 +197,38 @@ function AddVehicleModal({ onClose, onCreated }: { onClose: () => void; onCreate
           className="mb-4 w-full rounded-lg border border-line bg-bg2 px-3 py-2 font-mono text-sm text-ink outline-none focus:border-cyan/50"
         />
 
-        <label className="mb-1 block label-eyebrow">Название</label>
+        <label className="mb-1 block label-eyebrow">{t("field_name")}</label>
         <input
           required
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Городской велосипед №15"
+          placeholder={t("name_placeholder")}
           className="mb-4 w-full rounded-lg border border-line bg-bg2 px-3 py-2 text-sm text-ink outline-none focus:border-cyan/50"
         />
 
-        <label className="mb-1 block label-eyebrow">Тип</label>
+        <label className="mb-1 block label-eyebrow">{t("field_type")}</label>
         <div className="mb-4 flex gap-2">
-          {(["BIKE", "SCOOTER"] as const).map((t) => (
+          {(["BIKE", "SCOOTER"] as const).map((tp) => (
             <button
               type="button"
-              key={t}
-              onClick={() => setType(t)}
+              key={tp}
+              onClick={() => setType(tp)}
               className={`flex-1 rounded-lg border px-3 py-2 text-sm transition-colors ${
-                type === t
+                type === tp
                   ? "border-cyan/40 bg-cyanDim/40 text-cyan"
                   : "border-line text-muted hover:text-ink"
               }`}
             >
-              {t === "BIKE" ? "Велосипед" : "Самокат"}
+              {tp === "BIKE" ? t("vehicle_bike") : t("vehicle_scooter")}
             </button>
           ))}
         </div>
 
-        <label className="mb-1 block label-eyebrow">Локация (необязательно)</label>
+        <label className="mb-1 block label-eyebrow">{t("field_location_optional")}</label>
         <input
           value={location}
           onChange={(e) => setLocation(e.target.value)}
-          placeholder="Склад А"
+          placeholder={t("location_placeholder")}
           className="mb-5 w-full rounded-lg border border-line bg-bg2 px-3 py-2 text-sm text-ink outline-none focus:border-cyan/50"
         />
 
@@ -215,9 +241,9 @@ function AddVehicleModal({ onClose, onCreated }: { onClose: () => void; onCreate
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-lg border border-cyan/40 bg-cyanDim/40 py-2.5 text-sm font-medium text-cyan shadow-glowCyan transition-opacity hover:opacity-90 disabled:opacity-50"
+          className="w-full rounded-lg border border-cyan/40 bg-cyanDim/40 py-2.5 text-sm font-medium text-cyan transition-opacity hover:opacity-90 disabled:opacity-50"
         >
-          {loading ? "Создание…" : "Добавить в систему"}
+          {loading ? t("creating") : t("add_to_system")}
         </button>
       </form>
     </div>

@@ -7,7 +7,8 @@
     "build": "prisma generate && next build",
     "start": "prisma db push --skip-generate && next start",
     "postinstall": "prisma generate",
-    "seed": "tsx prisma/seed.ts"
+    "seed": "tsx prisma/seed.ts",
+    "clear-vehicles": "tsx prisma/clear-vehicles.ts"
   },
   "dependencies": {
     "@prisma/client": "5.19.1",

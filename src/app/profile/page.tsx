@@ -3,16 +3,16 @@ import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Navbar } from "@/components/Navbar";
-import { UsersAdmin } from "@/components/UsersAdmin";
+import { ProfileForm } from "@/components/ProfileForm";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminUsersPage() {
+export default async function ProfilePage() {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/login");
-  if (session.user.role !== "ADMIN") redirect("/");
 
-  const users = await prisma.user.findMany({
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
     select: {
       id: true,
       email: true,
@@ -23,10 +23,9 @@ export default async function AdminUsersPage() {
       phone: true,
       position: true,
       city: true,
-      createdAt: true,
     },
-    orderBy: { createdAt: "asc" },
   });
+  if (!user) redirect("/login");
 
   const vehicles = await prisma.vehicle.findMany({ select: { status: true } });
   const counts = {
@@ -42,10 +41,7 @@ export default async function AdminUsersPage() {
         userName={session.user.name || session.user.email || ""}
         role={session.user.role}
       />
-      <UsersAdmin
-        users={users.map((u) => ({ ...u, createdAt: u.createdAt.toISOString() })) as any}
-        currentUserId={session.user.id}
-      />
+      <ProfileForm user={user} />
     </>
   );
 }
