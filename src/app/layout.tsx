@@ -4,7 +4,7 @@ import "./globals.css";
 import Providers from "@/components/Providers";
 
 const display = Chakra_Petch({
-  subsets: ["latin", "cyrillic"],
+  subsets: ["latin"],
   weight: ["500", "600", "700"],
   variable: "--font-display",
 });
