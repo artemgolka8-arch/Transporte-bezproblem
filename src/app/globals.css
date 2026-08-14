@@ -1,0 +1,59 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-line;
+  }
+  html {
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-bg text-ink font-body antialiased;
+    background-image:
+      radial-gradient(circle at 15% 0%, rgba(0,229,255,0.06), transparent 40%),
+      radial-gradient(circle at 85% 20%, rgba(124,131,253,0.06), transparent 40%),
+      linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+    background-size: auto, auto, 36px 36px, 36px 36px;
+  }
+  ::selection {
+    background: rgba(0, 229, 255, 0.25);
+    color: #fff;
+  }
+  *:focus-visible {
+    outline: 2px solid #00e5ff;
+    outline-offset: 2px;
+  }
+}
+
+@layer utilities {
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: #232e47;
+    border-radius: 8px;
+  }
+
+  .panel {
+    @apply bg-panel border border-line rounded-2xl shadow-panel;
+  }
+
+  .label-eyebrow {
+    @apply font-mono text-[11px] tracking-[0.18em] uppercase text-faint;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

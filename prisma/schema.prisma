@@ -1,0 +1,71 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  VIEWER
+}
+
+enum VehicleType {
+  BIKE
+  SCOOTER
+}
+
+enum VehicleStatus {
+  AVAILABLE
+  WORKSHOP
+  RENTED
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     @default(VIEWER)
+  createdAt DateTime @default(now())
+}
+
+model Vehicle {
+  id                 String        @id @default(cuid())
+  code               String        @unique
+  name               String
+  type               VehicleType
+  status             VehicleStatus @default(AVAILABLE)
+  problemDescription String?
+  location           String?
+  renter             String?
+  rentedUntil        DateTime?
+  keys               Key[]
+  history            StatusLog[]
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+}
+
+model Key {
+  id          String   @id @default(cuid())
+  vehicleId   String
+  vehicle     Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  label       String
+  isDuplicate Boolean  @default(false)
+  holder      String?
+  notes       String?
+  createdAt   DateTime @default(now())
+}
+
+model StatusLog {
+  id        String        @id @default(cuid())
+  vehicleId String
+  vehicle   Vehicle       @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  status    VehicleStatus
+  note      String?
+  userName  String?
+  createdAt DateTime      @default(now())
+}
