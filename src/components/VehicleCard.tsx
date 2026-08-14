@@ -4,6 +4,7 @@ import Link from "next/link";
 import { StatusRing } from "./StatusRing";
 import { StatusBadge } from "./status";
 import { KeyIcon } from "./VehicleIcons";
+import { useTranslation } from "@/lib/i18n/LanguageProvider";
 
 export type VehicleCardData = {
   id: string;
@@ -18,6 +19,7 @@ export type VehicleCardData = {
 };
 
 export function VehicleCard({ vehicle, index }: { vehicle: VehicleCardData; index: number }) {
+  const { t } = useTranslation();
   return (
     <Link
       href={`/vehicle/${vehicle.id}`}
@@ -36,7 +38,7 @@ export function VehicleCard({ vehicle, index }: { vehicle: VehicleCardData; inde
         </div>
         {vehicle.problemDescription && (
           <span
-            title="Есть открытая проблема"
+            title={t("has_open_problem")}
             className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-danger shadow-[0_0_10px_rgba(255,92,122,0.7)]"
           />
         )}
@@ -51,13 +53,13 @@ export function VehicleCard({ vehicle, index }: { vehicle: VehicleCardData; inde
       </div>
 
       {vehicle.status === "RENTED" && vehicle.renter && (
-        <div className="text-xs text-muted truncate">Арендатор: {vehicle.renter}</div>
+        <div className="text-xs text-muted truncate">{t("renter_label", { name: vehicle.renter })}</div>
       )}
       {vehicle.status === "WORKSHOP" && vehicle.problemDescription && (
         <div className="line-clamp-2 text-xs text-amber/90">{vehicle.problemDescription}</div>
       )}
       {vehicle.location && vehicle.status === "AVAILABLE" && (
-        <div className="text-xs text-muted truncate">Локация: {vehicle.location}</div>
+        <div className="text-xs text-muted truncate">{t("location_label", { name: vehicle.location })}</div>
       )}
 
       <div className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 transition-opacity group-hover:opacity-100 ring-1 ring-cyan/20" />

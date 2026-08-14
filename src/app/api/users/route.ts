@@ -4,13 +4,26 @@ import bcrypt from "bcryptjs";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+const USER_SELECT = {
+  id: true,
+  email: true,
+  name: true,
+  role: true,
+  firstName: true,
+  lastName: true,
+  phone: true,
+  position: true,
+  city: true,
+  createdAt: true,
+};
+
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session || session.user.role !== "ADMIN") {
     return NextResponse.json({ error: "Недостаточно прав" }, { status: 403 });
   }
   const users = await prisma.user.findMany({
-    select: { id: true, email: true, name: true, role: true, createdAt: true },
+    select: USER_SELECT,
     orderBy: { createdAt: "asc" },
   });
   return NextResponse.json(users);
@@ -23,7 +36,7 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { email, password, name, role } = body;
+  const { email, password, name, role, firstName, lastName, phone, position, city } = body;
 
   if (!email || !password || !name || !role) {
     return NextResponse.json({ error: "Заполните все поля" }, { status: 400 });
@@ -36,8 +49,18 @@ export async function POST(req: NextRequest) {
 
   try {
     const user = await prisma.user.create({
-      data: { email: email.toLowerCase().trim(), password: hashed, name, role },
-      select: { id: true, email: true, name: true, role: true, createdAt: true },
+      data: {
+        email: email.toLowerCase().trim(),
+        password: hashed,
+        name,
+        role,
+        firstName: firstName || null,
+        lastName: lastName || null,
+        phone: phone || null,
+        position: position || null,
+        city: city || null,
+      },
+      select: USER_SELECT,
     });
     return NextResponse.json(user, { status: 201 });
   } catch (e: any) {

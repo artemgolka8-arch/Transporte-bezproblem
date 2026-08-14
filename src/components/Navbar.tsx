@@ -4,7 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { STATUS_CONFIG } from "./status";
-import { ROLE_LABELS } from "@/lib/roles";
+import { ROLE_LABEL_KEYS } from "@/lib/roles";
+import { useTranslation } from "@/lib/i18n/LanguageProvider";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 
 export function Navbar({
   counts,
@@ -16,6 +18,7 @@ export function Navbar({
   role: "ADMIN" | "MANAGER" | "VIEWER";
 }) {
   const pathname = usePathname();
+  const { t } = useTranslation();
 
   return (
     <header className="sticky top-0 z-30 border-b border-line bg-bg/85 backdrop-blur-md">
@@ -28,7 +31,7 @@ export function Navbar({
             <div className="font-display text-base font-semibold tracking-wide text-ink">
               FLEET<span className="text-cyan">/OS</span>
             </div>
-            <div className="label-eyebrow -mt-0.5">учёт транспорта</div>
+            <div className="label-eyebrow -mt-0.5">{t("tagline")}</div>
           </div>
         </Link>
 
@@ -42,7 +45,7 @@ export function Navbar({
               >
                 <span className={`h-1.5 w-1.5 rounded-full ${c.dot}`} />
                 <span className="font-mono text-sm font-medium text-ink">{counts[s]}</span>
-                <span className={`text-[11px] uppercase tracking-wide ${c.text}`}>{c.label}</span>
+                <span className={`text-[11px] uppercase tracking-wide ${c.text}`}>{t(c.labelKey)}</span>
               </div>
             );
           })}
@@ -55,7 +58,7 @@ export function Navbar({
               pathname === "/" ? "bg-panel2 text-ink" : "text-muted hover:text-ink"
             }`}
           >
-            Флот
+            {t("nav_fleet")}
           </Link>
           {role === "ADMIN" && (
             <Link
@@ -64,21 +67,31 @@ export function Navbar({
                 pathname?.startsWith("/admin") ? "bg-panel2 text-ink" : "text-muted hover:text-ink"
               }`}
             >
-              Пользователи
+              {t("nav_users")}
             </Link>
           )}
+          <Link
+            href="/profile"
+            className={`rounded-lg px-3 py-1.5 text-sm transition-colors ${
+              pathname === "/profile" ? "bg-panel2 text-ink" : "text-muted hover:text-ink"
+            }`}
+          >
+            {t("nav_profile")}
+          </Link>
         </nav>
+
+        <LanguageSwitcher />
 
         <div className="flex items-center gap-3 border-l border-line pl-4">
           <div className="text-right leading-tight hidden sm:block">
             <div className="text-sm text-ink">{userName}</div>
-            <div className="label-eyebrow">{ROLE_LABELS[role]}</div>
+            <div className="label-eyebrow">{t(ROLE_LABEL_KEYS[role])}</div>
           </div>
           <button
             onClick={() => signOut({ callbackUrl: "/login" })}
             className="rounded-lg border border-line px-3 py-1.5 text-xs text-muted transition-colors hover:border-danger/40 hover:text-danger"
           >
-            Выйти
+            {t("sign_out")}
           </button>
         </div>
       </div>

@@ -30,6 +30,11 @@ model User {
   password  String
   name      String
   role      Role     @default(VIEWER)
+  firstName String?
+  lastName  String?
+  phone     String?
+  position  String?
+  city      String?
   createdAt DateTime @default(now())
 }
 
