@@ -10,7 +10,7 @@ export const DEFAULT_LANG: Lang = "ru";
 
 const ru = {
   // общее
-  tagline: "учёт транспорта",
+  tagline: "Bezproblem transport control",
   login_tagline: "вход в систему",
   back: "← Назад",
   save: "Сохранить",
@@ -39,7 +39,7 @@ const ru = {
 
   // дашборд
   dashboard_eyebrow: "панель управления",
-  dashboard_title: "Флот техники",
+  dashboard_title: "Транспорт",
   dashboard_count: "{filtered} из {total} единиц",
   add_vehicle_btn: "+ Добавить транспорт",
   search_placeholder: "Поиск по названию или коду…",
@@ -56,8 +56,8 @@ const ru = {
   field_name: "Марка",
   field_type: "Тип",
   field_location_optional: "Локация (необязательно)",
-  location_placeholder: "Склад А",
-  name_placeholder: "Городской велосипед №15",
+  location_placeholder: "Wroclaw",
+  name_placeholder: "Duotts",
   vehicle_bike: "Велосипед",
   vehicle_scooter: "Скутер",
   creating: "Создание…",
@@ -74,7 +74,7 @@ const ru = {
   location_label: "Локация: {name}",
 
   // страница техники
-  back_to_fleet: "← К флоту",
+  back_to_fleet: "← К транспорту",
   tab_overview: "Обзор",
   tab_keys: "Ключи · {count}",
   problem_desc_eyebrow: "описание проблем",
