@@ -1,9 +1,14 @@
+"use client";
+
+import { useTranslation } from "@/lib/i18n/LanguageProvider";
+import type { TranslationKey } from "@/lib/i18n/translations";
+
 export type VehicleStatus = "AVAILABLE" | "WORKSHOP" | "RENTED";
 
 export const STATUS_CONFIG: Record<
   VehicleStatus,
   {
-    label: string;
+    labelKey: TranslationKey;
     dot: string;
     text: string;
     border: string;
@@ -13,7 +18,7 @@ export const STATUS_CONFIG: Record<
   }
 > = {
   AVAILABLE: {
-    label: "Доступен",
+    labelKey: "status_available",
     dot: "bg-mint",
     text: "text-mint",
     border: "border-mint/40",
@@ -22,7 +27,7 @@ export const STATUS_CONFIG: Record<
     ring: "ring-mint/50",
   },
   WORKSHOP: {
-    label: "В мастерской",
+    labelKey: "status_workshop",
     dot: "bg-amber",
     text: "text-amber",
     border: "border-amber/40",
@@ -31,7 +36,7 @@ export const STATUS_CONFIG: Record<
     ring: "ring-amber/50",
   },
   RENTED: {
-    label: "В аренде",
+    labelKey: "status_rented",
     dot: "bg-violet",
     text: "text-violet",
     border: "border-violet/40",
@@ -42,6 +47,7 @@ export const STATUS_CONFIG: Record<
 };
 
 export function StatusBadge({ status }: { status: VehicleStatus }) {
+  const { t } = useTranslation();
   const c = STATUS_CONFIG[status];
   return (
     <span
@@ -52,7 +58,7 @@ export function StatusBadge({ status }: { status: VehicleStatus }) {
           status === "WORKSHOP" ? "animate-pulseBeacon" : ""
         }`}
       />
-      {c.label}
+      {t(c.labelKey)}
     </span>
   );
 }

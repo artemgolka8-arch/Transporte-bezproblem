@@ -19,22 +19,30 @@ export function BikeIcon({ className = "" }: { className?: string }) {
 export function ScooterIcon({ className = "" }: { className?: string }) {
   return (
     <svg viewBox="0 0 48 48" fill="none" className={className}>
-      <circle cx="12" cy="36" r="5" stroke="currentColor" strokeWidth="2.4" />
-      <circle cx="36" cy="36" r="5" stroke="currentColor" strokeWidth="2.4" />
+      <circle cx="11" cy="36" r="5.2" stroke="currentColor" strokeWidth="2.4" />
+      <circle cx="37" cy="36" r="5.2" stroke="currentColor" strokeWidth="2.4" />
       <path
-        d="M12 31V22C12 19.8 13.8 18 16 18H30"
-        stroke="currentColor"
-        strokeWidth="2.4"
-        strokeLinecap="round"
-      />
-      <path
-        d="M30 10L34 10M32 10V22L36 31"
+        d="M11 36H16L20 24H30"
         stroke="currentColor"
         strokeWidth="2.4"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <path d="M12 31H20" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+      <path
+        d="M20 24C17.5 24 16 22.4 16 20.4C16 18.4 17.6 17 19.6 17H26C31 17 34.5 19.6 35.5 24L37 31"
+        stroke="currentColor"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M30 17V13.6C30 12.7 30.7 12 31.6 12H34"
+        stroke="currentColor"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path d="M33 36H37" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
     </svg>
   );
 }

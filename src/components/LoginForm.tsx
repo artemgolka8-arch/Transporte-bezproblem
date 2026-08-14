@@ -3,9 +3,12 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { useTranslation } from "@/lib/i18n/LanguageProvider";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 
 export function LoginForm() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -22,7 +25,7 @@ export function LoginForm() {
     });
     setLoading(false);
     if (res?.error) {
-      setError("Неверная почта или пароль");
+      setError(t("wrong_credentials"));
       return;
     }
     router.push("/");
@@ -32,6 +35,10 @@ export function LoginForm() {
   return (
     <div className="relative flex min-h-screen items-center justify-center px-4">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-scanline animate-scan" />
+
+      <div className="absolute top-4 right-4">
+        <LanguageSwitcher />
+      </div>
 
       <form
         onSubmit={handleSubmit}
@@ -45,11 +52,11 @@ export function LoginForm() {
             <div className="font-display text-base font-semibold text-ink">
               FLEET<span className="text-cyan">/OS</span>
             </div>
-            <div className="label-eyebrow -mt-0.5">вход в систему</div>
+            <div className="label-eyebrow -mt-0.5">{t("login_tagline")}</div>
           </div>
         </div>
 
-        <label className="mb-1 block label-eyebrow">Почта</label>
+        <label className="mb-1 block label-eyebrow">{t("field_email")}</label>
         <input
           type="email"
           required
@@ -59,7 +66,7 @@ export function LoginForm() {
           placeholder="you@fleet.local"
         />
 
-        <label className="mb-1 block label-eyebrow">Пароль</label>
+        <label className="mb-1 block label-eyebrow">{t("field_password_simple")}</label>
         <input
           type="password"
           required
@@ -80,7 +87,7 @@ export function LoginForm() {
           disabled={loading}
           className="w-full rounded-lg border border-cyan/40 bg-cyanDim/40 py-2.5 text-sm font-medium text-cyan shadow-glowCyan transition-opacity hover:opacity-90 disabled:opacity-50"
         >
-          {loading ? "Проверка…" : "Войти"}
+          {loading ? t("checking") : t("sign_in")}
         </button>
       </form>
     </div>

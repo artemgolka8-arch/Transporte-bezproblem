@@ -7,23 +7,23 @@
     @apply border-line;
   }
   html {
-    color-scheme: dark;
+    color-scheme: light;
   }
   body {
     @apply bg-bg text-ink font-body antialiased;
     background-image:
-      radial-gradient(circle at 15% 0%, rgba(0,229,255,0.06), transparent 40%),
-      radial-gradient(circle at 85% 20%, rgba(124,131,253,0.06), transparent 40%),
-      linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+      radial-gradient(circle at 15% 0%, rgba(18,116,224,0.08), transparent 40%),
+      radial-gradient(circle at 85% 20%, rgba(91,95,238,0.06), transparent 40%),
+      linear-gradient(rgba(15,37,69,0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(15,37,69,0.045) 1px, transparent 1px);
     background-size: auto, auto, 36px 36px, 36px 36px;
   }
   ::selection {
-    background: rgba(0, 229, 255, 0.25);
-    color: #fff;
+    background: rgba(18, 116, 224, 0.2);
+    color: #0f2545;
   }
   *:focus-visible {
-    outline: 2px solid #00e5ff;
+    outline: 2px solid #1274e0;
     outline-offset: 2px;
   }
 }
@@ -37,7 +37,7 @@
     background: transparent;
   }
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    background: #232e47;
+    background: #c3d6ec;
     border-radius: 8px;
   }
 
