@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { KeyIcon } from "./VehicleIcons";
 import { canEdit } from "@/lib/roles";
+import { useTranslation } from "@/lib/i18n/LanguageProvider";
 
 export type KeyData = {
   id: string;
@@ -36,6 +37,7 @@ export function KeyPeg({
   onUpdate: (id: string, data: Partial<KeyData>) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
 }) {
+  const { t } = useTranslation();
   const c = colorForLabel(keyData.label);
   const [editing, setEditing] = useState(false);
   const [holder, setHolder] = useState(keyData.holder || "");
@@ -61,7 +63,7 @@ export function KeyPeg({
       >
         {keyData.isDuplicate && (
           <span className="absolute -top-2 right-2 rounded-full border border-line bg-bg2 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wide text-muted">
-            дубликат
+            {t("duplicate_badge")}
           </span>
         )}
 
@@ -75,7 +77,7 @@ export function KeyPeg({
           </div>
           {!editing && (
             <div className="mt-0.5 text-[11px] text-muted">
-              {keyData.holder ? `У: ${keyData.holder}` : "Место хранения не указано"}
+              {keyData.holder ? t("holder_prefix", { holder: keyData.holder }) : t("no_holder")}
             </div>
           )}
         </div>
@@ -85,13 +87,13 @@ export function KeyPeg({
             <input
               value={holder}
               onChange={(e) => setHolder(e.target.value)}
-              placeholder="Кто хранит / где"
+              placeholder={t("key_holder_placeholder")}
               className="w-full rounded-md border border-line bg-bg2 px-2 py-1.5 text-xs text-ink outline-none focus:border-cyan/50"
             />
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Заметки"
+              placeholder={t("key_notes_placeholder")}
               rows={2}
               className="w-full resize-none rounded-md border border-line bg-bg2 px-2 py-1.5 text-xs text-ink outline-none focus:border-cyan/50"
             />
@@ -101,13 +103,13 @@ export function KeyPeg({
                 disabled={saving}
                 className="flex-1 rounded-md border border-cyan/40 bg-cyanDim/40 py-1 text-[11px] text-cyan"
               >
-                {saving ? "…" : "Сохранить"}
+                {saving ? "…" : t("save")}
               </button>
               <button
                 onClick={() => setEditing(false)}
                 className="flex-1 rounded-md border border-line py-1 text-[11px] text-muted"
               >
-                Отмена
+                {t("cancel")}
               </button>
             </div>
           </div>
@@ -118,13 +120,13 @@ export function KeyPeg({
                 onClick={() => setEditing(true)}
                 className="flex-1 rounded-md border border-line py-1 text-[11px] text-muted hover:text-ink"
               >
-                Изменить
+                {t("edit_action")}
               </button>
               <button
                 onClick={() => onDelete(keyData.id)}
                 className="flex-1 rounded-md border border-line py-1 text-[11px] text-muted hover:border-danger/40 hover:text-danger"
               >
-                Удалить
+                {t("delete_action")}
               </button>
             </div>
           )

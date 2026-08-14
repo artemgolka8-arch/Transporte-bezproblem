@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { Chakra_Petch, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/Providers";
+import { isLang, DEFAULT_LANG } from "@/lib/i18n/translations";
 
 const display = Chakra_Petch({
   subsets: ["latin"],
@@ -26,10 +28,13 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const cookieLang = cookies().get("fleet_lang")?.value;
+  const initialLang = isLang(cookieLang) ? cookieLang : DEFAULT_LANG;
+
   return (
-    <html lang="ru" className={`${display.variable} ${body.variable} ${mono.variable}`}>
+    <html lang={initialLang} className={`${display.variable} ${body.variable} ${mono.variable}`}>
       <body>
-        <Providers>{children}</Providers>
+        <Providers initialLang={initialLang}>{children}</Providers>
       </body>
     </html>
   );
