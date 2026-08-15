@@ -15,6 +15,12 @@ export async function GET() {
   return NextResponse.json(vehicles);
 }
 
+const BRAND_NAMES: Record<string, string> = {
+  DUOTTS: "Duotts",
+  LOOK_ROAD: "Look Road",
+  ONE_SPORT: "One Sport",
+};
+
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
@@ -23,11 +29,13 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { code, name, type, location, brand, city } = body;
+  const { code, type, location, brand, city } = body;
 
-  if (!code || !name || !type) {
-    return NextResponse.json({ error: "Заполните код, название и тип" }, { status: 400 });
+  if (!code || !type) {
+    return NextResponse.json({ error: "Заполните бортовой номер и тип" }, { status: 400 });
   }
+
+  const name = brand && BRAND_NAMES[brand] ? `${BRAND_NAMES[brand]} ${code}` : code;
 
   try {
     const vehicle = await prisma.vehicle.create({

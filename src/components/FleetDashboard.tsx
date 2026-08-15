@@ -163,11 +163,9 @@ function AddVehicleModal({
 }) {
   const { t } = useTranslation();
   const [code, setCode] = useState("");
-  const [name, setName] = useState("");
   const [type, setType] = useState<"BIKE" | "SCOOTER">("BIKE");
   const [brand, setBrand] = useState<(typeof BRAND_OPTIONS)[number] | "">("");
   const [city, setCity] = useState("");
-  const [location, setLocation] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -178,7 +176,7 @@ function AddVehicleModal({
     const res = await fetch("/api/vehicles", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code, name, type, brand: brand || null, city: city || null, location }),
+      body: JSON.stringify({ code, type, brand: brand || null, city: city || null }),
     });
     setLoading(false);
     if (!res.ok) {
@@ -208,17 +206,7 @@ function AddVehicleModal({
           required
           value={code}
           onChange={(e) => setCode(e.target.value)}
-          placeholder="BK-015"
           className="mb-4 w-full rounded-lg border border-line bg-bg2 px-3 py-2 font-mono text-sm text-ink outline-none focus:border-cyan/50"
-        />
-
-        <label className="mb-1 block label-eyebrow">{t("field_name")}</label>
-        <input
-          required
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder={t("name_placeholder")}
-          className="mb-4 w-full rounded-lg border border-line bg-bg2 px-3 py-2 text-sm text-ink outline-none focus:border-cyan/50"
         />
 
         <label className="mb-1 block label-eyebrow">{t("field_type")}</label>
@@ -259,21 +247,13 @@ function AddVehicleModal({
           value={city}
           onChange={(e) => setCity(e.target.value)}
           placeholder={t("city_placeholder")}
-          className="mb-4 w-full rounded-lg border border-line bg-bg2 px-3 py-2 text-sm text-ink outline-none focus:border-cyan/50"
+          className="mb-5 w-full rounded-lg border border-line bg-bg2 px-3 py-2 text-sm text-ink outline-none focus:border-cyan/50"
         />
         <datalist id="city-suggestions">
           {knownCities.map((c) => (
             <option key={c} value={c} />
           ))}
         </datalist>
-
-        <label className="mb-1 block label-eyebrow">{t("field_location_optional")}</label>
-        <input
-          value={location}
-          onChange={(e) => setLocation(e.target.value)}
-          placeholder={t("location_placeholder")}
-          className="mb-5 w-full rounded-lg border border-line bg-bg2 px-3 py-2 text-sm text-ink outline-none focus:border-cyan/50"
-        />
 
         {error && (
           <div className="mb-4 rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-xs text-danger">
