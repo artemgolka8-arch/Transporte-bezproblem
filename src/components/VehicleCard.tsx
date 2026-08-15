@@ -5,6 +5,15 @@ import { StatusRing } from "./StatusRing";
 import { StatusBadge } from "./status";
 import { KeyIcon } from "./VehicleIcons";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
+import { TranslationKey } from "@/lib/i18n/translations";
+
+export type VehicleBrand = "DUOTTS" | "LOOK_ROAD" | "ONE_SPORT";
+
+export const BRAND_LABEL_KEYS: Record<VehicleBrand, TranslationKey> = {
+  DUOTTS: "brand_duotts",
+  LOOK_ROAD: "brand_look_road",
+  ONE_SPORT: "brand_one_sport",
+};
 
 export type VehicleCardData = {
   id: string;
@@ -12,6 +21,8 @@ export type VehicleCardData = {
   name: string;
   type: "BIKE" | "SCOOTER";
   status: "AVAILABLE" | "WORKSHOP" | "RENTED";
+  brand?: VehicleBrand | null;
+  city?: string | null;
   problemDescription?: string | null;
   location?: string | null;
   renter?: string | null;
@@ -65,6 +76,9 @@ export function VehicleCard({
             <div className="font-display text-[15px] font-semibold text-ink leading-snug">
               {vehicle.name}
             </div>
+            {vehicle.brand && (
+              <div className="text-[11px] text-muted">{t(BRAND_LABEL_KEYS[vehicle.brand])}</div>
+            )}
           </div>
         </div>
         {vehicle.problemDescription && (
@@ -88,6 +102,9 @@ export function VehicleCard({
       )}
       {vehicle.status === "WORKSHOP" && vehicle.problemDescription && (
         <div className="line-clamp-2 text-xs text-amber/90">{vehicle.problemDescription}</div>
+      )}
+      {vehicle.city && (
+        <div className="text-xs text-muted truncate">{t("city_label", { name: vehicle.city })}</div>
       )}
       {vehicle.location && vehicle.status === "AVAILABLE" && (
         <div className="text-xs text-muted truncate">{t("location_label", { name: vehicle.location })}</div>

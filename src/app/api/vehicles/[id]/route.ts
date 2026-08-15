@@ -27,13 +27,15 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   }
 
   const body = await req.json();
-  const { status, problemDescription, note, name, location, renter, rentedUntil } = body;
+  const { status, problemDescription, note, name, location, renter, rentedUntil, brand, city } = body;
 
   const current = await prisma.vehicle.findUnique({ where: { id: params.id } });
   if (!current) return NextResponse.json({ error: "Не найдено" }, { status: 404 });
 
   const data: Record<string, unknown> = {};
   if (name !== undefined) data.name = name;
+  if (brand !== undefined) data.brand = brand || null;
+  if (city !== undefined) data.city = city || null;
   if (location !== undefined) data.location = location;
   if (renter !== undefined) data.renter = renter;
   if (rentedUntil !== undefined) data.rentedUntil = rentedUntil ? new Date(rentedUntil) : null;

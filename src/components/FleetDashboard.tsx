@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { VehicleCard, VehicleCardData } from "./VehicleCard";
+import { VehicleCard, VehicleCardData, BRAND_LABEL_KEYS } from "./VehicleCard";
 import { canEdit, isAdmin } from "@/lib/roles";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
 
@@ -12,9 +12,11 @@ type TypeFilter = "ALL" | "BIKE" | "SCOOTER";
 export function FleetDashboard({
   vehicles,
   role,
+  knownCities = [],
 }: {
   vehicles: VehicleCardData[];
   role: "ADMIN" | "MANAGER" | "VIEWER";
+  knownCities?: string[];
 }) {
   const router = useRouter();
   const { t } = useTranslation();
@@ -136,6 +138,7 @@ export function FleetDashboard({
 
       {modalOpen && (
         <AddVehicleModal
+          knownCities={knownCities}
           onClose={() => setModalOpen(false)}
           onCreated={() => {
             setModalOpen(false);
@@ -147,11 +150,23 @@ export function FleetDashboard({
   );
 }
 
-function AddVehicleModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
+const BRAND_OPTIONS = ["DUOTTS", "LOOK_ROAD", "ONE_SPORT"] as const;
+
+function AddVehicleModal({
+  onClose,
+  onCreated,
+  knownCities,
+}: {
+  onClose: () => void;
+  onCreated: () => void;
+  knownCities: string[];
+}) {
   const { t } = useTranslation();
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
   const [type, setType] = useState<"BIKE" | "SCOOTER">("BIKE");
+  const [brand, setBrand] = useState<(typeof BRAND_OPTIONS)[number] | "">("");
+  const [city, setCity] = useState("");
   const [location, setLocation] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -163,7 +178,7 @@ function AddVehicleModal({ onClose, onCreated }: { onClose: () => void; onCreate
     const res = await fetch("/api/vehicles", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code, name, type, location }),
+      body: JSON.stringify({ code, name, type, brand: brand || null, city: city || null, location }),
     });
     setLoading(false);
     if (!res.ok) {
@@ -223,6 +238,34 @@ function AddVehicleModal({ onClose, onCreated }: { onClose: () => void; onCreate
             </button>
           ))}
         </div>
+
+        <label className="mb-1 block label-eyebrow">{t("field_brand")}</label>
+        <select
+          value={brand}
+          onChange={(e) => setBrand(e.target.value as (typeof BRAND_OPTIONS)[number] | "")}
+          className="mb-4 w-full rounded-lg border border-line bg-bg2 px-3 py-2 text-sm text-ink outline-none focus:border-cyan/50"
+        >
+          <option value="">{t("choose_brand")}</option>
+          {BRAND_OPTIONS.map((b) => (
+            <option key={b} value={b}>
+              {t(BRAND_LABEL_KEYS[b])}
+            </option>
+          ))}
+        </select>
+
+        <label className="mb-1 block label-eyebrow">{t("field_city")}</label>
+        <input
+          list="city-suggestions"
+          value={city}
+          onChange={(e) => setCity(e.target.value)}
+          placeholder={t("city_placeholder")}
+          className="mb-4 w-full rounded-lg border border-line bg-bg2 px-3 py-2 text-sm text-ink outline-none focus:border-cyan/50"
+        />
+        <datalist id="city-suggestions">
+          {knownCities.map((c) => (
+            <option key={c} value={c} />
+          ))}
+        </datalist>
 
         <label className="mb-1 block label-eyebrow">{t("field_location_optional")}</label>
         <input

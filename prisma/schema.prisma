@@ -24,6 +24,12 @@ enum VehicleStatus {
   RENTED
 }
 
+enum VehicleBrand {
+  DUOTTS
+  LOOK_ROAD
+  ONE_SPORT
+}
+
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -44,6 +50,8 @@ model Vehicle {
   name               String
   type               VehicleType
   status             VehicleStatus @default(AVAILABLE)
+  brand              VehicleBrand?
+  city               String?
   problemDescription String?
   location           String?
   renter             String?

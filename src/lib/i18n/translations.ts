@@ -10,7 +10,7 @@ export const DEFAULT_LANG: Lang = "ru";
 
 const ru = {
   // общее
-  tagline: "Bezproblem transport control",
+  tagline: "учёт транспорта",
   login_tagline: "вход в систему",
   back: "← Назад",
   save: "Сохранить",
@@ -22,7 +22,7 @@ const ru = {
   optional: "необязательно",
 
   // навигация
-  nav_fleet: "Транспорт",
+  nav_fleet: "Флот",
   nav_users: "Пользователи",
   nav_profile: "Профиль",
   sign_out: "Выйти",
@@ -39,7 +39,7 @@ const ru = {
 
   // дашборд
   dashboard_eyebrow: "панель управления",
-  dashboard_title: "Транспорт",
+  dashboard_title: "Флот техники",
   dashboard_count: "{filtered} из {total} единиц",
   add_vehicle_btn: "+ Добавить транспорт",
   search_placeholder: "Поиск по названию или коду…",
@@ -53,11 +53,18 @@ const ru = {
   // модалка добавления техники
   new_vehicle_title: "Новая техника",
   field_code: "Бортовой номер",
-  field_name: "Марка",
+  field_name: "Название",
   field_type: "Тип",
+  field_brand: "Марка",
+  choose_brand: "Выберите марку…",
+  brand_duotts: "Duotts",
+  brand_look_road: "Look Road",
+  brand_one_sport: "One Sport",
+  brand_other: "Другая",
+  city_label: "Город: {name}",
   field_location_optional: "Локация (необязательно)",
-  location_placeholder: "Wroclaw",
-  name_placeholder: "Duotts",
+  location_placeholder: "Склад А",
+  name_placeholder: "Городской велосипед №15",
   vehicle_bike: "Велосипед",
   vehicle_scooter: "Скутер",
   creating: "Создание…",
@@ -74,7 +81,7 @@ const ru = {
   location_label: "Локация: {name}",
 
   // страница техники
-  back_to_fleet: "← К транспорту",
+  back_to_fleet: "← К флоту",
   tab_overview: "Обзор",
   tab_keys: "Ключи · {count}",
   problem_desc_eyebrow: "описание проблем",
@@ -85,9 +92,22 @@ const ru = {
   status_history_eyebrow: "история статусов",
   no_history: "Записей пока нет.",
   keys_panel_eyebrow: "панель ключей",
-  add_key_btn: "+ Добавить ключ",
+  add_key_btn: "+ Другой ключ",
   board_empty_title: "На доске пока пусто",
   board_empty_subtitle: "Добавьте первый ключ для этой единицы техники",
+
+  // быстрое добавление стандартных ключей
+  quick_add_eyebrow: "быстрое добавление",
+  quick_add_hint: "Нажмите, чтобы сразу добавить на доску",
+  quick_add_duplicate_hint: "Добавить как дубликат",
+
+  // пресеты названий ключей
+  key_preset_a: "Ключ A",
+  key_preset_b: "Ключ B",
+  key_preset_ignition: "Зажигание",
+  key_preset_lock: "Замок",
+  key_preset_custom: "Другое",
+  key_custom_placeholder: "Своё название",
 
   // модалка добавления ключа
   new_key_title: "Новый ключ",
@@ -136,9 +156,9 @@ const ru = {
   field_city: "Город",
   first_name_placeholder: "Иван",
   last_name_placeholder: "Иванов",
-  phone_placeholder: "000 000 000",
-  position_placeholder: "Менеджер",
-  city_placeholder: "Wroclaw",
+  phone_placeholder: "+7 900 000-00-00",
+  position_placeholder: "Менеджер по флоту",
+  city_placeholder: "Москва",
   save_changes: "Сохранить изменения",
   profile_updated: "Профиль обновлён",
   not_specified: "не указано",
@@ -165,7 +185,7 @@ const pl: Dict = {
   close: "Zamknij",
   optional: "opcjonalnie",
 
-  nav_fleet: "Pojazd",
+  nav_fleet: "Flota",
   nav_users: "Użytkownicy",
   nav_profile: "Profil",
   sign_out: "Wyloguj",
@@ -192,8 +212,15 @@ const pl: Dict = {
 
   new_vehicle_title: "Nowy pojazd",
   field_code: "Numer boczny",
-  field_name: "Marka",
+  field_name: "Nazwa",
   field_type: "Typ",
+  field_brand: "Marka",
+  choose_brand: "Wybierz markę…",
+  brand_duotts: "Duotts",
+  brand_look_road: "Look Road",
+  brand_one_sport: "One Sport",
+  brand_other: "Inna",
+  city_label: "Miasto: {name}",
   field_location_optional: "Lokalizacja (opcjonalnie)",
   location_placeholder: "Magazyn A",
   name_placeholder: "Rower miejski nr 15",
@@ -222,9 +249,20 @@ const pl: Dict = {
   status_history_eyebrow: "historia statusów",
   no_history: "Brak wpisów.",
   keys_panel_eyebrow: "tablica kluczy",
-  add_key_btn: "+ Dodaj klucz",
+  add_key_btn: "+ Inny klucz",
   board_empty_title: "Tablica jest pusta",
   board_empty_subtitle: "Dodaj pierwszy klucz dla tego pojazdu",
+
+  quick_add_eyebrow: "szybkie dodawanie",
+  quick_add_hint: "Kliknij, aby od razu dodać do tablicy",
+  quick_add_duplicate_hint: "Dodaj jako duplikat",
+
+  key_preset_a: "Klucz A",
+  key_preset_b: "Klucz B",
+  key_preset_ignition: "Zapłon",
+  key_preset_lock: "Zamek",
+  key_preset_custom: "Inne",
+  key_custom_placeholder: "Własna nazwa",
 
   new_key_title: "Nowy klucz",
   field_key_name: "Nazwa",
@@ -321,8 +359,15 @@ const uk: Dict = {
 
   new_vehicle_title: "Нова техніка",
   field_code: "Бортовий номер",
-  field_name: "Марка",
+  field_name: "Назва",
   field_type: "Тип",
+  field_brand: "Марка",
+  choose_brand: "Оберіть марку…",
+  brand_duotts: "Duotts",
+  brand_look_road: "Look Road",
+  brand_one_sport: "One Sport",
+  brand_other: "Інша",
+  city_label: "Місто: {name}",
   field_location_optional: "Локація (необов'язково)",
   location_placeholder: "Склад А",
   name_placeholder: "Міський велосипед №15",
@@ -351,9 +396,20 @@ const uk: Dict = {
   status_history_eyebrow: "історія статусів",
   no_history: "Записів поки немає.",
   keys_panel_eyebrow: "панель ключів",
-  add_key_btn: "+ Додати ключ",
+  add_key_btn: "+ Інший ключ",
   board_empty_title: "На дошці поки порожньо",
   board_empty_subtitle: "Додайте перший ключ для цієї одиниці техніки",
+
+  quick_add_eyebrow: "швидке додавання",
+  quick_add_hint: "Натисніть, щоб одразу додати на дошку",
+  quick_add_duplicate_hint: "Додати як дублікат",
+
+  key_preset_a: "Ключ A",
+  key_preset_b: "Ключ B",
+  key_preset_ignition: "Запалювання",
+  key_preset_lock: "Замок",
+  key_preset_custom: "Інше",
+  key_custom_placeholder: "Своя назва",
 
   new_key_title: "Новий ключ",
   field_key_name: "Назва",

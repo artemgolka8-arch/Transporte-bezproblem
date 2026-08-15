@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { code, name, type, location } = body;
+  const { code, name, type, location, brand, city } = body;
 
   if (!code || !name || !type) {
     return NextResponse.json({ error: "Заполните код, название и тип" }, { status: 400 });
@@ -35,6 +35,8 @@ export async function POST(req: NextRequest) {
         code,
         name,
         type,
+        brand: brand || null,
+        city: city || null,
         location: location || null,
         history: {
           create: {

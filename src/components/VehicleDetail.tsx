@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { StatusRing } from "./StatusRing";
 import { StatusBadge, STATUS_CONFIG, VehicleStatus } from "./status";
 import { KeyPeg, KeyData } from "./KeyPeg";
+import { BRAND_LABEL_KEYS, VehicleBrand } from "./VehicleCard";
 import { canEdit, isAdmin } from "@/lib/roles";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
 import { Lang } from "@/lib/i18n/translations";
@@ -23,6 +24,8 @@ export type VehicleFull = {
   name: string;
   type: "BIKE" | "SCOOTER";
   status: VehicleStatus;
+  brand: VehicleBrand | null;
+  city: string | null;
   problemDescription: string | null;
   location: string | null;
   renter: string | null;
@@ -31,6 +34,13 @@ export type VehicleFull = {
 };
 
 const LOCALE_MAP: Record<Lang, string> = { ru: "ru-RU", pl: "pl-PL", uk: "uk-UA" };
+
+const KEY_PRESETS = [
+  "key_preset_a",
+  "key_preset_b",
+  "key_preset_ignition",
+  "key_preset_lock",
+] as const;
 
 export function VehicleDetail({
   vehicle,
@@ -47,6 +57,7 @@ export function VehicleDetail({
   const [savingProblem, setSavingProblem] = useState(false);
   const [savingStatus, setSavingStatus] = useState(false);
   const [addingKey, setAddingKey] = useState(false);
+  const [quickAdding, setQuickAdding] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const editable = canEdit(role);
@@ -95,6 +106,20 @@ export function VehicleDetail({
     if (res.ok) {
       const updated = await res.json();
       setV((prev) => ({ ...prev, keys: prev.keys.map((k) => (k.id === id ? updated : k)) }));
+    }
+  }
+
+  async function quickAddKey(label: string, isDuplicate: boolean) {
+    setQuickAdding(label + (isDuplicate ? ":dup" : ""));
+    const res = await fetch("/api/keys", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ vehicleId: v.id, label, isDuplicate }),
+    });
+    setQuickAdding(null);
+    if (res.ok) {
+      const key = await res.json();
+      setV((prev) => ({ ...prev, keys: [...prev.keys, key] }));
     }
   }
 
@@ -155,6 +180,8 @@ export function VehicleDetail({
           <h1 className="font-display text-2xl font-semibold text-ink">{v.name}</h1>
           <div className="mt-2 flex items-center gap-2">
             <StatusBadge status={v.status} />
+            {v.brand && <span className="text-xs text-muted">· {t(BRAND_LABEL_KEYS[v.brand])}</span>}
+            {v.city && <span className="text-xs text-muted">· {v.city}</span>}
             {v.location && <span className="text-xs text-muted">· {v.location}</span>}
             {v.renter && <span className="text-xs text-muted">· {t("renter_label", { name: v.renter })}</span>}
           </div>
@@ -272,6 +299,8 @@ export function VehicleDetail({
             )}
           </div>
 
+          {editable && <QuickAddKeys onAdd={quickAddKey} pending={quickAdding} />}
+
           {v.keys.length === 0 && !addingKey ? (
             <div className="flex flex-col items-center gap-1 py-14 text-center">
               <div className="text-sm text-ink">{t("board_empty_title")}</div>
@@ -308,6 +337,52 @@ export function VehicleDetail({
   );
 }
 
+function QuickAddKeys({
+  onAdd,
+  pending,
+}: {
+  onAdd: (label: string, isDuplicate: boolean) => Promise<void>;
+  pending: string | null;
+}) {
+  const { t } = useTranslation();
+  const [asDuplicate, setAsDuplicate] = useState(false);
+
+  return (
+    <div className="mb-5 rounded-xl border border-line/60 bg-panel p-3.5">
+      <div className="mb-2.5 flex items-center justify-between">
+        <div className="label-eyebrow">{t("quick_add_eyebrow")}</div>
+        <label className="flex items-center gap-1.5 text-[11px] text-muted">
+          <input
+            type="checkbox"
+            checked={asDuplicate}
+            onChange={(e) => setAsDuplicate(e.target.checked)}
+            className="h-3.5 w-3.5 rounded border-line accent-cyan"
+          />
+          {t("quick_add_duplicate_hint")}
+        </label>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {KEY_PRESETS.map((presetKey) => {
+          const label = t(presetKey);
+          const busy = pending === label + (asDuplicate ? ":dup" : "");
+          return (
+            <button
+              key={presetKey}
+              type="button"
+              disabled={pending !== null}
+              onClick={() => onAdd(label, asDuplicate)}
+              title={t("quick_add_hint")}
+              className="rounded-lg border border-line bg-bg2 px-3 py-1.5 text-xs text-ink transition-colors hover:border-cyan/40 hover:text-cyan disabled:opacity-50"
+            >
+              {busy ? "…" : `+ ${label}`}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function AddKeyForm({
   vehicleId,
   onClose,
@@ -318,14 +393,22 @@ function AddKeyForm({
   onCreated: (key: KeyData) => void;
 }) {
   const { t } = useTranslation();
-  const [label, setLabel] = useState("");
+  const [selectedPreset, setSelectedPreset] = useState<string>(KEY_PRESETS[0]);
+  const [customLabel, setCustomLabel] = useState("");
   const [isDuplicate, setIsDuplicate] = useState(false);
   const [holder, setHolder] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const isCustom = selectedPreset === "custom";
+  const label = isCustom ? customLabel : t(selectedPreset as (typeof KEY_PRESETS)[number]);
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (!label.trim()) {
+      setError(t("key_create_failed"));
+      return;
+    }
     setError(null);
     setLoading(true);
     const res = await fetch("/api/keys", {
@@ -354,13 +437,42 @@ function AddKeyForm({
         </div>
 
         <label className="mb-1 block label-eyebrow">{t("field_key_name")}</label>
-        <input
-          required
-          value={label}
-          onChange={(e) => setLabel(e.target.value)}
-          placeholder={t("key_name_placeholder")}
-          className="mb-4 w-full rounded-lg border border-line bg-bg2 px-3 py-2 text-sm text-ink outline-none focus:border-cyan/50"
-        />
+        <div className="mb-4 flex flex-wrap gap-1.5">
+          {KEY_PRESETS.map((presetKey) => (
+            <button
+              type="button"
+              key={presetKey}
+              onClick={() => setSelectedPreset(presetKey)}
+              className={`rounded-lg border px-2.5 py-1.5 text-xs transition-colors ${
+                selectedPreset === presetKey
+                  ? "border-cyan/40 bg-cyanDim/40 text-cyan"
+                  : "border-line text-muted hover:text-ink"
+              }`}
+            >
+              {t(presetKey)}
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={() => setSelectedPreset("custom")}
+            className={`rounded-lg border px-2.5 py-1.5 text-xs transition-colors ${
+              isCustom ? "border-cyan/40 bg-cyanDim/40 text-cyan" : "border-line text-muted hover:text-ink"
+            }`}
+          >
+            {t("key_preset_custom")}
+          </button>
+        </div>
+
+        {isCustom && (
+          <input
+            required
+            autoFocus
+            value={customLabel}
+            onChange={(e) => setCustomLabel(e.target.value)}
+            placeholder={t("key_custom_placeholder")}
+            className="mb-4 w-full rounded-lg border border-line bg-bg2 px-3 py-2 text-sm text-ink outline-none focus:border-cyan/50"
+          />
+        )}
 
         <label className="mb-1 block label-eyebrow">{t("field_key_holder")}</label>
         <input
