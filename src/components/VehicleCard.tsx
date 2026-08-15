@@ -5,15 +5,10 @@ import { StatusRing } from "./StatusRing";
 import { StatusBadge } from "./status";
 import { KeyIcon } from "./VehicleIcons";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
-import { TranslationKey } from "@/lib/i18n/translations";
+import { VehicleBrand, BRAND_LABEL_KEYS } from "@/lib/brands";
 
-export type VehicleBrand = "DUOTTS" | "LOOK_ROAD" | "ONE_SPORT";
-
-export const BRAND_LABEL_KEYS: Record<VehicleBrand, TranslationKey> = {
-  DUOTTS: "brand_duotts",
-  LOOK_ROAD: "brand_look_road",
-  ONE_SPORT: "brand_one_sport",
-};
+export type { VehicleBrand };
+export { BRAND_LABEL_KEYS };
 
 export type VehicleCardData = {
   id: string;
@@ -23,6 +18,7 @@ export type VehicleCardData = {
   status: "AVAILABLE" | "WORKSHOP" | "RENTED";
   brand?: VehicleBrand | null;
   city?: string | null;
+  imageUrl?: string | null;
   problemDescription?: string | null;
   location?: string | null;
   renter?: string | null;
@@ -70,7 +66,7 @@ export function VehicleCard({
 
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
-          <StatusRing status={vehicle.status} type={vehicle.type} size={52} />
+          <StatusRing status={vehicle.status} type={vehicle.type} brand={vehicle.brand} imageUrl={vehicle.imageUrl} size={52} />
           <div>
             <div className="font-mono text-xs text-faint">{vehicle.code}</div>
             <div className="font-display text-[15px] font-semibold text-ink leading-snug">

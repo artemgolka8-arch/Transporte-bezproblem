@@ -26,6 +26,7 @@ export type VehicleFull = {
   status: VehicleStatus;
   brand: VehicleBrand | null;
   city: string | null;
+  imageUrl: string | null;
   problemDescription: string | null;
   location: string | null;
   renter: string | null;
@@ -174,7 +175,7 @@ export function VehicleDetail({
       )}
 
       <div className="panel mb-6 flex flex-wrap items-center gap-5 p-6">
-        <StatusRing status={v.status} type={v.type} size={72} />
+        <StatusRing status={v.status} type={v.type} brand={v.brand} imageUrl={v.imageUrl} size={72} />
         <div className="flex-1 min-w-[200px]">
           <div className="font-mono text-xs text-faint">{v.code}</div>
           <h1 className="font-display text-2xl font-semibold text-ink">{v.name}</h1>

@@ -19,6 +19,12 @@ const BRAND_NAMES: Record<string, string> = {
   DUOTTS: "Duotts",
   LOOK_ROAD: "Look Road",
   ONE_SPORT: "One Sport",
+  FUNBIKE: "FunBike",
+  INDIANA: "Indiana",
+  NILOX: "Nilox",
+  RAVAPI: "BezProblem x Ravapi",
+  HONDA_VISION_110: "Honda Vision 110 2025",
+  HONDA_PCX_125: "Honda PCX 125 2025",
 };
 
 export async function POST(req: NextRequest) {
@@ -29,7 +35,7 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { code, type, location, brand, city } = body;
+  const { code, type, location, brand, city, imageUrl } = body;
 
   if (!code || !type) {
     return NextResponse.json({ error: "Заполните бортовой номер и тип" }, { status: 400 });
@@ -45,6 +51,7 @@ export async function POST(req: NextRequest) {
         type,
         brand: brand || null,
         city: city || null,
+        imageUrl: imageUrl || null,
         location: location || null,
         history: {
           create: {

@@ -1,17 +1,24 @@
 import { STATUS_CONFIG, VehicleStatus } from "./status";
-import { BikeIcon, ScooterIcon } from "./VehicleIcons";
+import { BikeIcon, ScooterIcon, MopedIcon } from "./VehicleIcons";
+import { BRAND_VISUALS, VehicleBrand } from "@/lib/brands";
 
 export function StatusRing({
   status,
   type,
+  brand,
+  imageUrl,
   size = 64,
 }: {
   status: VehicleStatus;
   type: "BIKE" | "SCOOTER";
+  brand?: VehicleBrand | null;
+  imageUrl?: string | null;
   size?: number;
 }) {
   const c = STATUS_CONFIG[status];
-  const Icon = type === "BIKE" ? BikeIcon : ScooterIcon;
+  const visual = brand ? BRAND_VISUALS[brand] : null;
+  const IconByShape = { bike: BikeIcon, scooter: ScooterIcon, moped: MopedIcon };
+  const Icon = visual ? IconByShape[visual.icon] : type === "BIKE" ? BikeIcon : ScooterIcon;
 
   return (
     <div
@@ -31,7 +38,20 @@ export function StatusRing({
           />
         </div>
       )}
-      <Icon className={`relative h-1/2 w-1/2 ${c.text}`} />
+      {imageUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={imageUrl}
+          alt=""
+          className="relative h-full w-full rounded-full object-cover"
+        />
+      ) : visual ? (
+        <div className={`relative flex h-full w-full items-center justify-center rounded-full ${visual.bg}`}>
+          <Icon className={`h-1/2 w-1/2 ${visual.fg}`} />
+        </div>
+      ) : (
+        <Icon className={`relative h-1/2 w-1/2 ${c.text}`} />
+      )}
       <span
         className={`absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full ${c.dot} ring-2 ring-bg ${
           status === "WORKSHOP" ? "animate-pulseBeacon" : ""

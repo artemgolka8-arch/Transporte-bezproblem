@@ -47,6 +47,31 @@ export function ScooterIcon({ className = "" }: { className?: string }) {
   );
 }
 
+export function MopedIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 48 48" fill="none" className={className}>
+      <circle cx="12" cy="35" r="6" stroke="currentColor" strokeWidth="2.4" />
+      <circle cx="36" cy="35" r="6" stroke="currentColor" strokeWidth="2.4" />
+      <path
+        d="M12 35H15C15 28 19 24 25 24H31C34 24 36 26.5 36 30V35"
+        stroke="currentColor"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M15 24C15 21 17 19 20 19H24"
+        stroke="currentColor"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path d="M28 19H32.5C33.9 19 35 20.1 35 21.5V24" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+      <rect x="24" y="17" width="8" height="4" rx="1.5" stroke="currentColor" strokeWidth="2.2" />
+    </svg>
+  );
+}
+
 export function KeyIcon({ className = "" }: { className?: string }) {
   return (
     <svg viewBox="0 0 40 40" fill="none" className={className}>

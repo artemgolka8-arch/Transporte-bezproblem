@@ -28,6 +28,12 @@ enum VehicleBrand {
   DUOTTS
   LOOK_ROAD
   ONE_SPORT
+  FUNBIKE
+  INDIANA
+  NILOX
+  RAVAPI
+  HONDA_VISION_110
+  HONDA_PCX_125
 }
 
 model User {
@@ -52,6 +58,7 @@ model Vehicle {
   status             VehicleStatus @default(AVAILABLE)
   brand              VehicleBrand?
   city               String?
+  imageUrl           String?
   problemDescription String?
   location           String?
   renter             String?

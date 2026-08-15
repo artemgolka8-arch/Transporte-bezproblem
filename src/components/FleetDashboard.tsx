@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { VehicleCard, VehicleCardData, BRAND_LABEL_KEYS } from "./VehicleCard";
+import { VehicleCard, VehicleCardData } from "./VehicleCard";
+import { BRAND_LABEL_KEYS, BIKE_BRAND_OPTIONS, SCOOTER_BRAND_OPTIONS, VehicleBrand } from "@/lib/brands";
 import { canEdit, isAdmin } from "@/lib/roles";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
 
@@ -150,8 +151,6 @@ export function FleetDashboard({
   );
 }
 
-const BRAND_OPTIONS = ["DUOTTS", "LOOK_ROAD", "ONE_SPORT"] as const;
-
 function AddVehicleModal({
   onClose,
   onCreated,
@@ -164,10 +163,19 @@ function AddVehicleModal({
   const { t } = useTranslation();
   const [code, setCode] = useState("");
   const [type, setType] = useState<"BIKE" | "SCOOTER">("BIKE");
-  const [brand, setBrand] = useState<(typeof BRAND_OPTIONS)[number] | "">("");
+  const [brand, setBrand] = useState<VehicleBrand | "">("");
+  const [imageUrl, setImageUrl] = useState("");
   const [city, setCity] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const brandOptions = type === "BIKE" ? BIKE_BRAND_OPTIONS : SCOOTER_BRAND_OPTIONS;
+
+  function changeType(next: "BIKE" | "SCOOTER") {
+    setType(next);
+    // марка привязана к типу — при смене типа список вариантов меняется, сбрасываем выбор
+    setBrand("");
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -176,7 +184,7 @@ function AddVehicleModal({
     const res = await fetch("/api/vehicles", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code, type, brand: brand || null, city: city || null }),
+      body: JSON.stringify({ code, type, brand: brand || null, city: city || null, imageUrl: imageUrl || null }),
     });
     setLoading(false);
     if (!res.ok) {
@@ -215,7 +223,7 @@ function AddVehicleModal({
             <button
               type="button"
               key={tp}
-              onClick={() => setType(tp)}
+              onClick={() => changeType(tp)}
               className={`flex-1 rounded-lg border px-3 py-2 text-sm transition-colors ${
                 type === tp
                   ? "border-cyan/40 bg-cyanDim/40 text-cyan"
@@ -230,11 +238,11 @@ function AddVehicleModal({
         <label className="mb-1 block label-eyebrow">{t("field_brand")}</label>
         <select
           value={brand}
-          onChange={(e) => setBrand(e.target.value as (typeof BRAND_OPTIONS)[number] | "")}
+          onChange={(e) => setBrand(e.target.value as VehicleBrand | "")}
           className="mb-4 w-full rounded-lg border border-line bg-bg2 px-3 py-2 text-sm text-ink outline-none focus:border-cyan/50"
         >
           <option value="">{t("choose_brand")}</option>
-          {BRAND_OPTIONS.map((b) => (
+          {brandOptions.map((b) => (
             <option key={b} value={b}>
               {t(BRAND_LABEL_KEYS[b])}
             </option>
@@ -247,13 +255,22 @@ function AddVehicleModal({
           value={city}
           onChange={(e) => setCity(e.target.value)}
           placeholder={t("city_placeholder")}
-          className="mb-5 w-full rounded-lg border border-line bg-bg2 px-3 py-2 text-sm text-ink outline-none focus:border-cyan/50"
+          className="mb-4 w-full rounded-lg border border-line bg-bg2 px-3 py-2 text-sm text-ink outline-none focus:border-cyan/50"
         />
         <datalist id="city-suggestions">
           {knownCities.map((c) => (
             <option key={c} value={c} />
           ))}
         </datalist>
+
+        <label className="mb-1 block label-eyebrow">{t("field_photo_optional")}</label>
+        <input
+          value={imageUrl}
+          onChange={(e) => setImageUrl(e.target.value)}
+          placeholder={t("photo_placeholder")}
+          className="mb-1.5 w-full rounded-lg border border-line bg-bg2 px-3 py-2 text-sm text-ink outline-none focus:border-cyan/50"
+        />
+        <p className="mb-5 text-[11px] text-faint">{t("photo_hint")}</p>
 
         {error && (
           <div className="mb-4 rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-xs text-danger">
