@@ -1,6 +1,6 @@
 import { STATUS_CONFIG, VehicleStatus } from "./status";
 import { BikeIcon, ScooterIcon, MopedIcon } from "./VehicleIcons";
-import { BRAND_VISUALS, VehicleBrand } from "@/lib/brands";
+import { BRAND_VISUALS, BRAND_DEFAULT_PHOTOS, VehicleBrand } from "@/lib/brands";
 
 export function StatusRing({
   status,
@@ -19,6 +19,8 @@ export function StatusRing({
   const visual = brand ? BRAND_VISUALS[brand] : null;
   const IconByShape = { bike: BikeIcon, scooter: ScooterIcon, moped: MopedIcon };
   const Icon = visual ? IconByShape[visual.icon] : type === "BIKE" ? BikeIcon : ScooterIcon;
+  // Своё фото техники — в приоритете; иначе дефолтное фото марки, если оно загружено
+  const photo = imageUrl || (brand ? BRAND_DEFAULT_PHOTOS[brand] : undefined);
 
   return (
     <div
@@ -38,10 +40,10 @@ export function StatusRing({
           />
         </div>
       )}
-      {imageUrl ? (
+      {photo ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={imageUrl}
+          src={photo}
           alt=""
           className="relative h-full w-full rounded-full object-cover"
         />

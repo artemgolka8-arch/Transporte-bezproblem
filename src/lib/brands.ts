@@ -51,3 +51,14 @@ export const BRAND_VISUALS: Record<
   HONDA_VISION_110: { icon: "scooter", bg: "bg-mintDim/60", fg: "text-mint" },
   HONDA_PCX_125: { icon: "moped", bg: "bg-cyanDim/60", fg: "text-cyan" },
 };
+
+// Реальные фото техники по умолчанию для каждой марки (лежат в /public/brands).
+// Если для марки фото ещё не загружено — используется цветная иконка-заглушка выше.
+export const BRAND_DEFAULT_PHOTOS: Partial<Record<VehicleBrand, string>> = {
+  DUOTTS: "/brands/duotts.jpg",
+  LOOK_ROAD: "/brands/look-road.jpg",
+  ONE_SPORT: "/brands/one-sport.jpg",
+  FUNBIKE: "/brands/funbike.jpg",
+  INDIANA: "/brands/indiana.jpg",
+  NILOX: "/brands/nilox.jpg",
+};
