@@ -62,6 +62,10 @@ model Vehicle {
   problemDescription String?
   location           String?
   renter             String?
+  renterFirstName    String?
+  renterLastName     String?
+  renterPhone        String?
+  renterEmail        String?
   rentedUntil        DateTime?
   keys               Key[]
   history            StatusLog[]

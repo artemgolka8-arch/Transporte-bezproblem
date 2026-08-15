@@ -30,6 +30,10 @@ export type VehicleFull = {
   problemDescription: string | null;
   location: string | null;
   renter: string | null;
+  renterFirstName: string | null;
+  renterLastName: string | null;
+  renterPhone: string | null;
+  renterEmail: string | null;
   keys: KeyData[];
   history: HistoryEntry[];
 };
@@ -61,23 +65,44 @@ export function VehicleDetail({
   const [quickAdding, setQuickAdding] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [rentModalOpen, setRentModalOpen] = useState(false);
   const editable = canEdit(role);
   const admin = isAdmin(role);
 
-  async function changeStatus(status: VehicleStatus) {
-    if (!editable || status === v.status) return;
+  async function changeStatus(status: VehicleStatus, extra?: Record<string, unknown>) {
+    if (!editable || (status === v.status && !extra)) return;
     setSavingStatus(true);
     const res = await fetch(`/api/vehicles/${v.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status }),
+      body: JSON.stringify({ status, ...extra }),
     });
     setSavingStatus(false);
     if (res.ok) {
       const updated = await res.json();
-      setV((prev) => ({ ...prev, status: updated.status, history: updated.history }));
+      setV((prev) => ({
+        ...prev,
+        status: updated.status,
+        renter: updated.renter,
+        renterFirstName: updated.renterFirstName,
+        renterLastName: updated.renterLastName,
+        renterPhone: updated.renterPhone,
+        renterEmail: updated.renterEmail,
+        history: updated.history,
+      }));
       router.refresh();
+      return true;
     }
+    return false;
+  }
+
+  function requestStatus(status: VehicleStatus) {
+    if (!editable || status === v.status) return;
+    if (status === "RENTED") {
+      setRentModalOpen(true);
+      return;
+    }
+    changeStatus(status);
   }
 
   async function saveProblem() {
@@ -185,6 +210,9 @@ export function VehicleDetail({
             {v.city && <span className="text-xs text-muted">· {v.city}</span>}
             {v.location && <span className="text-xs text-muted">· {v.location}</span>}
             {v.renter && <span className="text-xs text-muted">· {t("renter_label", { name: v.renter })}</span>}
+            {v.status === "RENTED" && v.renterPhone && (
+              <span className="text-xs text-muted">· {v.renterPhone}</span>
+            )}
           </div>
         </div>
 
@@ -197,7 +225,7 @@ export function VehicleDetail({
                 <button
                   key={s}
                   disabled={savingStatus}
-                  onClick={() => changeStatus(s)}
+                  onClick={() => requestStatus(s)}
                   className={`rounded-lg border px-3 py-2 text-xs transition-colors disabled:opacity-50 ${
                     active
                       ? `${c.border} ${c.bg} ${c.text}`
@@ -333,6 +361,25 @@ export function VehicleDetail({
             />
           )}
         </div>
+      )}
+
+      {rentModalOpen && (
+        <RentVehicleModal
+          saving={savingStatus}
+          onClose={() => setRentModalOpen(false)}
+          onSubmit={async (renterData) => {
+            const fullName = `${renterData.firstName} ${renterData.lastName}`.trim();
+            const ok = await changeStatus("RENTED", {
+              renterFirstName: renterData.firstName,
+              renterLastName: renterData.lastName,
+              renterPhone: renterData.phone,
+              renterEmail: renterData.email,
+              note: t("rent_history_note", { name: fullName }),
+            });
+            if (ok) setRentModalOpen(false);
+            return ok;
+          }}
+        />
       )}
     </div>
   );
@@ -505,6 +552,101 @@ function AddKeyForm({
           className="w-full rounded-lg border border-cyan/40 bg-cyanDim/40 py-2.5 text-sm font-medium text-cyan transition-opacity hover:opacity-90 disabled:opacity-50"
         >
           {loading ? t("creating") : t("add_to_board")}
+        </button>
+      </form>
+    </div>
+  );
+}
+
+function RentVehicleModal({
+  onClose,
+  onSubmit,
+  saving,
+}: {
+  onClose: () => void;
+  onSubmit: (data: { firstName: string; lastName: string; phone: string; email: string }) => Promise<boolean | void>;
+  saving: boolean;
+}) {
+  const { t } = useTranslation();
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!firstName.trim() || !lastName.trim() || !phone.trim() || !email.trim()) {
+      setError(t("rent_fill_all_fields"));
+      return;
+    }
+    setError(null);
+    const ok = await onSubmit({ firstName: firstName.trim(), lastName: lastName.trim(), phone: phone.trim(), email: email.trim() });
+    if (ok === false) setError(t("rent_save_failed"));
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+      <form onSubmit={submit} className="panel w-full max-w-sm p-6 animate-rise">
+        <div className="mb-1 flex items-center justify-between">
+          <h2 className="font-display text-lg font-semibold text-ink">{t("rent_modal_title")}</h2>
+          <button type="button" onClick={onClose} className="text-muted hover:text-ink">
+            ✕
+          </button>
+        </div>
+        <p className="mb-5 text-xs text-muted">{t("rent_modal_subtitle")}</p>
+
+        <label className="mb-1 block label-eyebrow">{t("field_renter_first_name")}</label>
+        <input
+          required
+          autoFocus
+          value={firstName}
+          onChange={(e) => setFirstName(e.target.value)}
+          placeholder={t("renter_first_name_placeholder")}
+          className="mb-4 w-full rounded-lg border border-line bg-bg2 px-3 py-2 text-sm text-ink outline-none focus:border-cyan/50"
+        />
+
+        <label className="mb-1 block label-eyebrow">{t("field_renter_last_name")}</label>
+        <input
+          required
+          value={lastName}
+          onChange={(e) => setLastName(e.target.value)}
+          placeholder={t("renter_last_name_placeholder")}
+          className="mb-4 w-full rounded-lg border border-line bg-bg2 px-3 py-2 text-sm text-ink outline-none focus:border-cyan/50"
+        />
+
+        <label className="mb-1 block label-eyebrow">{t("field_renter_phone")}</label>
+        <input
+          required
+          type="tel"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          placeholder={t("renter_phone_placeholder")}
+          className="mb-4 w-full rounded-lg border border-line bg-bg2 px-3 py-2 text-sm text-ink outline-none focus:border-cyan/50"
+        />
+
+        <label className="mb-1 block label-eyebrow">{t("field_renter_email")}</label>
+        <input
+          required
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder={t("renter_email_placeholder")}
+          className="mb-4 w-full rounded-lg border border-line bg-bg2 px-3 py-2 text-sm text-ink outline-none focus:border-cyan/50"
+        />
+
+        {error && (
+          <div className="mb-4 rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-xs text-danger">
+            {error}
+          </div>
+        )}
+
+        <button
+          type="submit"
+          disabled={saving}
+          className="w-full rounded-lg border border-violet/40 bg-violetDim/40 py-2.5 text-sm font-medium text-violet transition-opacity hover:opacity-90 disabled:opacity-50"
+        >
+          {saving ? t("saving") : t("rent_confirm_btn")}
         </button>
       </form>
     </div>

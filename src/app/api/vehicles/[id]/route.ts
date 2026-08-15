@@ -27,10 +27,40 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   }
 
   const body = await req.json();
-  const { status, problemDescription, note, name, location, renter, rentedUntil, brand, city, imageUrl } = body;
+  const {
+    status,
+    problemDescription,
+    note,
+    name,
+    location,
+    rentedUntil,
+    brand,
+    city,
+    imageUrl,
+    renterFirstName,
+    renterLastName,
+    renterPhone,
+    renterEmail,
+  } = body;
 
   const current = await prisma.vehicle.findUnique({ where: { id: params.id } });
   if (!current) return NextResponse.json({ error: "Не найдено" }, { status: 404 });
+
+  const statusChanged = status !== undefined && status !== current.status;
+
+  // Переход в статус "В аренде" разрешён только если заполнены все данные клиента
+  if (statusChanged && status === "RENTED") {
+    const firstName = renterFirstName !== undefined ? renterFirstName : current.renterFirstName;
+    const lastName = renterLastName !== undefined ? renterLastName : current.renterLastName;
+    const phone = renterPhone !== undefined ? renterPhone : current.renterPhone;
+    const email = renterEmail !== undefined ? renterEmail : current.renterEmail;
+    if (!firstName?.trim() || !lastName?.trim() || !phone?.trim() || !email?.trim()) {
+      return NextResponse.json(
+        { error: "Для статуса «В аренде» заполните имя, фамилию, телефон и email клиента" },
+        { status: 400 }
+      );
+    }
+  }
 
   const data: Record<string, unknown> = {};
   if (name !== undefined) data.name = name;
@@ -38,12 +68,29 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (city !== undefined) data.city = city || null;
   if (imageUrl !== undefined) data.imageUrl = imageUrl || null;
   if (location !== undefined) data.location = location;
-  if (renter !== undefined) data.renter = renter;
   if (rentedUntil !== undefined) data.rentedUntil = rentedUntil ? new Date(rentedUntil) : null;
   if (problemDescription !== undefined) data.problemDescription = problemDescription;
   if (status !== undefined) data.status = status;
 
-  const statusChanged = status !== undefined && status !== current.status;
+  if (renterFirstName !== undefined) data.renterFirstName = renterFirstName || null;
+  if (renterLastName !== undefined) data.renterLastName = renterLastName || null;
+  if (renterPhone !== undefined) data.renterPhone = renterPhone || null;
+  if (renterEmail !== undefined) data.renterEmail = renterEmail || null;
+  if (renterFirstName !== undefined || renterLastName !== undefined) {
+    const fn = renterFirstName !== undefined ? renterFirstName : current.renterFirstName;
+    const ln = renterLastName !== undefined ? renterLastName : current.renterLastName;
+    data.renter = [fn, ln].filter(Boolean).join(" ") || null;
+  }
+
+  // При выходе из аренды очищаем данные клиента, чтобы следующая аренда требовала новых данных
+  if (statusChanged && current.status === "RENTED" && status !== "RENTED") {
+    data.renter = null;
+    data.renterFirstName = null;
+    data.renterLastName = null;
+    data.renterPhone = null;
+    data.renterEmail = null;
+    data.rentedUntil = null;
+  }
 
   const vehicle = await prisma.vehicle.update({
     where: { id: params.id },
