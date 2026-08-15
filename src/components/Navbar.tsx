@@ -29,9 +29,9 @@ export function Navbar({
           </div>
           <div className="leading-tight">
             <div className="font-display text-base font-semibold tracking-wide text-ink">
-              FLEET<span className="text-cyan">/OS</span>
+              Bez<span className="text-cyan">Problem</span>
             </div>
-            <div className="label-eyebrow -mt-0.5">{t("tagline")}</div>
+            <div className="font-display text-[11px] tracking-wide text-muted -mt-0.5">{t("tagline")}</div>
           </div>
         </Link>
 

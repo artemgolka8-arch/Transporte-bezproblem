@@ -50,7 +50,7 @@ export function LoginForm() {
           </div>
           <div>
             <div className="font-display text-base font-semibold text-ink">
-              FLEET<span className="text-cyan">/OS</span>
+              Bez<span className="text-cyan">Problem</span>
             </div>
             <div className="label-eyebrow -mt-0.5">{t("login_tagline")}</div>
           </div>

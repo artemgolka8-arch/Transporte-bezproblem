@@ -23,7 +23,7 @@ const mono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FLEET/OS — учёт транспорта",
+  title: "BezProblem — Transport Control",
   description: "Панель учёта велосипедов и самокатов: статусы, ремонт, ключи",
 };
 

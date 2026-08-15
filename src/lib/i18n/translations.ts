@@ -10,7 +10,7 @@ export const DEFAULT_LANG: Lang = "ru";
 
 const ru = {
   // общее
-  tagline: "учёт транспорта",
+  tagline: "Transport Control",
   login_tagline: "вход в систему",
   back: "← Назад",
   save: "Сохранить",
@@ -22,8 +22,8 @@ const ru = {
   optional: "необязательно",
 
   // навигация
-  nav_fleet: "Флот",
-  nav_users: "Пользователи",
+  nav_fleet: "Транспорт",
+  nav_users: "Менеджеры",
   nav_profile: "Профиль",
   sign_out: "Выйти",
 
@@ -39,10 +39,10 @@ const ru = {
 
   // дашборд
   dashboard_eyebrow: "панель управления",
-  dashboard_title: "Флот техники",
+  dashboard_title: "Транспорт",
   dashboard_count: "{filtered} из {total} единиц",
   add_vehicle_btn: "+ Добавить транспорт",
-  search_placeholder: "Поиск по названию или коду…",
+  search_placeholder: "Название/Номер транспорта",
   type_all: "Все типы",
   type_bike: "Велосипеды",
   type_scooter: "Скутеры",
@@ -183,7 +183,7 @@ export type TranslationKey = keyof typeof ru;
 type Dict = Record<TranslationKey, string>;
 
 const pl: Dict = {
-  tagline: "ewidencja floty",
+  tagline: "Transport Control",
   login_tagline: "logowanie do systemu",
   back: "← Wstecz",
   save: "Zapisz",
@@ -194,8 +194,8 @@ const pl: Dict = {
   close: "Zamknij",
   optional: "opcjonalnie",
 
-  nav_fleet: "Flota",
-  nav_users: "Użytkownicy",
+  nav_fleet: "Transport",
+  nav_users: "Menedżerowie",
   nav_profile: "Profil",
   sign_out: "Wyloguj",
 
@@ -208,10 +208,10 @@ const pl: Dict = {
   role_viewer: "Obserwator",
 
   dashboard_eyebrow: "panel sterowania",
-  dashboard_title: "Flota pojazdów",
+  dashboard_title: "Transport",
   dashboard_count: "{filtered} z {total} jednostek",
   add_vehicle_btn: "+ Dodaj pojazd",
-  search_placeholder: "Szukaj po nazwie lub kodzie…",
+  search_placeholder: "Nazwa/Numer pojazdu",
   type_all: "Wszystkie typy",
   type_bike: "Rowery",
   type_scooter: "Skutery",
@@ -339,7 +339,7 @@ const pl: Dict = {
 };
 
 const uk: Dict = {
-  tagline: "облік транспорту",
+  tagline: "Transport Control",
   login_tagline: "вхід у систему",
   back: "← Назад",
   save: "Зберегти",
@@ -350,8 +350,8 @@ const uk: Dict = {
   close: "Закрити",
   optional: "необов'язково",
 
-  nav_fleet: "Флот",
-  nav_users: "Користувачі",
+  nav_fleet: "Транспорт",
+  nav_users: "Менеджери",
   nav_profile: "Профіль",
   sign_out: "Вийти",
 
@@ -364,10 +364,10 @@ const uk: Dict = {
   role_viewer: "Спостерігач",
 
   dashboard_eyebrow: "панель керування",
-  dashboard_title: "Флот техніки",
+  dashboard_title: "Транспорт",
   dashboard_count: "{filtered} із {total} одиниць",
   add_vehicle_btn: "+ Додати транспорт",
-  search_placeholder: "Пошук за назвою або кодом…",
+  search_placeholder: "Назва/Номер техніки",
   type_all: "Усі типи",
   type_bike: "Велосипеди",
   type_scooter: "Скутери",
