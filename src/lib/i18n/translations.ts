@@ -32,6 +32,18 @@ const ru = {
   theme_light: "Светлая тема",
   theme_dark: "Тёмная тема",
 
+  // статистика
+  nav_stats: "Статистика",
+  stats_title: "Статистика по автопарку",
+  stats_loading: "Загрузка…",
+  stats_error: "Не удалось загрузить статистику",
+  stats_total: "Всего единиц техники",
+  stats_by_status: "По статусу",
+  stats_by_type: "По типу транспорта",
+  stats_by_city: "По городам",
+  stats_by_brand: "По маркам",
+  stats_no_city: "Город не указан",
+
   // статусы
   status_available: "Доступен",
   status_workshop: "В мастерской",
@@ -320,6 +332,18 @@ const pl: Dict = {
   theme_light: "Jasny motyw",
   theme_dark: "Ciemny motyw",
 
+  nav_stats: "Statystyki",
+  stats_title: "Statystyki floty",
+  stats_loading: "Ładowanie…",
+  stats_error: "Nie udało się załadować statystyk",
+  stats_total: "Łączna liczba pojazdów",
+  stats_by_status: "Według statusu",
+  stats_by_type: "Według typu pojazdu",
+  stats_by_city: "Według miast",
+  stats_by_brand: "Według marek",
+  stats_no_city: "Miasto nie podane",
+
+
   status_available: "Dostępny",
   status_workshop: "W warsztacie",
   status_rented: "Wynajęty",
@@ -590,6 +614,18 @@ const uk: Dict = {
 
   theme_light: "Світла тема",
   theme_dark: "Темна тема",
+
+  nav_stats: "Статистика",
+  stats_title: "Статистика автопарку",
+  stats_loading: "Завантаження…",
+  stats_error: "Не вдалося завантажити статистику",
+  stats_total: "Всього одиниць техніки",
+  stats_by_status: "За статусом",
+  stats_by_type: "За типом транспорту",
+  stats_by_city: "За містами",
+  stats_by_brand: "За марками",
+  stats_no_city: "Місто не вказано",
+
 
   status_available: "Доступний",
   status_workshop: "У майстерні",

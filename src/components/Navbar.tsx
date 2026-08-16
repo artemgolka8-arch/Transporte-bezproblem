@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { STATUS_CONFIG } from "./status";
 import { ROLE_LABEL_KEYS } from "@/lib/roles";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
 import { HeaderControls } from "./HeaderControls";
+import { StatsPanel } from "./StatsPanel";
 
 export function Navbar({
   counts,
@@ -37,21 +37,6 @@ export function Navbar({
             <div className="font-display text-[11px] tracking-wide text-muted -mt-0.5">{t("tagline")}</div>
           </div>
         </Link>
-
-        <div className="hidden items-center divide-x divide-line/60 overflow-hidden rounded-xl border border-line/60 bg-panel/50 lg:flex">
-          {(["AVAILABLE", "WORKSHOP", "RENTED"] as const).map((s) => {
-            const c = STATUS_CONFIG[s];
-            return (
-              <div key={s} className="flex items-center gap-2 whitespace-nowrap px-3.5 py-2">
-                <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${c.dot}`} />
-                <span className="font-mono text-sm font-semibold text-ink">{counts[s]}</span>
-                <span className={`text-[10px] font-medium uppercase tracking-wider ${c.text}`}>
-                  {t(c.labelKey)}
-                </span>
-              </div>
-            );
-          })}
-        </div>
 
         <nav className="ml-auto flex items-center gap-1">
           <Link
@@ -88,6 +73,7 @@ export function Navbar({
           >
             {t("nav_profile")}
           </Link>
+          <StatsPanel counts={counts} />
         </nav>
 
         <HeaderControls className="shrink-0" />
