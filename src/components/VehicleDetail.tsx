@@ -389,12 +389,32 @@ export function VehicleDetail({
 
 function RenterCard({ vehicle }: { vehicle: VehicleFull }) {
   const { t } = useTranslation();
-  const fullName =
-    [vehicle.renterFirstName, vehicle.renterLastName].filter(Boolean).join(" ") ||
-    vehicle.renter ||
-    "";
+  const [copiedField, setCopiedField] = useState<string | null>(null);
 
-  const hasData = Boolean(fullName || vehicle.renterPhone || vehicle.renterEmail);
+  const hasData = Boolean(
+    vehicle.renterFirstName || vehicle.renterLastName || vehicle.renter || vehicle.renterPhone || vehicle.renterEmail
+  );
+
+  const firstName = vehicle.renterFirstName || (!vehicle.renterLastName ? vehicle.renter : "") || "";
+  const lastName = vehicle.renterLastName || "";
+
+  async function copy(field: string, value: string) {
+    if (!value) return;
+    try {
+      await navigator.clipboard.writeText(value);
+    } catch {
+      return;
+    }
+    setCopiedField(field);
+    window.setTimeout(() => setCopiedField((prev) => (prev === field ? null : prev)), 1800);
+  }
+
+  const fields: { key: string; labelKey: string; copiedKey: string; value: string }[] = [
+    { key: "firstName", labelKey: "renter_card_first_name", copiedKey: "renter_card_first_name_copied", value: firstName },
+    { key: "lastName", labelKey: "renter_card_last_name", copiedKey: "renter_card_last_name_copied", value: lastName },
+    { key: "phone", labelKey: "renter_card_phone", copiedKey: "renter_card_phone_copied", value: vehicle.renterPhone || "" },
+    { key: "email", labelKey: "renter_card_email", copiedKey: "renter_card_email_copied", value: vehicle.renterEmail || "" },
+  ];
 
   return (
     <div className="panel p-6 lg:col-span-2">
@@ -402,37 +422,31 @@ function RenterCard({ vehicle }: { vehicle: VehicleFull }) {
       {!hasData ? (
         <p className="text-sm text-muted">{t("renter_card_empty")}</p>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <div>
-            <div className="text-[11px] text-faint">{t("renter_card_full_name")}</div>
-            <div className="mt-0.5 text-sm text-ink">{fullName || "—"}</div>
-          </div>
-          <div>
-            <div className="text-[11px] text-faint">{t("renter_card_phone")}</div>
-            {vehicle.renterPhone ? (
-              <a
-                href={`tel:${vehicle.renterPhone}`}
-                className="mt-0.5 block text-sm text-cyan transition-opacity hover:opacity-80"
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          {fields.map((f) => (
+            <div key={f.key}>
+              <div className="text-[11px] text-faint">{t(f.labelKey)}</div>
+              {f.value ? (
+                <button
+                  type="button"
+                  onClick={() => copy(f.key, f.value)}
+                  title={t("renter_card_copy_hint")}
+                  className="mt-0.5 block max-w-full truncate text-left text-sm text-cyan transition-opacity hover:opacity-80"
+                >
+                  {f.value}
+                </button>
+              ) : (
+                <div className="mt-0.5 text-sm text-ink">—</div>
+              )}
+              <div
+                className={`mt-1 text-[11px] text-mint transition-opacity ${
+                  copiedField === f.key ? "opacity-100" : "opacity-0"
+                }`}
               >
-                {vehicle.renterPhone}
-              </a>
-            ) : (
-              <div className="mt-0.5 text-sm text-ink">—</div>
-            )}
-          </div>
-          <div>
-            <div className="text-[11px] text-faint">{t("renter_card_email")}</div>
-            {vehicle.renterEmail ? (
-              <a
-                href={`mailto:${vehicle.renterEmail}`}
-                className="mt-0.5 block truncate text-sm text-cyan transition-opacity hover:opacity-80"
-              >
-                {vehicle.renterEmail}
-              </a>
-            ) : (
-              <div className="mt-0.5 text-sm text-ink">—</div>
-            )}
-          </div>
+                {t(f.copiedKey)}
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>
