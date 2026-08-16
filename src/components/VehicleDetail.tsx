@@ -69,6 +69,9 @@ export function VehicleDetail({
   const [v, setV] = useState(vehicle);
   const [problemDraft, setProblemDraft] = useState(vehicle.problemDescription || "");
   const [savingProblem, setSavingProblem] = useState(false);
+  const [editingVin, setEditingVin] = useState(false);
+  const [vinDraft, setVinDraft] = useState(vehicle.vin || "");
+  const [savingVin, setSavingVin] = useState(false);
   const [savingStatus, setSavingStatus] = useState(false);
   const [addingKey, setAddingKey] = useState(false);
   const [quickAdding, setQuickAdding] = useState<string | null>(null);
@@ -139,6 +142,32 @@ export function VehicleDetail({
       setV((prev) => ({ ...prev, problemDescription: updated.problemDescription, history: updated.history }));
       router.refresh();
     }
+  }
+
+  async function saveVin() {
+    const next = vinDraft.trim();
+    setSavingVin(true);
+    const res = await fetch(`/api/vehicles/${v.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        vin: next,
+        note: next ? t("vin_updated_note") : t("vin_cleared_note"),
+      }),
+    });
+    setSavingVin(false);
+    if (res.ok) {
+      const updated = await res.json();
+      setV((prev) => ({ ...prev, vin: updated.vin, history: updated.history }));
+      setVinDraft(updated.vin || "");
+      setEditingVin(false);
+      router.refresh();
+    }
+  }
+
+  function cancelVin() {
+    setVinDraft(v.vin || "");
+    setEditingVin(false);
   }
 
   async function updateKey(id: string, data: Partial<KeyData>) {
@@ -221,7 +250,54 @@ export function VehicleDetail({
         <StatusRing status={v.status} type={v.type} brand={v.brand} color={v.color} imageUrl={v.imageUrl} size={72} />
         <div className="flex-1 min-w-[200px]">
           <div className="font-mono text-xs text-faint">{v.code}</div>
-          {v.vin && <div className="font-mono text-[11px] text-faint/70">VIN: {v.vin}</div>}
+          {editingVin ? (
+            <div className="mt-1 flex items-center gap-1.5">
+              <input
+                autoFocus
+                value={vinDraft}
+                onChange={(e) => setVinDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") saveVin();
+                  if (e.key === "Escape") cancelVin();
+                }}
+                placeholder={t("vin_placeholder")}
+                className="w-40 rounded-md border border-line bg-bg2 px-2 py-1 font-mono text-[11px] text-ink outline-none focus:border-cyan/50"
+              />
+              <button
+                onClick={saveVin}
+                disabled={savingVin}
+                className="rounded-md border border-cyan/40 bg-cyanDim/40 px-2 py-1 text-[11px] font-medium text-cyan transition-opacity hover:opacity-90 disabled:opacity-50"
+              >
+                {savingVin ? t("saving") : t("save")}
+              </button>
+              <button
+                onClick={cancelVin}
+                disabled={savingVin}
+                className="text-[11px] text-muted transition-colors hover:text-ink disabled:opacity-50"
+              >
+                ✕
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5">
+              {v.vin ? (
+                <span className="font-mono text-[11px] text-faint/70">VIN: {v.vin}</span>
+              ) : editable ? (
+                <span className="font-mono text-[11px] text-faint/50">{t("field_vin")}: —</span>
+              ) : null}
+              {editable && (
+                <button
+                  onClick={() => {
+                    setVinDraft(v.vin || "");
+                    setEditingVin(true);
+                  }}
+                  className="text-[11px] text-cyan/80 underline-offset-2 transition-colors hover:text-cyan hover:underline"
+                >
+                  {v.vin ? t("edit") : t("add")}
+                </button>
+              )}
+            </div>
+          )}
           <h1 className="font-display text-2xl font-semibold text-ink">{v.name}</h1>
           <div className="mt-2 flex items-center gap-2">
             <StatusBadge status={v.status} />
