@@ -16,6 +16,7 @@ type ProfileData = {
   phone: string | null;
   position: string | null;
   city: string | null;
+  telegramChatId: string | null;
 };
 
 const ROLE_ACCENT: Record<Role, ProfileAccent> = {
@@ -48,6 +49,7 @@ export function ProfileForm({
   const [phone, setPhone] = useState(user.phone || "");
   const [position, setPosition] = useState(user.position || "");
   const [city, setCity] = useState(user.city || "");
+  const [telegramChatId, setTelegramChatId] = useState(user.telegramChatId || "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -60,7 +62,7 @@ export function ProfileForm({
     const res = await fetch("/api/profile", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ firstName, lastName, phone, position, city }),
+      body: JSON.stringify({ firstName, lastName, phone, position, city, telegramChatId }),
     });
     setSaving(false);
     if (!res.ok) {
@@ -173,6 +175,24 @@ export function ProfileForm({
               className={FIELD_CLASS}
             />
           </div>
+        </div>
+
+        <div className="mt-9 rounded-xl border border-line/70 p-5">
+          <div className="mb-1 flex items-center gap-2">
+            <span className="label-eyebrow">{t("telegram_setup_title")}</span>
+          </div>
+          <ol className="mb-4 list-decimal space-y-1 pl-4 text-xs text-muted">
+            <li>{t("telegram_setup_step1")}</li>
+            <li>{t("telegram_setup_step2")}</li>
+            <li>{t("telegram_setup_step3")}</li>
+          </ol>
+          <label className="mb-1.5 block label-eyebrow">{t("field_telegram_chat_id")}</label>
+          <input
+            value={telegramChatId}
+            onChange={(e) => setTelegramChatId(e.target.value)}
+            placeholder={t("telegram_chat_id_placeholder")}
+            className={FIELD_CLASS}
+          />
         </div>
 
         {error && <div className="mt-6 text-xs text-danger">{error}</div>}

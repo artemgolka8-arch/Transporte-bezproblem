@@ -13,6 +13,7 @@ const PROFILE_SELECT = {
   phone: true,
   position: true,
   city: true,
+  telegramChatId: true,
   createdAt: true,
 };
 
@@ -39,7 +40,7 @@ export async function PATCH(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { name, firstName, lastName, phone, position, city } = body;
+  const { name, firstName, lastName, phone, position, city, telegramChatId } = body;
 
   const user = await prisma.user.update({
     where: { id: session.user.id },
@@ -50,6 +51,7 @@ export async function PATCH(req: NextRequest) {
       ...(phone !== undefined ? { phone } : {}),
       ...(position !== undefined ? { position } : {}),
       ...(city !== undefined ? { city } : {}),
+      ...(telegramChatId !== undefined ? { telegramChatId: telegramChatId?.trim() || null } : {}),
     },
     select: PROFILE_SELECT,
   });

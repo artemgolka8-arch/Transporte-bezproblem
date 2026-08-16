@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { title, description, assigneeId, dueDate } = body;
+  const { title, description, assigneeId, dueDate, reminderAt } = body;
 
   if (!title?.trim()) {
     return NextResponse.json({ error: "Укажите название задачи" }, { status: 400 });
@@ -53,6 +53,7 @@ export async function POST(req: NextRequest) {
       title: title.trim(),
       description: description?.trim() || null,
       dueDate: dueDate ? new Date(dueDate) : null,
+      reminderAt: reminderAt ? new Date(reminderAt) : null,
       creatorId: session.user.id,
       assigneeId: finalAssigneeId,
       participants: { connect: participantIds.map((id) => ({ id })) },

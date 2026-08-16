@@ -101,7 +101,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     return NextResponse.json({ error: "Недостаточно прав" }, { status: 403 });
   }
 
-  const { title, description, dueDate } = body;
+  const { title, description, dueDate, reminderAt } = body;
   const data: Record<string, unknown> = {};
   if (title !== undefined) {
     if (!title.trim()) return NextResponse.json({ error: "Укажите название задачи" }, { status: 400 });
@@ -109,6 +109,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   }
   if (description !== undefined) data.description = description?.trim() || null;
   if (dueDate !== undefined) data.dueDate = dueDate ? new Date(dueDate) : null;
+  if (reminderAt !== undefined) {
+    data.reminderAt = reminderAt ? new Date(reminderAt) : null;
+    data.reminderSentAt = null;
+  }
 
   const updated = await prisma.task.update({
     where: { id: task.id },

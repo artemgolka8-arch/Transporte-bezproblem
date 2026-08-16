@@ -350,6 +350,20 @@ const ru = {
   tasks_fill_required: "Укажите название задачи",
   task_create_failed: "Не удалось создать задачу",
   task_action_failed: "Не удалось выполнить действие",
+
+  // напоминания и telegram
+  field_task_reminder: "Напомнить (дата и время)",
+  task_reminder_hint: "Придёт уведомление в Telegram, если он подключён в профиле",
+  task_reminder_label: "Напоминание {date}",
+  task_reminder_sent_label: "Напоминание {date} (отправлено)",
+  task_log_reminder_sent: "Отправлено напоминание в Telegram",
+  task_log_reminder_failed: "Не удалось отправить напоминание",
+  telegram_setup_title: "Напоминания о задачах в Telegram",
+  telegram_setup_step1: "Найдите бота в Telegram (ссылку/юзернейм уточните у администратора) и нажмите «Start»",
+  telegram_setup_step2: "Напишите боту @userinfobot — он пришлёт ваш числовой Chat ID",
+  telegram_setup_step3: "Вставьте этот номер в поле ниже и сохраните",
+  field_telegram_chat_id: "Telegram Chat ID",
+  telegram_chat_id_placeholder: "например, 123456789",
 } as const;
 
 export type TranslationKey = keyof typeof ru;
@@ -679,6 +693,19 @@ const pl: Dict = {
   tasks_fill_required: "Podaj nazwę zadania",
   task_create_failed: "Nie udało się utworzyć zadania",
   task_action_failed: "Nie udało się wykonać akcji",
+
+  field_task_reminder: "Przypomnienie (data i godzina)",
+  task_reminder_hint: "Przyjdzie powiadomienie na Telegramie, jeśli jest podłączony w profilu",
+  task_reminder_label: "Przypomnienie {date}",
+  task_reminder_sent_label: "Przypomnienie {date} (wysłane)",
+  task_log_reminder_sent: "Wysłano przypomnienie na Telegramie",
+  task_log_reminder_failed: "Nie udało się wysłać przypomnienia",
+  telegram_setup_title: "Przypomnienia o zadaniach na Telegramie",
+  telegram_setup_step1: "Znajdź bota na Telegramie (link/nazwę użytkownika poda administrator) i naciśnij „Start”",
+  telegram_setup_step2: "Napisz do @userinfobot — wyśle Twój numeryczny Chat ID",
+  telegram_setup_step3: "Wklej ten numer w pole poniżej i zapisz",
+  field_telegram_chat_id: "Telegram Chat ID",
+  telegram_chat_id_placeholder: "np. 123456789",
 };
 
 const uk: Dict = {
@@ -1005,6 +1032,19 @@ const uk: Dict = {
   tasks_fill_required: "Вкажіть назву завдання",
   task_create_failed: "Не вдалося створити завдання",
   task_action_failed: "Не вдалося виконати дію",
+
+  field_task_reminder: "Нагадати (дата і час)",
+  task_reminder_hint: "Прийде сповіщення в Telegram, якщо він підключений у профілі",
+  task_reminder_label: "Нагадування {date}",
+  task_reminder_sent_label: "Нагадування {date} (надіслано)",
+  task_log_reminder_sent: "Надіслано нагадування в Telegram",
+  task_log_reminder_failed: "Не вдалося надіслати нагадування",
+  telegram_setup_title: "Нагадування про завдання в Telegram",
+  telegram_setup_step1: "Знайдіть бота в Telegram (посилання/юзернейм уточніть в адміністратора) і натисніть «Start»",
+  telegram_setup_step2: "Напишіть боту @userinfobot — він надішле ваш числовий Chat ID",
+  telegram_setup_step3: "Вставте цей номер у поле нижче і збережіть",
+  field_telegram_chat_id: "Telegram Chat ID",
+  telegram_chat_id_placeholder: "наприклад, 123456789",
 };
 
 export const translations: Record<Lang, Dict> = { ru, pl, uk };

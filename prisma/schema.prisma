@@ -47,6 +47,7 @@ model User {
   phone          String?
   position       String?
   city           String?
+  telegramChatId String?
   createdAt      DateTime @default(now())
   createdTasks   Task[]   @relation("TaskCreator")
   assignedTasks  Task[]   @relation("TaskAssignee")
@@ -59,22 +60,24 @@ enum TaskStatus {
 }
 
 model Task {
-  id           String     @id @default(cuid())
-  title        String
-  description  String?
-  status       TaskStatus @default(OPEN)
-  dueDate      DateTime?
-  creatorId    String
-  creator      User       @relation("TaskCreator", fields: [creatorId], references: [id])
-  assigneeId   String
-  assignee     User       @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  id             String     @id @default(cuid())
+  title          String
+  description    String?
+  status         TaskStatus @default(OPEN)
+  dueDate        DateTime?
+  reminderAt     DateTime?
+  reminderSentAt DateTime?
+  creatorId      String
+  creator        User       @relation("TaskCreator", fields: [creatorId], references: [id])
+  assigneeId     String
+  assignee       User       @relation("TaskAssignee", fields: [assigneeId], references: [id])
   // Все, кто когда-либо был создателем или исполнителем этой задачи —
   // именно они видят задачу в списке. Пополняется при передаче.
-  participants User[]     @relation("TaskParticipants")
-  completedAt  DateTime?
-  history      TaskLog[]
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  participants   User[]     @relation("TaskParticipants")
+  completedAt    DateTime?
+  history        TaskLog[]
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
 }
 
 model TaskLog {

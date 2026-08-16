@@ -25,6 +25,8 @@ type TaskRow = {
   description: string | null;
   status: "OPEN" | "DONE";
   dueDate: string | null;
+  reminderAt: string | null;
+  reminderSentAt: string | null;
   creator: TaskUser;
   assignee: TaskUser;
   history: TaskLog[];
@@ -227,6 +229,18 @@ function TaskCard({
                 {t("task_due_label", { date: new Date(task.dueDate).toLocaleDateString(LOCALE_MAP[lang]) })}
               </span>
             )}
+            {task.reminderAt && (
+              <span
+                className={`inline-flex items-center gap-1 text-xs ${
+                  task.reminderSentAt ? "text-faint" : "text-cyan"
+                }`}
+              >
+                🔔{" "}
+                {t(task.reminderSentAt ? "task_reminder_sent_label" : "task_reminder_label", {
+                  date: new Date(task.reminderAt).toLocaleString(LOCALE_MAP[lang]),
+                })}
+              </span>
+            )}
           </div>
           <div className="font-display text-base font-semibold text-ink">{task.title}</div>
           {task.description && <p className="mt-1 text-sm text-muted">{task.description}</p>}
@@ -327,6 +341,10 @@ function describeLog(h: TaskLog, t: (key: any, vars?: Record<string, string | nu
     }
     case "edited":
       return t("task_log_edited");
+    case "reminder_sent":
+      return t("task_log_reminder_sent");
+    case "reminder_failed":
+      return h.note ? `${t("task_log_reminder_failed")} — ${h.note}` : t("task_log_reminder_failed");
     default:
       return h.action;
   }
@@ -348,6 +366,7 @@ function NewTaskModal({
   const [description, setDescription] = useState("");
   const [assigneeId, setAssigneeId] = useState(currentUserId);
   const [dueDate, setDueDate] = useState("");
+  const [reminderAt, setReminderAt] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -362,7 +381,13 @@ function NewTaskModal({
     const res = await fetch("/api/tasks", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, description, assigneeId, dueDate: dueDate || null }),
+      body: JSON.stringify({
+        title,
+        description,
+        assigneeId,
+        dueDate: dueDate || null,
+        reminderAt: reminderAt || null,
+      }),
     });
     setLoading(false);
     if (!res.ok) {
@@ -423,6 +448,15 @@ function NewTaskModal({
           onChange={(e) => setDueDate(e.target.value)}
           className="mb-4 w-full rounded-lg border border-line bg-bg2 px-3 py-2 text-sm text-ink outline-none focus:border-cyan/50"
         />
+
+        <label className="mb-1 block label-eyebrow">{t("field_task_reminder")}</label>
+        <input
+          type="datetime-local"
+          value={reminderAt}
+          onChange={(e) => setReminderAt(e.target.value)}
+          className="w-full rounded-lg border border-line bg-bg2 px-3 py-2 text-sm text-ink outline-none focus:border-cyan/50"
+        />
+        <p className="mb-4 mt-1.5 text-[11px] text-faint">{t("task_reminder_hint")}</p>
 
         {error && (
           <div className="mb-4 rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-xs text-danger">

@@ -23,6 +23,7 @@ export default async function ProfilePage() {
       phone: true,
       position: true,
       city: true,
+      telegramChatId: true,
     },
   });
   if (!user) redirect("/login");
