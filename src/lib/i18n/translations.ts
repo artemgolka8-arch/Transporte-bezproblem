@@ -69,7 +69,9 @@ const ru = {
 
   // модалка добавления техники
   new_vehicle_title: "Новая техника",
-  field_code: "Бортовой номер",
+  field_code: "Регистрационный номер",
+  field_vin: "VIN номер",
+  vin_placeholder: "Введите VIN (необязательно)",
   field_name: "Название",
   field_type: "Тип",
   field_brand: "Марка",
@@ -522,7 +524,9 @@ const pl: Dict = {
   empty_subtitle: "Zmień wyszukiwanie lub filtry",
 
   new_vehicle_title: "Nowy pojazd",
-  field_code: "Numer boczny",
+  field_code: "Numer rejestracyjny",
+  field_vin: "Numer VIN",
+  vin_placeholder: "Wpisz VIN (opcjonalnie)",
   field_name: "Nazwa",
   field_type: "Typ",
   field_brand: "Marka",
@@ -957,7 +961,9 @@ const uk: Dict = {
   empty_subtitle: "Змініть пошук або фільтри",
 
   new_vehicle_title: "Нова техніка",
-  field_code: "Бортовий номер",
+  field_code: "Реєстраційний номер",
+  field_vin: "VIN номер",
+  vin_placeholder: "Введіть VIN (необов'язково)",
   field_name: "Назва",
   field_type: "Тип",
   field_brand: "Марка",

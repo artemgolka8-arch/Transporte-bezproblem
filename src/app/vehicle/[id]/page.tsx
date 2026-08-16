@@ -37,6 +37,7 @@ export default async function VehiclePage({ params }: { params: { id: string } }
         vehicle={{
           id: vehicle.id,
           code: vehicle.code,
+          vin: vehicle.vin,
           name: vehicle.name,
           type: vehicle.type,
           status: vehicle.status,

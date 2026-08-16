@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { code, type, location, brand, city, imageUrl } = body;
+  const { code, vin, type, location, brand, city, imageUrl } = body;
 
   if (!code || !type) {
     return NextResponse.json({ error: "Заполните бортовой номер и тип" }, { status: 400 });
@@ -47,6 +47,7 @@ export async function POST(req: NextRequest) {
     const vehicle = await prisma.vehicle.create({
       data: {
         code,
+        vin: vin || null,
         name,
         type,
         brand: brand || null,

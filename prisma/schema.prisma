@@ -101,6 +101,7 @@ model TaskLog {
 model Vehicle {
   id                 String        @id @default(cuid())
   code               String        @unique
+  vin                String?
   name               String
   type               VehicleType
   status             VehicleStatus @default(AVAILABLE)

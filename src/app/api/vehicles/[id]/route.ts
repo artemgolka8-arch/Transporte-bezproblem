@@ -37,6 +37,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     brand,
     city,
     imageUrl,
+    vin,
     renterFirstName,
     renterLastName,
     renterPhone,
@@ -85,6 +86,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (brand !== undefined) data.brand = brand || null;
   if (city !== undefined) data.city = city || null;
   if (imageUrl !== undefined) data.imageUrl = imageUrl || null;
+  if (vin !== undefined) data.vin = vin || null;
   if (location !== undefined) data.location = location;
   if (rentedUntil !== undefined) data.rentedUntil = rentedUntil ? new Date(rentedUntil) : null;
   if (problemDescription !== undefined) data.problemDescription = problemDescription;

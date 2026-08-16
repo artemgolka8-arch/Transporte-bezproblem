@@ -21,6 +21,7 @@ type HistoryEntry = {
 export type VehicleFull = {
   id: string;
   code: string;
+  vin: string | null;
   name: string;
   type: "BIKE" | "SCOOTER";
   status: VehicleStatus;
@@ -218,6 +219,7 @@ export function VehicleDetail({
         <StatusRing status={v.status} type={v.type} brand={v.brand} imageUrl={v.imageUrl} size={72} />
         <div className="flex-1 min-w-[200px]">
           <div className="font-mono text-xs text-faint">{v.code}</div>
+          {v.vin && <div className="font-mono text-[11px] text-faint/70">VIN: {v.vin}</div>}
           <h1 className="font-display text-2xl font-semibold text-ink">{v.name}</h1>
           <div className="mt-2 flex items-center gap-2">
             <StatusBadge status={v.status} />

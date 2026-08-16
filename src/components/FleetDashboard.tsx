@@ -162,6 +162,7 @@ function AddVehicleModal({
 }) {
   const { t } = useTranslation();
   const [code, setCode] = useState("");
+  const [vin, setVin] = useState("");
   const [type, setType] = useState<"BIKE" | "SCOOTER">("BIKE");
   const [brand, setBrand] = useState<VehicleBrand | "">("");
   const [imageUrl, setImageUrl] = useState("");
@@ -184,7 +185,7 @@ function AddVehicleModal({
     const res = await fetch("/api/vehicles", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code, type, brand: brand || null, city: city || null, imageUrl: imageUrl || null }),
+      body: JSON.stringify({ code, vin: vin || null, type, brand: brand || null, city: city || null, imageUrl: imageUrl || null }),
     });
     setLoading(false);
     if (!res.ok) {
@@ -234,6 +235,14 @@ function AddVehicleModal({
             </button>
           ))}
         </div>
+
+        <label className="mb-1 block label-eyebrow">{t("field_vin")}</label>
+        <input
+          value={vin}
+          onChange={(e) => setVin(e.target.value)}
+          placeholder={t("vin_placeholder")}
+          className="mb-4 w-full rounded-lg border border-line bg-bg2 px-3 py-2 font-mono text-sm text-ink outline-none focus:border-cyan/50"
+        />
 
         <label className="mb-1 block label-eyebrow">{t("field_brand")}</label>
         <select
