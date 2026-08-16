@@ -8,7 +8,7 @@ import { KeyPeg, KeyData } from "./KeyPeg";
 import { BRAND_LABEL_KEYS, VehicleBrand } from "./VehicleCard";
 import { canEdit, isAdmin } from "@/lib/roles";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
-import { Lang } from "@/lib/i18n/translations";
+import { Lang, TranslationKey } from "@/lib/i18n/translations";
 
 type HistoryEntry = {
   id: string;
@@ -409,7 +409,7 @@ function RenterCard({ vehicle }: { vehicle: VehicleFull }) {
     window.setTimeout(() => setCopiedField((prev) => (prev === field ? null : prev)), 1800);
   }
 
-  const fields: { key: string; labelKey: string; copiedKey: string; value: string }[] = [
+  const fields: { key: string; labelKey: TranslationKey; copiedKey: TranslationKey; value: string }[] = [
     { key: "firstName", labelKey: "renter_card_first_name", copiedKey: "renter_card_first_name_copied", value: firstName },
     { key: "lastName", labelKey: "renter_card_last_name", copiedKey: "renter_card_last_name_copied", value: lastName },
     { key: "phone", labelKey: "renter_card_phone", copiedKey: "renter_card_phone_copied", value: vehicle.renterPhone || "" },
