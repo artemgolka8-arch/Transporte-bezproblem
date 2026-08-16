@@ -27,7 +27,32 @@ export function ClientsList({
   const { t } = useTranslation();
   const [query, setQuery] = useState("");
   const [formOpen, setFormOpen] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState<string | null>(null);
   const editable = canEdit(role);
+
+  async function syncFromRented() {
+    setSyncing(true);
+    setSyncResult(null);
+    try {
+      const res = await fetch("/api/clients/backfill", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) {
+        setSyncResult(data.error || "Не удалось выполнить перенос");
+        return;
+      }
+      const parts = [`Создано карточек: ${data.created}`, `Привязано к существующим: ${data.linked}`];
+      if (data.skipped?.length) {
+        parts.push(
+          `Пропущено (нет телефона): ${data.skipped.map((s: { code: string }) => s.code).join(", ")}`
+        );
+      }
+      setSyncResult(parts.join(". "));
+      router.refresh();
+    } finally {
+      setSyncing(false);
+    }
+  }
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -46,14 +71,29 @@ export function ClientsList({
           <h1 className="font-display text-2xl font-semibold text-ink">{t("clients_title")}</h1>
         </div>
         {editable && (
-          <button
-            onClick={() => setFormOpen(true)}
-            className="rounded-lg border border-cyan/40 bg-cyanDim/40 px-4 py-2.5 text-sm font-medium text-cyan shadow-glowCyan transition-opacity hover:opacity-90"
-          >
-            {t("new_client_btn")}
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={syncFromRented}
+              disabled={syncing}
+              className="rounded-lg border border-violet/40 bg-violetDim/40 px-4 py-2.5 text-sm font-medium text-violet transition-opacity hover:opacity-90 disabled:opacity-50"
+            >
+              {syncing ? "Переносим…" : "Перенести из аренды"}
+            </button>
+            <button
+              onClick={() => setFormOpen(true)}
+              className="rounded-lg border border-cyan/40 bg-cyanDim/40 px-4 py-2.5 text-sm font-medium text-cyan shadow-glowCyan transition-opacity hover:opacity-90"
+            >
+              {t("new_client_btn")}
+            </button>
+          </div>
         )}
       </div>
+
+      {syncResult && (
+        <div className="mb-5 rounded-lg border border-violet/30 bg-violetDim/20 px-3 py-2.5 text-xs text-violet">
+          {syncResult}
+        </div>
+      )}
 
       <input
         value={query}
