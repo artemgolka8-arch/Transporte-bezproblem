@@ -6,7 +6,7 @@ import { StatusBadge, VehicleStatus } from "./status";
 import { canEdit, isAdmin } from "@/lib/roles";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
 import { Lang } from "@/lib/i18n/translations";
-import { AccessBadge } from "@/components/AccessBadge";
+import { ProfileHeader } from "@/components/ProfileHeader";
 
 type ClientVehicle = {
   id: string;
@@ -29,6 +29,9 @@ type ClientData = {
 };
 
 const LOCALE_MAP: Record<Lang, string> = { ru: "ru-RU", pl: "pl-PL", uk: "uk-UA" };
+
+const FIELD_CLASS =
+  "w-full border-b border-line bg-transparent px-0 py-2.5 text-sm text-ink outline-none transition-colors placeholder:text-faint focus:border-cyan disabled:opacity-50";
 
 export function ClientProfile({
   client,
@@ -95,8 +98,8 @@ export function ClientProfile({
   const sinceDate = new Date(client.createdAt).toLocaleDateString(LOCALE_MAP[lang]);
 
   return (
-    <div className="mx-auto max-w-5xl px-5 py-8">
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+    <div className="mx-auto max-w-3xl px-5 py-12">
+      <div className="mb-10 flex flex-wrap items-center justify-between gap-3">
         <button
           onClick={() => router.push("/clients")}
           className="flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-ink"
@@ -108,146 +111,126 @@ export function ClientProfile({
           <button
             onClick={removeClient}
             disabled={deleting}
-            className="rounded-lg border border-danger/30 px-3 py-1.5 text-xs text-danger transition-colors hover:bg-danger/10 disabled:opacity-50"
+            className="text-xs text-danger/80 transition-colors hover:text-danger disabled:opacity-50"
           >
             {deleting ? t("deleting") : t("delete_client_btn")}
           </button>
         )}
       </div>
 
-      <div className="mb-6">
-        <div className="label-eyebrow mb-1">{t("client_profile_eyebrow")}</div>
-        <h1 className="font-display text-2xl font-semibold text-ink">
-          {client.firstName} {client.lastName}
-        </h1>
-      </div>
+      <ProfileHeader
+        eyebrow={t("client_profile_eyebrow")}
+        initials={initials.toUpperCase()}
+        name={`${client.firstName} ${client.lastName}`}
+        subtitle={client.email || client.phone}
+        accent={activeCount > 0 ? "mint" : "faint"}
+        statusLabel={activeCount > 0 ? t("rental_active") : t("rental_inactive")}
+        meta={[
+          { label: t("field_renter_phone"), value: client.phone },
+          { label: t("since_label"), value: sinceDate },
+        ]}
+        clearance={{
+          level: Math.min(activeCount, 3),
+          max: 3,
+          label: t("active_units_label"),
+        }}
+      />
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[360px_1fr]">
-        <div className="space-y-4 lg:sticky lg:top-6 lg:self-start">
-          <AccessBadge
-            eyebrow={t("badge_eyebrow_client")}
-            initials={initials.toUpperCase()}
-            name={`${client.firstName} ${client.lastName}`}
-            subtitle={client.email || client.phone}
-            accent={activeCount > 0 ? "mint" : "faint"}
-            ledLabel={activeCount > 0 ? t("rental_active") : t("rental_inactive")}
-            ledPulse={activeCount > 0}
-            meta={[
-              { label: t("field_renter_phone"), value: client.phone },
-              { label: t("since_label"), value: sinceDate },
-            ]}
-            clearance={{
-              level: Math.min(activeCount, 3),
-              max: 3,
-              label: t("active_units_label"),
-            }}
-            barcodeValue={client.phone}
-          />
-        </div>
-
-        <div className="space-y-6">
-
-      <form onSubmit={save} className="panel p-6">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <form onSubmit={save} className="border-b border-line py-10">
+        <div className="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2">
           <div>
-            <label className="mb-1 block label-eyebrow">{t("field_renter_first_name")}</label>
+            <label className="mb-1.5 block label-eyebrow">{t("field_renter_first_name")}</label>
             <input
               required
               disabled={!editable}
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
-              className="w-full rounded-lg border border-line bg-bg2 px-3 py-2.5 text-sm text-ink outline-none transition-colors focus:border-cyan/50 disabled:opacity-60"
+              className={FIELD_CLASS}
             />
           </div>
           <div>
-            <label className="mb-1 block label-eyebrow">{t("field_renter_last_name")}</label>
+            <label className="mb-1.5 block label-eyebrow">{t("field_renter_last_name")}</label>
             <input
               required
               disabled={!editable}
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
-              className="w-full rounded-lg border border-line bg-bg2 px-3 py-2.5 text-sm text-ink outline-none transition-colors focus:border-cyan/50 disabled:opacity-60"
+              className={FIELD_CLASS}
             />
           </div>
           <div>
-            <label className="mb-1 block label-eyebrow">{t("field_renter_phone")}</label>
+            <label className="mb-1.5 block label-eyebrow">{t("field_renter_phone")}</label>
             <input
               required
               type="tel"
               disabled={!editable}
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              className="w-full rounded-lg border border-line bg-bg2 px-3 py-2.5 text-sm text-ink outline-none transition-colors focus:border-cyan/50 disabled:opacity-60"
+              className={FIELD_CLASS}
             />
           </div>
           <div>
-            <label className="mb-1 block label-eyebrow">{t("field_renter_email")}</label>
+            <label className="mb-1.5 block label-eyebrow">{t("field_renter_email")}</label>
             <input
               type="email"
               disabled={!editable}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder={t("renter_email_placeholder")}
-              className="w-full rounded-lg border border-line bg-bg2 px-3 py-2.5 text-sm text-ink outline-none transition-colors focus:border-cyan/50 disabled:opacity-60"
+              className={FIELD_CLASS}
             />
           </div>
         </div>
 
-        <div className="mt-4">
-          <label className="mb-1 block label-eyebrow">{t("field_client_notes")}</label>
+        <div className="mt-6">
+          <label className="mb-1.5 block label-eyebrow">{t("field_client_notes")}</label>
           <textarea
             disabled={!editable}
-            rows={4}
+            rows={3}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder={t("client_notes_placeholder")}
-            className="w-full resize-none rounded-lg border border-line bg-bg2 px-3 py-2.5 text-sm text-ink outline-none transition-colors focus:border-cyan/50 disabled:opacity-60"
+            className={`${FIELD_CLASS} resize-none`}
           />
         </div>
 
-        {error && (
-          <div className="mt-5 rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-xs text-danger">
-            {error}
-          </div>
-        )}
-        {saved && !error && (
-          <div className="mt-5 rounded-lg border border-mint/30 bg-mintDim/20 px-3 py-2 text-xs text-mint">
-            {t("client_updated")}
-          </div>
-        )}
+        {error && <div className="mt-6 text-xs text-danger">{error}</div>}
+        {saved && !error && <div className="mt-6 text-xs text-mint">{t("client_updated")}</div>}
 
         {editable && (
-          <button
-            type="submit"
-            disabled={saving}
-            className="mt-5 rounded-lg border border-cyan/40 bg-cyanDim/40 px-5 py-2.5 text-sm font-medium text-cyan shadow-glowCyan transition-opacity hover:opacity-90 disabled:opacity-50"
-          >
-            {saving ? t("saving") : t("save_changes")}
-          </button>
+          <div className="mt-9 flex justify-end">
+            <button
+              type="submit"
+              disabled={saving}
+              className="rounded-full bg-ink px-6 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+            >
+              {saving ? t("saving") : t("save_changes")}
+            </button>
+          </div>
         )}
       </form>
 
-      <div>
-        <div className="label-eyebrow mb-3">{t("client_vehicles_eyebrow")}</div>
+      <div className="pt-10">
+        <div className="label-eyebrow mb-4">{t("client_vehicles_eyebrow")}</div>
         {client.vehicles.length === 0 ? (
-          <div className="panel p-6 text-sm text-muted">{t("client_vehicles_empty")}</div>
+          <div className="py-6 text-sm text-muted">{t("client_vehicles_empty")}</div>
         ) : (
-          <div className="space-y-2.5">
+          <div className="divide-y divide-line">
             {client.vehicles.map((v) => (
               <button
                 key={v.id}
                 onClick={() => router.push(`/vehicle/${v.id}`)}
-                className="panel flex w-full items-center gap-3 p-4 text-left transition-colors hover:bg-panel2/60"
+                className="flex w-full items-center gap-3 py-3.5 text-left transition-colors hover:bg-panel2/40"
               >
                 {v.imageUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={v.imageUrl}
                     alt=""
-                    className="h-11 w-11 shrink-0 rounded-lg border border-line object-cover"
+                    className="h-10 w-10 shrink-0 rounded-full object-cover"
                   />
                 ) : (
-                  <div className="h-11 w-11 shrink-0 rounded-lg border border-line bg-panel2" />
+                  <div className="h-10 w-10 shrink-0 rounded-full bg-panel2" />
                 )}
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm text-ink">{v.name}</div>
@@ -258,8 +241,6 @@ export function ClientProfile({
             ))}
           </div>
         )}
-      </div>
-        </div>
       </div>
     </div>
   );

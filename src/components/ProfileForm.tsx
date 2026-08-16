@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
 import { ROLE_LABEL_KEYS, Role } from "@/lib/roles";
-import { AccessBadge, BadgeAccent } from "@/components/AccessBadge";
+import { ProfileHeader, ProfileAccent } from "@/components/ProfileHeader";
 
 type ProfileData = {
   id: string;
@@ -18,7 +18,7 @@ type ProfileData = {
   city: string | null;
 };
 
-const ROLE_ACCENT: Record<Role, BadgeAccent> = {
+const ROLE_ACCENT: Record<Role, ProfileAccent> = {
   ADMIN: "violet",
   MANAGER: "cyan",
   VIEWER: "faint",
@@ -29,6 +29,9 @@ const ROLE_CLEARANCE: Record<Role, number> = {
   MANAGER: 2,
   VIEWER: 1,
 };
+
+const FIELD_CLASS =
+  "w-full border-b border-line bg-transparent px-0 py-2.5 text-sm text-ink outline-none transition-colors placeholder:text-faint focus:border-cyan";
 
 export function ProfileForm({
   user,
@@ -74,146 +77,117 @@ export function ProfileForm({
   const initials =
     (user.firstName?.[0] || user.name?.[0] || "?") + (user.lastName?.[0] || user.name?.[1] || "");
 
+  const statCells = [
+    { key: "AVAILABLE" as const, labelKey: "status_available" as const, color: "text-mint" },
+    { key: "WORKSHOP" as const, labelKey: "status_workshop" as const, color: "text-amber" },
+    { key: "RENTED" as const, labelKey: "status_rented" as const, color: "text-violet" },
+  ];
+
   return (
-    <div className="mx-auto max-w-5xl px-5 py-8">
-      <div className="mb-6">
-        <div className="label-eyebrow mb-1">{t("profile_eyebrow")}</div>
-        <h1 className="font-display text-2xl font-semibold text-ink">{t("profile_title")}</h1>
-        <p className="mt-1 text-sm text-muted">{t("profile_subtitle")}</p>
+    <div className="mx-auto max-w-3xl px-5 py-12">
+      <div className="mb-10">
+        <div className="label-eyebrow mb-1.5">{t("profile_eyebrow")}</div>
+        <h1 className="font-display text-3xl font-semibold text-ink">{t("profile_title")}</h1>
+        <p className="mt-1.5 text-sm text-muted">{t("profile_subtitle")}</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[360px_1fr]">
-        <div className="space-y-4 lg:sticky lg:top-6 lg:self-start">
-          <AccessBadge
-            eyebrow={t("badge_eyebrow_staff")}
-            initials={initials.toUpperCase()}
-            name={displayName}
-            subtitle={user.email}
-            accent={accent}
-            ledLabel={t("badge_access_active")}
-            ledPulse
-            meta={[
-              { label: t("field_position"), value: position || "—" },
-              { label: t("field_city"), value: city || "—" },
-            ]}
-            clearance={{
-              level: ROLE_CLEARANCE[user.role],
-              max: 3,
-              label: `${t("clearance_level")} · ${t(ROLE_LABEL_KEYS[user.role])}`,
-            }}
-            barcodeValue={user.id}
-          />
+      <ProfileHeader
+        eyebrow={t("badge_eyebrow_staff")}
+        initials={initials.toUpperCase()}
+        name={displayName}
+        subtitle={user.email}
+        accent={accent}
+        statusLabel={t("badge_access_active")}
+        meta={[
+          { label: t("field_position"), value: position || "—" },
+          { label: t("field_city"), value: city || "—" },
+        ]}
+        clearance={{
+          level: ROLE_CLEARANCE[user.role],
+          max: 3,
+          label: `${t("clearance_level")} · ${t(ROLE_LABEL_KEYS[user.role])}`,
+        }}
+      />
 
-          {fleetCounts && (
-            <div className="panel p-4">
-              <div className="label-eyebrow mb-3">{t("fleet_snapshot_title")}</div>
-              <div className="grid grid-cols-3 gap-2 text-center">
-                <div>
-                  <div className="font-display text-lg font-semibold text-mint">
-                    {fleetCounts.AVAILABLE}
-                  </div>
-                  <div className="mt-0.5 font-mono text-[10px] uppercase text-faint">
-                    {t("status_available")}
-                  </div>
-                </div>
-                <div>
-                  <div className="font-display text-lg font-semibold text-amber">
-                    {fleetCounts.WORKSHOP}
-                  </div>
-                  <div className="mt-0.5 font-mono text-[10px] uppercase text-faint">
-                    {t("status_workshop")}
-                  </div>
-                </div>
-                <div>
-                  <div className="font-display text-lg font-semibold text-violet">
-                    {fleetCounts.RENTED}
-                  </div>
-                  <div className="mt-0.5 font-mono text-[10px] uppercase text-faint">
-                    {t("status_rented")}
-                  </div>
-                </div>
+      {fleetCounts && (
+        <div className="grid grid-cols-3 divide-x divide-line border-b border-line py-7">
+          {statCells.map((s) => (
+            <div key={s.key} className="px-6 text-center first:pl-0 last:pr-0">
+              <div className={`font-display text-2xl font-semibold ${s.color}`}>
+                {fleetCounts[s.key]}
               </div>
+              <div className="mt-1 label-eyebrow">{t(s.labelKey)}</div>
             </div>
-          )}
+          ))}
         </div>
+      )}
 
-      <form onSubmit={submit} className="panel h-fit p-6">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <form onSubmit={submit} className="pt-10">
+        <div className="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2">
           <div>
-            <label className="mb-1 block label-eyebrow">{t("field_first_name")}</label>
+            <label className="mb-1.5 block label-eyebrow">{t("field_first_name")}</label>
             <input
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
               placeholder={t("first_name_placeholder")}
-              className="w-full rounded-lg border border-line bg-bg2 px-3 py-2.5 text-sm text-ink outline-none transition-colors focus:border-cyan/50"
+              className={FIELD_CLASS}
             />
           </div>
           <div>
-            <label className="mb-1 block label-eyebrow">{t("field_last_name")}</label>
+            <label className="mb-1.5 block label-eyebrow">{t("field_last_name")}</label>
             <input
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
               placeholder={t("last_name_placeholder")}
-              className="w-full rounded-lg border border-line bg-bg2 px-3 py-2.5 text-sm text-ink outline-none transition-colors focus:border-cyan/50"
+              className={FIELD_CLASS}
             />
           </div>
           <div>
-            <label className="mb-1 block label-eyebrow">{t("field_phone")}</label>
+            <label className="mb-1.5 block label-eyebrow">{t("field_phone")}</label>
             <input
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder={t("phone_placeholder")}
-              className="w-full rounded-lg border border-line bg-bg2 px-3 py-2.5 text-sm text-ink outline-none transition-colors focus:border-cyan/50"
+              className={FIELD_CLASS}
             />
           </div>
           <div>
-            <label className="mb-1 block label-eyebrow">{t("field_email")}</label>
-            <input
-              value={user.email}
-              disabled
-              className="w-full rounded-lg border border-line bg-bg2 px-3 py-2.5 text-sm text-muted outline-none opacity-60"
-            />
+            <label className="mb-1.5 block label-eyebrow">{t("field_email")}</label>
+            <input value={user.email} disabled className={`${FIELD_CLASS} opacity-50`} />
           </div>
           <div>
-            <label className="mb-1 block label-eyebrow">{t("field_position")}</label>
+            <label className="mb-1.5 block label-eyebrow">{t("field_position")}</label>
             <input
               value={position}
               onChange={(e) => setPosition(e.target.value)}
               placeholder={t("position_placeholder")}
-              className="w-full rounded-lg border border-line bg-bg2 px-3 py-2.5 text-sm text-ink outline-none transition-colors focus:border-cyan/50"
+              className={FIELD_CLASS}
             />
           </div>
           <div>
-            <label className="mb-1 block label-eyebrow">{t("field_city")}</label>
+            <label className="mb-1.5 block label-eyebrow">{t("field_city")}</label>
             <input
               value={city}
               onChange={(e) => setCity(e.target.value)}
               placeholder={t("city_placeholder")}
-              className="w-full rounded-lg border border-line bg-bg2 px-3 py-2.5 text-sm text-ink outline-none transition-colors focus:border-cyan/50"
+              className={FIELD_CLASS}
             />
           </div>
         </div>
 
-        {error && (
-          <div className="mt-5 rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-xs text-danger">
-            {error}
-          </div>
-        )}
-        {saved && !error && (
-          <div className="mt-5 rounded-lg border border-mint/30 bg-mintDim/20 px-3 py-2 text-xs text-mint">
-            {t("profile_updated")}
-          </div>
-        )}
+        {error && <div className="mt-6 text-xs text-danger">{error}</div>}
+        {saved && !error && <div className="mt-6 text-xs text-mint">{t("profile_updated")}</div>}
 
-        <button
-          type="submit"
-          disabled={saving}
-          className="mt-5 rounded-lg border border-cyan/40 bg-cyanDim/40 px-5 py-2.5 text-sm font-medium text-cyan shadow-glowCyan transition-opacity hover:opacity-90 disabled:opacity-50"
-        >
-          {saving ? t("saving") : t("save_changes")}
-        </button>
+        <div className="mt-9 flex justify-end">
+          <button
+            type="submit"
+            disabled={saving}
+            className="rounded-full bg-ink px-6 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+          >
+            {saving ? t("saving") : t("save_changes")}
+          </button>
+        </div>
       </form>
-      </div>
     </div>
   );
 }

@@ -12,11 +12,9 @@
   body {
     @apply bg-bg text-ink font-body antialiased;
     background-image:
-      radial-gradient(circle at 15% 0%, rgba(18,116,224,0.08), transparent 40%),
-      radial-gradient(circle at 85% 20%, rgba(91,95,238,0.06), transparent 40%),
-      linear-gradient(rgba(15,37,69,0.045) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(15,37,69,0.045) 1px, transparent 1px);
-    background-size: auto, auto, 36px 36px, 36px 36px;
+      radial-gradient(circle at 12% -10%, rgba(18,116,224,0.05), transparent 45%),
+      radial-gradient(circle at 88% 0%, rgba(91,95,238,0.04), transparent 40%);
+    background-attachment: fixed;
   }
   ::selection {
     background: rgba(18, 116, 224, 0.2);
