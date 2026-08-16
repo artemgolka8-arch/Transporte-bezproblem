@@ -7,6 +7,17 @@
 
 const BASE_URL = "https://portal.ravapi.eu";
 
+// Заголовки, имитирующие обычный браузерный запрос — некоторые бэкенды (в т.ч.
+// защищённые через WAF/reverse-proxy) отклоняют запросы без Origin/Referer/UA
+// статусом 403, даже если логин и пароль верны.
+const BROWSER_HEADERS: Record<string, string> = {
+  "User-Agent":
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+  Origin: BASE_URL,
+  Referer: `${BASE_URL}/login`,
+  Accept: "application/json, text/plain, */*",
+};
+
 export type RavapiDebtor = {
   id: number;
   firstName: string;
@@ -60,17 +71,44 @@ async function login(): Promise<Record<string, string>> {
     throw new RavapiError("Не заданы RAVAPI_EMAIL / RAVAPI_PASSWORD в переменных окружения");
   }
 
+  // Многие такие бэкенды выдают начальный CSRF/сессионный cookie на обычный GET
+  // страницы логина ещё до самого логина — без него POST /api/login тоже может
+  // отвечать 403.
+  let initialJar: Record<string, string> = {};
+  try {
+    const pre = await fetch(`${BASE_URL}/dashboard`, {
+      headers: { ...BROWSER_HEADERS, Accept: "text/html,application/xhtml+xml" },
+    });
+    initialJar = cookieJarFrom(extractSetCookies(pre));
+  } catch {
+    // Если предварительный запрос не удался — продолжаем без initial-cookie,
+    // логин всё равно попробуется.
+  }
+
+  const loginHeaders: Record<string, string> = {
+    ...BROWSER_HEADERS,
+    "Content-Type": "application/json",
+  };
+  if (Object.keys(initialJar).length > 0) {
+    loginHeaders.Cookie = cookieHeader(initialJar);
+    if (initialJar["XSRF-TOKEN"]) {
+      loginHeaders["X-XSRF-TOKEN"] = decodeURIComponent(initialJar["XSRF-TOKEN"]);
+    }
+  }
+
   const res = await fetch(`${BASE_URL}/api/login`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: loginHeaders,
     body: JSON.stringify({ email, password }),
   });
 
   if (!res.ok) {
-    throw new RavapiError(`Не удалось войти в ravapi.eu (статус ${res.status})`);
+    const bodyText = await res.text().catch(() => "");
+    const snippet = bodyText ? ` — ${bodyText.slice(0, 200)}` : "";
+    throw new RavapiError(`Не удалось войти в ravapi.eu (статус ${res.status})${snippet}`);
   }
 
-  const jar = cookieJarFrom(extractSetCookies(res));
+  const jar = { ...initialJar, ...cookieJarFrom(extractSetCookies(res)) };
   if (Object.keys(jar).length === 0) {
     throw new RavapiError("ravapi.eu не вернул сессионные cookie при входе");
   }
@@ -83,8 +121,8 @@ async function fetchDebtorsPage(
   take: number
 ): Promise<{ items: RavapiDebtor[]; total: number | null }> {
   const headers: Record<string, string> = {
+    ...BROWSER_HEADERS,
     "Content-Type": "application/json",
-    Accept: "application/json",
     Cookie: cookieHeader(jar),
   };
   if (jar["XSRF-TOKEN"]) {
