@@ -56,6 +56,16 @@ export async function DELETE(_req: NextRequest, { params }: { params: { id: stri
   if (session.user.id === params.id) {
     return NextResponse.json({ error: "Нельзя удалить самого себя" }, { status: 400 });
   }
-  await prisma.user.delete({ where: { id: params.id } });
+  try {
+    await prisma.user.delete({ where: { id: params.id } });
+  } catch (e: any) {
+    if (e?.code === "P2003") {
+      return NextResponse.json(
+        { error: "Нельзя удалить: на пользователе есть задачи. Сначала передайте или удалите их" },
+        { status: 409 }
+      );
+    }
+    throw e;
+  }
   return NextResponse.json({ ok: true });
 }

@@ -55,6 +55,14 @@ export function Navbar({
           >
             {t("nav_clients")}
           </Link>
+          <Link
+            href="/tasks"
+            className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-sm transition-colors ${
+              pathname?.startsWith("/tasks") ? "bg-panel2 text-ink" : "text-muted hover:text-ink"
+            }`}
+          >
+            {t("nav_tasks")}
+          </Link>
           {role === "ADMIN" && (
             <Link
               href="/admin/users"

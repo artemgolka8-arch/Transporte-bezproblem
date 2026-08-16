@@ -37,17 +37,52 @@ enum VehicleBrand {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  name      String
-  role      Role     @default(VIEWER)
-  firstName String?
-  lastName  String?
-  phone     String?
-  position  String?
-  city      String?
-  createdAt DateTime @default(now())
+  id            String   @id @default(cuid())
+  email         String   @unique
+  password      String
+  name          String
+  role          Role     @default(VIEWER)
+  firstName     String?
+  lastName      String?
+  phone         String?
+  position      String?
+  city          String?
+  createdAt     DateTime @default(now())
+  createdTasks  Task[]   @relation("TaskCreator")
+  assignedTasks Task[]   @relation("TaskAssignee")
+}
+
+enum TaskStatus {
+  OPEN
+  DONE
+}
+
+model Task {
+  id          String     @id @default(cuid())
+  title       String
+  description String?
+  status      TaskStatus @default(OPEN)
+  dueDate     DateTime?
+  creatorId   String
+  creator     User       @relation("TaskCreator", fields: [creatorId], references: [id])
+  assigneeId  String
+  assignee    User       @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  completedAt DateTime?
+  history     TaskLog[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model TaskLog {
+  id           String   @id @default(cuid())
+  taskId       String
+  task         Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  action       String
+  fromUserName String?
+  toUserName   String?
+  note         String?
+  userName     String?
+  createdAt    DateTime @default(now())
 }
 
 model Vehicle {
