@@ -24,9 +24,12 @@ export function Navbar({
     <header className="sticky top-0 z-30 border-b border-line bg-bg/85 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center gap-6 px-5 py-3.5">
         <Link href="/" className="flex items-center gap-2.5 shrink-0">
-          <div className="relative h-8 w-8 rounded-lg border border-cyan/40 bg-cyanDim/40 shadow-glowCyan flex items-center justify-center">
-            <span className="h-2 w-2 rounded-full bg-cyan animate-pulseBeacon" />
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/logo.png"
+            alt="BezProblem"
+            className="h-9 w-9 rounded-full border border-cyan/40 shadow-glowCyan object-cover"
+          />
           <div className="leading-tight">
             <div className="font-display text-base font-semibold tracking-wide text-ink">
               Bez<span className="text-cyan">Problem</span>

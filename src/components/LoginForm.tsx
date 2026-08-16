@@ -45,9 +45,12 @@ export function LoginForm() {
         className="panel relative w-full max-w-sm p-7 animate-rise"
       >
         <div className="mb-6 flex items-center gap-2.5">
-          <div className="h-8 w-8 rounded-lg border border-cyan/40 bg-cyanDim/40 shadow-glowCyan flex items-center justify-center">
-            <span className="h-2 w-2 rounded-full bg-cyan animate-pulseBeacon" />
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/logo.png"
+            alt="BezProblem"
+            className="h-9 w-9 rounded-full border border-cyan/40 shadow-glowCyan object-cover"
+          />
           <div>
             <div className="font-display text-base font-semibold text-ink">
               Bez<span className="text-cyan">Problem</span>
