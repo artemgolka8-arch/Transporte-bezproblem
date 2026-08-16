@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
 import { ROLE_LABEL_KEYS, Role } from "@/lib/roles";
+import { AccessBadge, BadgeAccent } from "@/components/AccessBadge";
 
 type ProfileData = {
   id: string;
@@ -17,7 +18,25 @@ type ProfileData = {
   city: string | null;
 };
 
-export function ProfileForm({ user }: { user: ProfileData }) {
+const ROLE_ACCENT: Record<Role, BadgeAccent> = {
+  ADMIN: "violet",
+  MANAGER: "cyan",
+  VIEWER: "faint",
+};
+
+const ROLE_CLEARANCE: Record<Role, number> = {
+  ADMIN: 3,
+  MANAGER: 2,
+  VIEWER: 1,
+};
+
+export function ProfileForm({
+  user,
+  fleetCounts,
+}: {
+  user: ProfileData;
+  fleetCounts?: { AVAILABLE: number; WORKSHOP: number; RENTED: number };
+}) {
   const router = useRouter();
   const { t } = useTranslation();
 
@@ -50,25 +69,75 @@ export function ProfileForm({ user }: { user: ProfileData }) {
     router.refresh();
   }
 
+  const accent = ROLE_ACCENT[user.role];
+  const displayName = [user.firstName, user.lastName].filter(Boolean).join(" ") || user.name;
+  const initials =
+    (user.firstName?.[0] || user.name?.[0] || "?") + (user.lastName?.[0] || user.name?.[1] || "");
+
   return (
-    <div className="mx-auto max-w-2xl px-5 py-8">
+    <div className="mx-auto max-w-5xl px-5 py-8">
       <div className="mb-6">
         <div className="label-eyebrow mb-1">{t("profile_eyebrow")}</div>
         <h1 className="font-display text-2xl font-semibold text-ink">{t("profile_title")}</h1>
         <p className="mt-1 text-sm text-muted">{t("profile_subtitle")}</p>
       </div>
 
-      <form onSubmit={submit} className="panel p-6">
-        <div className="mb-5 flex flex-wrap items-center gap-3 border-b border-line pb-5">
-          <div className="flex-1 min-w-[180px]">
-            <div className="text-sm text-ink">{user.name}</div>
-            <div className="font-mono text-xs text-muted">{user.email}</div>
-          </div>
-          <span className="rounded-full border border-cyan/40 bg-cyanDim/40 px-2.5 py-1 font-mono text-[11px] uppercase tracking-wide text-cyan">
-            {t(ROLE_LABEL_KEYS[user.role])}
-          </span>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[360px_1fr]">
+        <div className="space-y-4 lg:sticky lg:top-6 lg:self-start">
+          <AccessBadge
+            eyebrow={t("badge_eyebrow_staff")}
+            initials={initials.toUpperCase()}
+            name={displayName}
+            subtitle={user.email}
+            accent={accent}
+            ledLabel={t("badge_access_active")}
+            ledPulse
+            meta={[
+              { label: t("field_position"), value: position || "—" },
+              { label: t("field_city"), value: city || "—" },
+            ]}
+            clearance={{
+              level: ROLE_CLEARANCE[user.role],
+              max: 3,
+              label: `${t("clearance_level")} · ${t(ROLE_LABEL_KEYS[user.role])}`,
+            }}
+            barcodeValue={user.id}
+          />
+
+          {fleetCounts && (
+            <div className="panel p-4">
+              <div className="label-eyebrow mb-3">{t("fleet_snapshot_title")}</div>
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div>
+                  <div className="font-display text-lg font-semibold text-mint">
+                    {fleetCounts.AVAILABLE}
+                  </div>
+                  <div className="mt-0.5 font-mono text-[10px] uppercase text-faint">
+                    {t("status_available")}
+                  </div>
+                </div>
+                <div>
+                  <div className="font-display text-lg font-semibold text-amber">
+                    {fleetCounts.WORKSHOP}
+                  </div>
+                  <div className="mt-0.5 font-mono text-[10px] uppercase text-faint">
+                    {t("status_workshop")}
+                  </div>
+                </div>
+                <div>
+                  <div className="font-display text-lg font-semibold text-violet">
+                    {fleetCounts.RENTED}
+                  </div>
+                  <div className="mt-0.5 font-mono text-[10px] uppercase text-faint">
+                    {t("status_rented")}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
+      <form onSubmit={submit} className="panel h-fit p-6">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label className="mb-1 block label-eyebrow">{t("field_first_name")}</label>
@@ -144,6 +213,7 @@ export function ProfileForm({ user }: { user: ProfileData }) {
           {saving ? t("saving") : t("save_changes")}
         </button>
       </form>
+      </div>
     </div>
   );
 }

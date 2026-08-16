@@ -6,6 +6,7 @@ import { StatusBadge, VehicleStatus } from "./status";
 import { canEdit, isAdmin } from "@/lib/roles";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
 import { Lang } from "@/lib/i18n/translations";
+import { AccessBadge } from "@/components/AccessBadge";
 
 type ClientVehicle = {
   id: string;
@@ -89,8 +90,12 @@ export function ClientProfile({
     }
   }
 
+  const activeCount = client.vehicles.filter((v) => v.status === "RENTED").length;
+  const initials = (client.firstName[0] || "?") + (client.lastName[0] || "");
+  const sinceDate = new Date(client.createdAt).toLocaleDateString(LOCALE_MAP[lang]);
+
   return (
-    <div className="mx-auto max-w-2xl px-5 py-8">
+    <div className="mx-auto max-w-5xl px-5 py-8">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <button
           onClick={() => router.push("/clients")}
@@ -115,10 +120,32 @@ export function ClientProfile({
         <h1 className="font-display text-2xl font-semibold text-ink">
           {client.firstName} {client.lastName}
         </h1>
-        <p className="mt-1 text-xs text-faint">
-          {t("client_since", { date: new Date(client.createdAt).toLocaleDateString(LOCALE_MAP[lang]) })}
-        </p>
       </div>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[360px_1fr]">
+        <div className="space-y-4 lg:sticky lg:top-6 lg:self-start">
+          <AccessBadge
+            eyebrow={t("badge_eyebrow_client")}
+            initials={initials.toUpperCase()}
+            name={`${client.firstName} ${client.lastName}`}
+            subtitle={client.email || client.phone}
+            accent={activeCount > 0 ? "mint" : "faint"}
+            ledLabel={activeCount > 0 ? t("rental_active") : t("rental_inactive")}
+            ledPulse={activeCount > 0}
+            meta={[
+              { label: t("field_renter_phone"), value: client.phone },
+              { label: t("since_label"), value: sinceDate },
+            ]}
+            clearance={{
+              level: Math.min(activeCount, 3),
+              max: 3,
+              label: t("active_units_label"),
+            }}
+            barcodeValue={client.phone}
+          />
+        </div>
+
+        <div className="space-y-6">
 
       <form onSubmit={save} className="panel p-6">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -200,7 +227,7 @@ export function ClientProfile({
         )}
       </form>
 
-      <div className="mt-6">
+      <div>
         <div className="label-eyebrow mb-3">{t("client_vehicles_eyebrow")}</div>
         {client.vehicles.length === 0 ? (
           <div className="panel p-6 text-sm text-muted">{t("client_vehicles_empty")}</div>
@@ -210,10 +237,20 @@ export function ClientProfile({
               <button
                 key={v.id}
                 onClick={() => router.push(`/vehicle/${v.id}`)}
-                className="panel flex w-full items-center justify-between gap-3 p-4 text-left transition-colors hover:bg-panel2/60"
+                className="panel flex w-full items-center gap-3 p-4 text-left transition-colors hover:bg-panel2/60"
               >
-                <div>
-                  <div className="text-sm text-ink">{v.name}</div>
+                {v.imageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={v.imageUrl}
+                    alt=""
+                    className="h-11 w-11 shrink-0 rounded-lg border border-line object-cover"
+                  />
+                ) : (
+                  <div className="h-11 w-11 shrink-0 rounded-lg border border-line bg-panel2" />
+                )}
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm text-ink">{v.name}</div>
                   <div className="font-mono text-xs text-faint">{v.code}</div>
                 </div>
                 <StatusBadge status={v.status} />
@@ -221,6 +258,8 @@ export function ClientProfile({
             ))}
           </div>
         )}
+      </div>
+        </div>
       </div>
     </div>
   );

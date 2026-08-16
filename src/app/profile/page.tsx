@@ -41,7 +41,7 @@ export default async function ProfilePage() {
         userName={session.user.name || session.user.email || ""}
         role={session.user.role}
       />
-      <ProfileForm user={user} />
+      <ProfileForm user={user} fleetCounts={counts} />
     </>
   );
 }
