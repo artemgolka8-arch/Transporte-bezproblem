@@ -33,7 +33,7 @@ type DebtorRow = {
 };
 
 function formatMoney(value: number) {
-  return `${value.toLocaleString("ru-RU", { maximumFractionDigits: 2 })} zł`;
+  return `${value.toLocaleString("ru-RU", { maximumFractionDigits: 2 })}\u00A0zł`;
 }
 
 function initials(first: string, last: string) {
@@ -471,8 +471,8 @@ export function DebtorsList({
                         <span
                           className={
                             r.currentBalance < 0
-                              ? "rounded-lg border border-danger/30 bg-danger/10 px-3 py-1.5 text-[12px] font-medium text-danger"
-                              : "rounded-lg border border-line bg-bg2 px-3 py-1.5 text-[12px] font-medium text-ink"
+                              ? "inline-block whitespace-nowrap rounded-lg border border-danger/30 bg-danger/10 px-3 py-1.5 text-[12px] font-medium text-danger"
+                              : "inline-block whitespace-nowrap rounded-lg border border-line bg-bg2 px-3 py-1.5 text-[12px] font-medium text-ink"
                           }
                         >
                           {formatMoney(r.currentBalance)}
@@ -480,7 +480,7 @@ export function DebtorsList({
                       </td>
                       <td className="px-5 py-3.5">
                         {r.isContactedForDebt ? (
-                          <span className="rounded-lg border border-mint/30 bg-mintDim/40 px-2.5 py-1 text-[11px] font-medium text-mint">
+                          <span className="inline-block whitespace-nowrap rounded-lg border border-mint/30 bg-mintDim/40 px-2.5 py-1 text-[11px] font-medium text-mint">
                             {t("debtors_contacted_badge")}
                           </span>
                         ) : (
@@ -497,8 +497,8 @@ export function DebtorsList({
                           title={r.phoneNumber ? t("debtors_send_sms_btn") : t("notify_no_phone")}
                           className={
                             r.messages.some((m) => m.status === "SENT")
-                              ? "inline-flex h-8 items-center gap-1.5 rounded-lg border border-mint/40 bg-mintDim/40 px-3 text-[12px] font-medium text-mint transition-opacity hover:opacity-80 disabled:opacity-40"
-                              : "inline-flex h-8 items-center gap-1.5 rounded-lg border border-line bg-bg2 px-3 text-[12px] font-medium text-ink transition-colors hover:border-violet/40 hover:text-violet disabled:opacity-40"
+                              ? "inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-lg border border-mint/40 bg-mintDim/40 px-3 text-[12px] font-medium text-mint transition-opacity hover:opacity-80 disabled:opacity-40"
+                              : "inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-lg border border-line bg-bg2 px-3 text-[12px] font-medium text-ink transition-colors hover:border-violet/40 hover:text-violet disabled:opacity-40"
                           }
                         >
                           <SmsIcon />

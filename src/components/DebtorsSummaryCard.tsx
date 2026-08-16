@@ -15,7 +15,7 @@ export type DebtorsSummary = {
 };
 
 function formatMoney(value: number) {
-  return `${value.toLocaleString("ru-RU", { maximumFractionDigits: 2 })} zł`;
+  return `${value.toLocaleString("ru-RU", { maximumFractionDigits: 2 })}\u00A0zł`;
 }
 
 function TrendIcon({ down }: { down: boolean }) {
@@ -66,7 +66,7 @@ export function DebtorsSummaryCard({ summary }: { summary: DebtorsSummary }) {
             </span>
             {delta !== 0 && (
               <span
-                className={`inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[11px] font-medium ${
+                className={`inline-flex items-center gap-0.5 whitespace-nowrap rounded-md px-1.5 py-0.5 text-[11px] font-medium ${
                   improved ? "bg-mintDim/50 text-mint" : "bg-danger/10 text-danger"
                 }`}
               >

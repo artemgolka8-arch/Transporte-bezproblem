@@ -40,7 +40,7 @@ type ReferredRow = {
 };
 
 function formatMoney(value: number) {
-  return `${value.toLocaleString("ru-RU", { maximumFractionDigits: 2 })} zł`;
+  return `${value.toLocaleString("ru-RU", { maximumFractionDigits: 2 })}\u00A0zł`;
 }
 
 function initials(first: string, last: string) {
@@ -281,8 +281,8 @@ export function ReferredClientsList({ referred, role }: { referred: ReferredRow[
                           onClick={() => setPayoutRowId(r.id)}
                           className={
                             r.payoutTotal > 0
-                              ? "rounded-lg border border-mint/40 bg-mintDim/40 px-3 py-1.5 text-[12px] font-medium text-mint transition-opacity hover:opacity-80"
-                              : "rounded-lg border border-line bg-bg2 px-3 py-1.5 text-[12px] font-medium text-ink transition-colors hover:border-violet/40 hover:text-violet"
+                              ? "whitespace-nowrap rounded-lg border border-mint/40 bg-mintDim/40 px-3 py-1.5 text-[12px] font-medium text-mint transition-opacity hover:opacity-80"
+                              : "whitespace-nowrap rounded-lg border border-line bg-bg2 px-3 py-1.5 text-[12px] font-medium text-ink transition-colors hover:border-violet/40 hover:text-violet"
                           }
                         >
                           {r.payoutTotal > 0 ? formatMoney(r.payoutTotal) : `+ ${t("payout_label")}`}
