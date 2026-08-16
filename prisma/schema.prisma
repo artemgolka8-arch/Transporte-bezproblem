@@ -18,6 +18,12 @@ enum VehicleType {
   SCOOTER
 }
 
+enum InvitationType {
+  FLEET_PARTNER
+  RENT
+  FLEET_PARTNER_RENT
+}
+
 enum VehicleStatus {
   AVAILABLE
   WORKSHOP
@@ -132,6 +138,17 @@ model Client {
   messages  ClientMessage[]
   createdAt DateTime        @default(now())
   updatedAt DateTime        @updatedAt
+}
+
+model ReferredClient {
+  id             String         @id @default(cuid())
+  firstName      String
+  lastName       String
+  phone          String         @unique
+  invitationType InvitationType
+  city           String
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
 }
 
 model ClientMessage {

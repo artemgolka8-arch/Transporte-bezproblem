@@ -56,6 +56,14 @@ export function Navbar({
             {t("nav_clients")}
           </Link>
           <Link
+            href="/referred-clients"
+            className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-sm transition-colors ${
+              pathname?.startsWith("/referred-clients") ? "bg-panel2 text-ink" : "text-muted hover:text-ink"
+            }`}
+          >
+            {t("nav_referred_clients")}
+          </Link>
+          <Link
             href="/tasks"
             className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-sm transition-colors ${
               pathname?.startsWith("/tasks") ? "bg-panel2 text-ink" : "text-muted hover:text-ink"

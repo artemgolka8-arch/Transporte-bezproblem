@@ -364,6 +364,23 @@ const ru = {
   telegram_setup_step3: "Вставьте этот номер в поле ниже и сохраните",
   field_telegram_chat_id: "Telegram Chat ID",
   telegram_chat_id_placeholder: "например, 123456789",
+
+  // приглашённые клиенты
+  nav_referred_clients: "Приглашённые клиенты",
+  referred_eyebrow: "рефералы и партнёрство",
+  referred_title: "Приглашённые клиенты",
+  new_referred_btn: "+ Добавить приглашённого",
+  referred_search_placeholder: "Поиск по имени, телефону или городу",
+  referred_empty_title: "Пока никого не пригласили",
+  referred_empty_subtitle: "Добавьте первого приглашённого клиента",
+  col_invitation_type: "Тип приглашения",
+  col_city: "Город",
+  new_referred_title: "Новый приглашённый клиент",
+  field_invitation_type: "Тип приглашения",
+  invitation_fleet_partner: "Fleet Partner",
+  invitation_rent: "Rent",
+  invitation_fleet_partner_rent: "Fleet Partner+Rent",
+  delete_referred_confirm: "Удалить этого приглашённого клиента?",
 } as const;
 
 export type TranslationKey = keyof typeof ru;
@@ -706,6 +723,22 @@ const pl: Dict = {
   telegram_setup_step3: "Wklej ten numer w pole poniżej i zapisz",
   field_telegram_chat_id: "Telegram Chat ID",
   telegram_chat_id_placeholder: "np. 123456789",
+
+  nav_referred_clients: "Polecone kontakty",
+  referred_eyebrow: "polecenia i partnerstwo",
+  referred_title: "Polecone kontakty",
+  new_referred_btn: "+ Dodaj poleconego",
+  referred_search_placeholder: "Szukaj po imieniu, telefonie lub mieście",
+  referred_empty_title: "Jeszcze nikogo nie polecono",
+  referred_empty_subtitle: "Dodaj pierwszy polecony kontakt",
+  col_invitation_type: "Typ zaproszenia",
+  col_city: "Miasto",
+  new_referred_title: "Nowy polecony kontakt",
+  field_invitation_type: "Typ zaproszenia",
+  invitation_fleet_partner: "Fleet Partner",
+  invitation_rent: "Rent",
+  invitation_fleet_partner_rent: "Fleet Partner+Rent",
+  delete_referred_confirm: "Usunąć ten polecony kontakt?",
 };
 
 const uk: Dict = {
@@ -1045,6 +1078,22 @@ const uk: Dict = {
   telegram_setup_step3: "Вставте цей номер у поле нижче і збережіть",
   field_telegram_chat_id: "Telegram Chat ID",
   telegram_chat_id_placeholder: "наприклад, 123456789",
+
+  nav_referred_clients: "Запрошені клієнти",
+  referred_eyebrow: "реферали та партнерство",
+  referred_title: "Запрошені клієнти",
+  new_referred_btn: "+ Додати запрошеного",
+  referred_search_placeholder: "Пошук за ім'ям, телефоном або містом",
+  referred_empty_title: "Поки нікого не запросили",
+  referred_empty_subtitle: "Додайте першого запрошеного клієнта",
+  col_invitation_type: "Тип запрошення",
+  col_city: "Місто",
+  new_referred_title: "Новий запрошений клієнт",
+  field_invitation_type: "Тип запрошення",
+  invitation_fleet_partner: "Fleet Partner",
+  invitation_rent: "Rent",
+  invitation_fleet_partner_rent: "Fleet Partner+Rent",
+  delete_referred_confirm: "Видалити цього запрошеного клієнта?",
 };
 
 export const translations: Record<Lang, Dict> = { ru, pl, uk };
