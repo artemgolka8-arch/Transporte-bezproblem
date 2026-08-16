@@ -67,6 +67,8 @@ model Vehicle {
   renterPhone        String?
   renterEmail        String?
   rentedUntil        DateTime?
+  clientId           String?
+  client             Client?       @relation(fields: [clientId], references: [id])
   workshopDate       DateTime?
   workshopReason     String?
   workshopMileage    Int?
@@ -75,6 +77,18 @@ model Vehicle {
   history            StatusLog[]
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt
+}
+
+model Client {
+  id        String    @id @default(cuid())
+  firstName String
+  lastName  String
+  phone     String    @unique
+  email     String?
+  notes     String?
+  vehicles  Vehicle[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 model Key {

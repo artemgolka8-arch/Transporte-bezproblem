@@ -100,12 +100,38 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     data.renter = [fn, ln].filter(Boolean).join(" ") || null;
   }
 
+  // При оформлении аренды заводим/обновляем карточку клиента в общем справочнике,
+  // чтобы её можно было находить и дополнять в разделе "Арендующие клиенты"
+  if (statusChanged && status === "RENTED") {
+    const fn = (renterFirstName !== undefined ? renterFirstName : current.renterFirstName) || "";
+    const ln = (renterLastName !== undefined ? renterLastName : current.renterLastName) || "";
+    const phone = (renterPhone !== undefined ? renterPhone : current.renterPhone) || "";
+    const email = renterEmail !== undefined ? renterEmail : current.renterEmail;
+    const client = await prisma.client.upsert({
+      where: { phone: phone.trim() },
+      update: {
+        firstName: fn.trim(),
+        lastName: ln.trim(),
+        email: email?.trim() || null,
+      },
+      create: {
+        firstName: fn.trim(),
+        lastName: ln.trim(),
+        phone: phone.trim(),
+        email: email?.trim() || null,
+      },
+    });
+    data.clientId = client.id;
+  }
+
   if (workshopDate !== undefined) data.workshopDate = workshopDate ? new Date(workshopDate) : null;
   if (workshopReason !== undefined) data.workshopReason = workshopReason || null;
   if (workshopMileage !== undefined) data.workshopMileage = workshopMileage === "" || workshopMileage === null ? null : Number(workshopMileage);
   if (workshopCity !== undefined) data.workshopCity = workshopCity || null;
 
-  // При выходе из аренды очищаем данные клиента, чтобы следующая аренда требовала новых данных
+  // При выходе из аренды очищаем данные клиента на самой технике,
+  // чтобы следующая аренда требовала новых данных. Карточка клиента
+  // в справочнике (Client) при этом сохраняется — её можно будет найти позже.
   if (statusChanged && current.status === "RENTED" && status !== "RENTED") {
     data.renter = null;
     data.renterFirstName = null;
@@ -113,6 +139,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     data.renterPhone = null;
     data.renterEmail = null;
     data.rentedUntil = null;
+    data.clientId = null;
   }
 
   // При выходе из мастерской очищаем заявку на ремонт, чтобы следующий заезд требовал новых данных
