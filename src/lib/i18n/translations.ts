@@ -103,6 +103,15 @@ const ru = {
   rent_confirm_btn: "Сдать в аренду",
   rent_fill_all_fields: "Заполните все поля",
   rent_save_failed: "Не удалось сохранить. Попробуйте ещё раз",
+
+  // карточка клиента
+  renter_card_eyebrow: "Данные клиента",
+  renter_card_empty: "Клиент не указан",
+  renter_card_full_name: "ФИО",
+  renter_card_phone: "Телефон",
+  renter_card_email: "Электронная почта",
+  renter_card_call_btn: "Позвонить",
+  renter_card_email_btn: "Написать",
   rent_history_note: "Сдано в аренду: {name}",
 
   // страница техники
@@ -287,6 +296,15 @@ const pl: Dict = {
   rent_save_failed: "Nie udało się zapisać. Spróbuj ponownie",
   rent_history_note: "Wynajęto: {name}",
 
+  // karta klienta
+  renter_card_eyebrow: "Dane klienta",
+  renter_card_empty: "Klient nie jest przypisany",
+  renter_card_full_name: "Imię i nazwisko",
+  renter_card_phone: "Telefon",
+  renter_card_email: "E-mail",
+  renter_card_call_btn: "Zadzwoń",
+  renter_card_email_btn: "Napisz",
+
   back_to_fleet: "← Do floty",
   tab_overview: "Przegląd",
   tab_keys: "Klucze · {count}",
@@ -457,6 +475,15 @@ const uk: Dict = {
   rent_fill_all_fields: "Заповніть усі поля",
   rent_save_failed: "Не вдалося зберегти. Спробуйте ще раз",
   rent_history_note: "Здано в оренду: {name}",
+
+  // картка клієнта
+  renter_card_eyebrow: "Дані клієнта",
+  renter_card_empty: "Клієнта не вказано",
+  renter_card_full_name: "ПІБ",
+  renter_card_phone: "Телефон",
+  renter_card_email: "Електронна пошта",
+  renter_card_call_btn: "Подзвонити",
+  renter_card_email_btn: "Написати",
 
   back_to_fleet: "← До флоту",
   tab_overview: "Огляд",

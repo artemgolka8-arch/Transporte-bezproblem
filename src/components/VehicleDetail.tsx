@@ -261,6 +261,8 @@ export function VehicleDetail({
 
       {tab === "overview" ? (
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+          {v.status === "RENTED" && <RenterCard vehicle={v} />}
+
           <div className="panel p-6">
             <div className="label-eyebrow mb-3">{t("problem_desc_eyebrow")}</div>
             {editable ? (
@@ -380,6 +382,58 @@ export function VehicleDetail({
             return ok;
           }}
         />
+      )}
+    </div>
+  );
+}
+
+function RenterCard({ vehicle }: { vehicle: VehicleFull }) {
+  const { t } = useTranslation();
+  const fullName =
+    [vehicle.renterFirstName, vehicle.renterLastName].filter(Boolean).join(" ") ||
+    vehicle.renter ||
+    "";
+
+  const hasData = Boolean(fullName || vehicle.renterPhone || vehicle.renterEmail);
+
+  return (
+    <div className="panel p-6 lg:col-span-2">
+      <div className="label-eyebrow mb-3">{t("renter_card_eyebrow")}</div>
+      {!hasData ? (
+        <p className="text-sm text-muted">{t("renter_card_empty")}</p>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div>
+            <div className="text-[11px] text-faint">{t("renter_card_full_name")}</div>
+            <div className="mt-0.5 text-sm text-ink">{fullName || "—"}</div>
+          </div>
+          <div>
+            <div className="text-[11px] text-faint">{t("renter_card_phone")}</div>
+            {vehicle.renterPhone ? (
+              <a
+                href={`tel:${vehicle.renterPhone}`}
+                className="mt-0.5 block text-sm text-cyan transition-opacity hover:opacity-80"
+              >
+                {vehicle.renterPhone}
+              </a>
+            ) : (
+              <div className="mt-0.5 text-sm text-ink">—</div>
+            )}
+          </div>
+          <div>
+            <div className="text-[11px] text-faint">{t("renter_card_email")}</div>
+            {vehicle.renterEmail ? (
+              <a
+                href={`mailto:${vehicle.renterEmail}`}
+                className="mt-0.5 block truncate text-sm text-cyan transition-opacity hover:opacity-80"
+              >
+                {vehicle.renterEmail}
+              </a>
+            ) : (
+              <div className="mt-0.5 text-sm text-ink">—</div>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );
