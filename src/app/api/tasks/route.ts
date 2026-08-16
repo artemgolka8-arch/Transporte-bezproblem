@@ -14,7 +14,10 @@ export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
 
+  // Задачу видит только тот, кто с ней когда-либо связан: создатель,
+  // текущий исполнитель, либо участник цепочки передач.
   const tasks = await prisma.task.findMany({
+    where: { participants: { some: { id: session.user.id } } },
     include: TASK_INCLUDE,
     orderBy: [{ status: "asc" }, { createdAt: "desc" }],
   });
@@ -42,6 +45,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Исполнитель не найден" }, { status: 400 });
   }
 
+  // Участники — создатель и исполнитель (если это один и тот же человек, задачу видит только он)
+  const participantIds = Array.from(new Set([session.user.id, finalAssigneeId]));
+
   const task = await prisma.task.create({
     data: {
       title: title.trim(),
@@ -49,6 +55,7 @@ export async function POST(req: NextRequest) {
       dueDate: dueDate ? new Date(dueDate) : null,
       creatorId: session.user.id,
       assigneeId: finalAssigneeId,
+      participants: { connect: participantIds.map((id) => ({ id })) },
       history: {
         create: {
           action: "created",

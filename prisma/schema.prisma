@@ -37,19 +37,20 @@ enum VehicleBrand {
 }
 
 model User {
-  id            String   @id @default(cuid())
-  email         String   @unique
-  password      String
-  name          String
-  role          Role     @default(VIEWER)
-  firstName     String?
-  lastName      String?
-  phone         String?
-  position      String?
-  city          String?
-  createdAt     DateTime @default(now())
-  createdTasks  Task[]   @relation("TaskCreator")
-  assignedTasks Task[]   @relation("TaskAssignee")
+  id             String   @id @default(cuid())
+  email          String   @unique
+  password       String
+  name           String
+  role           Role     @default(VIEWER)
+  firstName      String?
+  lastName       String?
+  phone          String?
+  position       String?
+  city           String?
+  createdAt      DateTime @default(now())
+  createdTasks   Task[]   @relation("TaskCreator")
+  assignedTasks  Task[]   @relation("TaskAssignee")
+  visibleTasks   Task[]   @relation("TaskParticipants")
 }
 
 enum TaskStatus {
@@ -58,19 +59,22 @@ enum TaskStatus {
 }
 
 model Task {
-  id          String     @id @default(cuid())
-  title       String
-  description String?
-  status      TaskStatus @default(OPEN)
-  dueDate     DateTime?
-  creatorId   String
-  creator     User       @relation("TaskCreator", fields: [creatorId], references: [id])
-  assigneeId  String
-  assignee    User       @relation("TaskAssignee", fields: [assigneeId], references: [id])
-  completedAt DateTime?
-  history     TaskLog[]
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  id           String     @id @default(cuid())
+  title        String
+  description  String?
+  status       TaskStatus @default(OPEN)
+  dueDate      DateTime?
+  creatorId    String
+  creator      User       @relation("TaskCreator", fields: [creatorId], references: [id])
+  assigneeId   String
+  assignee     User       @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  // Все, кто когда-либо был создателем или исполнителем этой задачи —
+  // именно они видят задачу в списке. Пополняется при передаче.
+  participants User[]     @relation("TaskParticipants")
+  completedAt  DateTime?
+  history      TaskLog[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 }
 
 model TaskLog {

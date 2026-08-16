@@ -12,6 +12,7 @@ export default async function TasksPage() {
   if (!session) redirect("/login");
 
   const tasks = await prisma.task.findMany({
+    where: { participants: { some: { id: session.user.id } } },
     include: {
       creator: { select: { id: true, name: true } },
       assignee: { select: { id: true, name: true } },

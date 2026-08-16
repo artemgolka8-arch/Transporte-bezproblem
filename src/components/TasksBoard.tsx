@@ -192,11 +192,10 @@ function TaskCard({
   const [historyOpen, setHistoryOpen] = useState(false);
   const [transferOpen, setTransferOpen] = useState(false);
 
-  const editable = canEdit(role);
   const isAssignee = task.assignee.id === currentUserId;
   const isCreator = task.creator.id === currentUserId;
-  const canAct = editable || isAssignee;
-  const canDelete = editable || isCreator;
+  const canAct = isAssignee || isCreator;
+  const canDelete = isCreator;
   const done = task.status === "DONE";
 
   async function wrap(fn: () => Promise<void>) {
