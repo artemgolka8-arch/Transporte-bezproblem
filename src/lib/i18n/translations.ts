@@ -400,6 +400,16 @@ const ru = {
   per_page_label: "на странице",
   total_clients_label: "Всего клиентов",
   page_label: "Страница",
+
+  // Telegram Mini App
+  telegram_tab_profile: "Профиль",
+  telegram_tab_tasks: "Задачи",
+  telegram_not_linked_title: "Аккаунт не привязан",
+  telegram_not_linked_body: "Откройте профиль на сайте, укажите Telegram Chat ID и сохраните — после этого данные появятся здесь.",
+  telegram_loading: "Загрузка…",
+  telegram_error_generic: "Не удалось загрузить данные",
+  telegram_no_tasks: "Задач нет",
+  telegram_open_site: "Открыть сайт",
 } as const;
 
 export type TranslationKey = keyof typeof ru;
@@ -776,6 +786,15 @@ const pl: Dict = {
   per_page_label: "na stronie",
   total_clients_label: "Łącznie klientów",
   page_label: "Strona",
+
+  telegram_tab_profile: "Profil",
+  telegram_tab_tasks: "Zadania",
+  telegram_not_linked_title: "Konto niepołączone",
+  telegram_not_linked_body: "Otwórz profil na stronie, podaj Telegram Chat ID i zapisz — dane pojawią się tutaj.",
+  telegram_loading: "Ładowanie…",
+  telegram_error_generic: "Nie udało się załadować danych",
+  telegram_no_tasks: "Brak zadań",
+  telegram_open_site: "Otwórz stronę",
 };
 
 const uk: Dict = {
@@ -1149,6 +1168,15 @@ const uk: Dict = {
   per_page_label: "на сторінці",
   total_clients_label: "Всього клієнтів",
   page_label: "Сторінка",
+
+  telegram_tab_profile: "Профіль",
+  telegram_tab_tasks: "Завдання",
+  telegram_not_linked_title: "Акаунт не прив'язаний",
+  telegram_not_linked_body: "Відкрийте профіль на сайті, вкажіть Telegram Chat ID і збережіть — дані з'являться тут.",
+  telegram_loading: "Завантаження…",
+  telegram_error_generic: "Не вдалося завантажити дані",
+  telegram_no_tasks: "Завдань немає",
+  telegram_open_site: "Відкрити сайт",
 };
 
 export const translations: Record<Lang, Dict> = { ru, pl, uk };
