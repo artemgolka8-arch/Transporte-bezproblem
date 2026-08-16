@@ -386,7 +386,11 @@ function NewTaskModal({
         description,
         assigneeId,
         dueDate: dueDate || null,
-        reminderAt: reminderAt || null,
+        // datetime-local отдаёт строку без часового пояса ("2026-08-16T11:30") — превращаем
+        // её в точный момент времени прямо в браузере (где реально известен часовой пояс
+        // пользователя), а не отправляем как есть, иначе сервер (работает по UTC) поймёт
+        // это время неправильно
+        reminderAt: reminderAt ? new Date(reminderAt).toISOString() : null,
       }),
     });
     setLoading(false);
