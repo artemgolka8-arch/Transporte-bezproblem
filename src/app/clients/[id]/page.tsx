@@ -18,6 +18,10 @@ export default async function ClientProfilePage({ params }: { params: { id: stri
         orderBy: { updatedAt: "desc" },
         select: { id: true, code: true, name: true, status: true, imageUrl: true, rentedUntil: true },
       },
+      messages: {
+        orderBy: { createdAt: "desc" },
+        take: 20,
+      },
     },
   });
   if (!client) notFound();
@@ -52,6 +56,16 @@ export default async function ClientProfilePage({ params }: { params: { id: stri
             status: v.status,
             imageUrl: v.imageUrl,
             rentedUntil: v.rentedUntil ? v.rentedUntil.toISOString() : null,
+          })),
+          messages: client.messages.map((m) => ({
+            id: m.id,
+            channel: m.channel as "EMAIL" | "SMS",
+            target: m.target,
+            body: m.body,
+            status: m.status as "SENT" | "FAILED",
+            error: m.error,
+            sentBy: m.sentBy,
+            createdAt: m.createdAt.toISOString(),
           })),
         }}
         role={session.user.role}

@@ -7,6 +7,7 @@ import { canEdit, isAdmin } from "@/lib/roles";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
 import { Lang } from "@/lib/i18n/translations";
 import { ProfileHeader } from "@/components/ProfileHeader";
+import { ClientNotifyPanel } from "@/components/ClientNotifyPanel";
 
 type ClientVehicle = {
   id: string;
@@ -15,6 +16,17 @@ type ClientVehicle = {
   status: VehicleStatus;
   imageUrl: string | null;
   rentedUntil: string | null;
+};
+
+type ClientMessageRecord = {
+  id: string;
+  channel: "EMAIL" | "SMS";
+  target: string;
+  body: string;
+  status: "SENT" | "FAILED";
+  error: string | null;
+  sentBy: string | null;
+  createdAt: string;
 };
 
 type ClientData = {
@@ -26,6 +38,7 @@ type ClientData = {
   notes: string | null;
   createdAt: string;
   vehicles: ClientVehicle[];
+  messages: ClientMessageRecord[];
 };
 
 const LOCALE_MAP: Record<Lang, string> = { ru: "ru-RU", pl: "pl-PL", uk: "uk-UA" };
@@ -209,6 +222,15 @@ export function ClientProfile({
           </div>
         )}
       </form>
+
+      <ClientNotifyPanel
+        clientId={client.id}
+        firstName={client.firstName}
+        hasEmail={!!client.email}
+        hasPhone={!!client.phone}
+        history={client.messages}
+        editable={editable}
+      />
 
       <div className="pt-10">
         <div className="label-eyebrow mb-4">{t("client_vehicles_eyebrow")}</div>

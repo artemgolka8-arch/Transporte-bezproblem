@@ -173,6 +173,30 @@ const ru = {
   active_units_label: "Единиц в аренде",
   since_label: "С нами с",
 
+  // отправка сообщений клиенту
+  notify_open_btn: "Написать клиенту",
+  notify_title: "Сообщение клиенту",
+  notify_channel_email: "Email",
+  notify_channel_sms: "SMS",
+  notify_template_label: "Шаблон",
+  notify_template_custom: "Свой текст",
+  notify_template_reminder_title: "Напоминание об аренде",
+  notify_template_reminder_body:
+    "Здравствуйте, {name}! Напоминаем, что срок аренды подходит к концу. Пожалуйста, свяжитесь с нами для продления или возврата техники.",
+  notify_template_return_title: "Просьба вернуть технику",
+  notify_template_return_body:
+    "Здравствуйте, {name}! Просим вас вернуть арендованную технику в ближайшее время. Спасибо за понимание.",
+  notify_message_label: "Текст сообщения",
+  notify_send_btn: "Отправить",
+  notify_sending: "Отправка…",
+  notify_sent_ok: "Сообщение отправлено",
+  notify_no_email: "У клиента не указана почта",
+  notify_no_phone: "У клиента не указан телефон",
+  notify_history_title: "История сообщений",
+  notify_history_empty: "Сообщений пока не было",
+  notify_status_sent: "Отправлено",
+  notify_status_failed: "Ошибка отправки",
+
   // страница техники
   back_to_fleet: "← К флоту",
   tab_overview: "Обзор",
@@ -427,6 +451,30 @@ const pl: Dict = {
   active_units_label: "Jednostek w wynajmie",
   since_label: "Z nami od",
 
+  // wysyłanie wiadomości do klienta
+  notify_open_btn: "Napisz do klienta",
+  notify_title: "Wiadomość do klienta",
+  notify_channel_email: "Email",
+  notify_channel_sms: "SMS",
+  notify_template_label: "Szablon",
+  notify_template_custom: "Własny tekst",
+  notify_template_reminder_title: "Przypomnienie o wynajmie",
+  notify_template_reminder_body:
+    "Dzień dobry, {name}! Przypominamy, że okres wynajmu dobiega końca. Prosimy o kontakt w sprawie przedłużenia lub zwrotu sprzętu.",
+  notify_template_return_title: "Prośba o zwrot sprzętu",
+  notify_template_return_body:
+    "Dzień dobry, {name}! Prosimy o zwrot wynajętego sprzętu w najbliższym czasie. Dziękujemy za zrozumienie.",
+  notify_message_label: "Treść wiadomości",
+  notify_send_btn: "Wyślij",
+  notify_sending: "Wysyłanie…",
+  notify_sent_ok: "Wiadomość wysłana",
+  notify_no_email: "Klient nie ma podanego adresu email",
+  notify_no_phone: "Klient nie ma podanego numeru telefonu",
+  notify_history_title: "Historia wiadomości",
+  notify_history_empty: "Nie wysłano jeszcze żadnej wiadomości",
+  notify_status_sent: "Wysłano",
+  notify_status_failed: "Błąd wysyłki",
+
   back_to_fleet: "← Do floty",
   tab_overview: "Przegląd",
   tab_keys: "Klucze · {count}",
@@ -669,6 +717,30 @@ const uk: Dict = {
   rental_inactive: "Немає активної оренди",
   active_units_label: "Одиниць в оренді",
   since_label: "З нами з",
+
+  // надсилання повідомлень клієнту
+  notify_open_btn: "Написати клієнту",
+  notify_title: "Повідомлення клієнту",
+  notify_channel_email: "Email",
+  notify_channel_sms: "SMS",
+  notify_template_label: "Шаблон",
+  notify_template_custom: "Свій текст",
+  notify_template_reminder_title: "Нагадування про оренду",
+  notify_template_reminder_body:
+    "Доброго дня, {name}! Нагадуємо, що термін оренди добігає кінця. Будь ласка, зв'яжіться з нами для продовження або повернення техніки.",
+  notify_template_return_title: "Прохання повернути техніку",
+  notify_template_return_body:
+    "Доброго дня, {name}! Просимо повернути орендовану техніку найближчим часом. Дякуємо за розуміння.",
+  notify_message_label: "Текст повідомлення",
+  notify_send_btn: "Надіслати",
+  notify_sending: "Надсилання…",
+  notify_sent_ok: "Повідомлення надіслано",
+  notify_no_email: "У клієнта не вказано пошту",
+  notify_no_phone: "У клієнта не вказано телефон",
+  notify_history_title: "Історія повідомлень",
+  notify_history_empty: "Повідомлень поки не було",
+  notify_status_sent: "Надіслано",
+  notify_status_failed: "Помилка надсилання",
 
   back_to_fleet: "← До флоту",
   tab_overview: "Огляд",

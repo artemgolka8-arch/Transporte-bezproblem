@@ -80,15 +80,29 @@ model Vehicle {
 }
 
 model Client {
-  id        String    @id @default(cuid())
+  id        String          @id @default(cuid())
   firstName String
   lastName  String
-  phone     String    @unique
+  phone     String          @unique
   email     String?
   notes     String?
   vehicles  Vehicle[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  messages  ClientMessage[]
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+}
+
+model ClientMessage {
+  id        String   @id @default(cuid())
+  clientId  String
+  client    Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  channel   String
+  target    String
+  body      String
+  status    String
+  error     String?
+  sentBy    String?
+  createdAt DateTime @default(now())
 }
 
 model Key {
