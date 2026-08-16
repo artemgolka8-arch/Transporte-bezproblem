@@ -6,6 +6,7 @@ import { StatusBadge } from "./status";
 import { KeyIcon } from "./VehicleIcons";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
 import { VehicleBrand, BRAND_LABEL_KEYS } from "@/lib/brands";
+import { VehicleColor, COLOR_LABEL_KEYS } from "@/lib/colors";
 
 export type { VehicleBrand };
 export { BRAND_LABEL_KEYS };
@@ -17,6 +18,7 @@ export type VehicleCardData = {
   type: "BIKE" | "SCOOTER";
   status: "AVAILABLE" | "WORKSHOP" | "RENTED";
   brand?: VehicleBrand | null;
+  color?: VehicleColor | null;
   city?: string | null;
   imageUrl?: string | null;
   problemDescription?: string | null;
@@ -66,14 +68,18 @@ export function VehicleCard({
 
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
-          <StatusRing status={vehicle.status} type={vehicle.type} brand={vehicle.brand} imageUrl={vehicle.imageUrl} size={52} />
+          <StatusRing status={vehicle.status} type={vehicle.type} brand={vehicle.brand} color={vehicle.color} imageUrl={vehicle.imageUrl} size={52} />
           <div>
             <div className="font-mono text-xs text-faint">{vehicle.code}</div>
             <div className="font-display text-[15px] font-semibold text-ink leading-snug">
               {vehicle.name}
             </div>
-            {vehicle.brand && (
-              <div className="text-[11px] text-muted">{t(BRAND_LABEL_KEYS[vehicle.brand])}</div>
+            {(vehicle.brand || vehicle.color) && (
+              <div className="text-[11px] text-muted">
+                {vehicle.brand && t(BRAND_LABEL_KEYS[vehicle.brand])}
+                {vehicle.brand && vehicle.color && " · "}
+                {vehicle.color && t(COLOR_LABEL_KEYS[vehicle.color])}
+              </div>
             )}
           </div>
         </div>

@@ -42,6 +42,7 @@ export default async function VehiclePage({ params }: { params: { id: string } }
           type: vehicle.type,
           status: vehicle.status,
           brand: vehicle.brand,
+          color: vehicle.color,
           city: vehicle.city,
           imageUrl: vehicle.imageUrl,
           renterFirstName: vehicle.renterFirstName,

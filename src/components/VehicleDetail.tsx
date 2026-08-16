@@ -6,6 +6,7 @@ import { StatusRing } from "./StatusRing";
 import { StatusBadge, STATUS_CONFIG, VehicleStatus } from "./status";
 import { KeyPeg, KeyData } from "./KeyPeg";
 import { BRAND_LABEL_KEYS, VehicleBrand } from "./VehicleCard";
+import { VehicleColor, COLOR_LABEL_KEYS, COLOR_SWATCH } from "@/lib/colors";
 import { canEdit, isAdmin } from "@/lib/roles";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
 import { Lang, TranslationKey } from "@/lib/i18n/translations";
@@ -26,6 +27,7 @@ export type VehicleFull = {
   type: "BIKE" | "SCOOTER";
   status: VehicleStatus;
   brand: VehicleBrand | null;
+  color: VehicleColor | null;
   city: string | null;
   imageUrl: string | null;
   problemDescription: string | null;
@@ -216,7 +218,7 @@ export function VehicleDetail({
       )}
 
       <div className="panel mb-6 flex flex-wrap items-center gap-5 p-6">
-        <StatusRing status={v.status} type={v.type} brand={v.brand} imageUrl={v.imageUrl} size={72} />
+        <StatusRing status={v.status} type={v.type} brand={v.brand} color={v.color} imageUrl={v.imageUrl} size={72} />
         <div className="flex-1 min-w-[200px]">
           <div className="font-mono text-xs text-faint">{v.code}</div>
           {v.vin && <div className="font-mono text-[11px] text-faint/70">VIN: {v.vin}</div>}
@@ -224,6 +226,16 @@ export function VehicleDetail({
           <div className="mt-2 flex items-center gap-2">
             <StatusBadge status={v.status} />
             {v.brand && <span className="text-xs text-muted">· {t(BRAND_LABEL_KEYS[v.brand])}</span>}
+            {v.color && (
+              <span className="inline-flex items-center gap-1 text-xs text-muted">
+                ·
+                <span
+                  className="inline-block h-2.5 w-2.5 rounded-full border border-line"
+                  style={{ backgroundColor: COLOR_SWATCH[v.color] }}
+                />
+                {t(COLOR_LABEL_KEYS[v.color])}
+              </span>
+            )}
             {v.city && <span className="text-xs text-muted">· {v.city}</span>}
             {v.location && <span className="text-xs text-muted">· {v.location}</span>}
             {v.renter && <span className="text-xs text-muted">· {t("renter_label", { name: v.renter })}</span>}

@@ -35,10 +35,10 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { code, vin, type, location, brand, city, imageUrl } = body;
+  const { code, vin, type, location, brand, color, city, imageUrl } = body;
 
   if (!code || !type) {
-    return NextResponse.json({ error: "Заполните бортовой номер и тип" }, { status: 400 });
+    return NextResponse.json({ error: "Заполните регистрационный номер и тип" }, { status: 400 });
   }
 
   const name = brand && BRAND_NAMES[brand] ? `${BRAND_NAMES[brand]} ${code}` : code;
@@ -51,6 +51,7 @@ export async function POST(req: NextRequest) {
         name,
         type,
         brand: brand || null,
+        color: color || null,
         city: city || null,
         imageUrl: imageUrl || null,
         location: location || null,

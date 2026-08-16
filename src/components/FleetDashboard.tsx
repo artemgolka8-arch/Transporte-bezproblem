@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { VehicleCard, VehicleCardData } from "./VehicleCard";
 import { BRAND_LABEL_KEYS, BIKE_BRAND_OPTIONS, SCOOTER_BRAND_OPTIONS, VehicleBrand } from "@/lib/brands";
+import { SCOOTER_COLOR_OPTIONS, COLOR_LABEL_KEYS, COLOR_SWATCH, VehicleColor } from "@/lib/colors";
 import { canEdit, isAdmin } from "@/lib/roles";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
 
@@ -165,6 +166,7 @@ function AddVehicleModal({
   const [vin, setVin] = useState("");
   const [type, setType] = useState<"BIKE" | "SCOOTER">("BIKE");
   const [brand, setBrand] = useState<VehicleBrand | "">("");
+  const [color, setColor] = useState<VehicleColor | "">("");
   const [imageUrl, setImageUrl] = useState("");
   const [city, setCity] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -176,6 +178,7 @@ function AddVehicleModal({
     setType(next);
     // марка привязана к типу — при смене типа список вариантов меняется, сбрасываем выбор
     setBrand("");
+    setColor("");
   }
 
   async function submit(e: React.FormEvent) {
@@ -185,7 +188,7 @@ function AddVehicleModal({
     const res = await fetch("/api/vehicles", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code, vin: vin || null, type, brand: brand || null, city: city || null, imageUrl: imageUrl || null }),
+      body: JSON.stringify({ code, vin: vin || null, type, brand: brand || null, color: color || null, city: city || null, imageUrl: imageUrl || null }),
     });
     setLoading(false);
     if (!res.ok) {
@@ -257,6 +260,40 @@ function AddVehicleModal({
             </option>
           ))}
         </select>
+
+        {type === "SCOOTER" && (
+          <>
+            <label className="mb-1 block label-eyebrow">
+              {t("field_color")} <span className="text-faint normal-case">({t("color_optional")})</span>
+            </label>
+            <div className="mb-4 flex flex-wrap gap-2">
+              {SCOOTER_COLOR_OPTIONS.map((c) => (
+                <button
+                  type="button"
+                  key={c}
+                  onClick={() => setColor(color === c ? "" : c)}
+                  title={t(COLOR_LABEL_KEYS[c])}
+                  aria-label={t(COLOR_LABEL_KEYS[c])}
+                  className={`relative h-8 w-8 rounded-full border-2 transition-transform ${
+                    color === c ? "border-cyan scale-110" : "border-line hover:scale-105"
+                  }`}
+                  style={{ backgroundColor: COLOR_SWATCH[c] }}
+                >
+                  {color === c && (
+                    <svg viewBox="0 0 20 20" fill="none" className="absolute inset-0 m-auto h-4 w-4 drop-shadow">
+                      <path
+                        d="M4.5 10.5l3.5 3.5 7-8"
+                        stroke={c === "WHITE" || c === "YELLOW" ? "#1c1c1e" : "#fff"}
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  )}
+                </button>              ))}
+            </div>
+          </>
+        )}
 
         <label className="mb-1 block label-eyebrow">{t("field_city")}</label>
         <input

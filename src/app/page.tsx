@@ -35,6 +35,7 @@ export default async function HomePage() {
     type: v.type,
     status: v.status,
     brand: v.brand,
+    color: v.color,
     city: v.city,
     imageUrl: v.imageUrl,
     problemDescription: v.problemDescription,

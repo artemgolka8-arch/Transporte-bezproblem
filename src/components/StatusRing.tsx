@@ -1,17 +1,20 @@
 import { STATUS_CONFIG, VehicleStatus } from "./status";
 import { BikeIcon, ScooterIcon, MopedIcon } from "./VehicleIcons";
 import { BRAND_VISUALS, BRAND_DEFAULT_PHOTOS, VehicleBrand } from "@/lib/brands";
+import { VehicleColor, COLOR_SWATCH, SCOOTER_COLOR_PHOTOS } from "@/lib/colors";
 
 export function StatusRing({
   status,
   type,
   brand,
+  color,
   imageUrl,
   size = 64,
 }: {
   status: VehicleStatus;
   type: "BIKE" | "SCOOTER";
   brand?: VehicleBrand | null;
+  color?: VehicleColor | null;
   imageUrl?: string | null;
   size?: number;
 }) {
@@ -19,8 +22,11 @@ export function StatusRing({
   const visual = brand ? BRAND_VISUALS[brand] : null;
   const IconByShape = { bike: BikeIcon, scooter: ScooterIcon, moped: MopedIcon };
   const Icon = visual ? IconByShape[visual.icon] : type === "BIKE" ? BikeIcon : ScooterIcon;
-  // Своё фото техники — в приоритете; иначе дефолтное фото марки, если оно загружено
-  const photo = imageUrl || (brand ? BRAND_DEFAULT_PHOTOS[brand] : undefined);
+  // Приоритет фото: своё загруженное фото → фото для этой марки+цвета (если есть) →
+  // дефолтное фото марки → цветная иконка-заглушка (подкрашенная в выбранный цвет техники, если он задан)
+  const colorPhoto = brand && color ? SCOOTER_COLOR_PHOTOS[brand]?.[color] : undefined;
+  const photo = imageUrl || colorPhoto || (brand ? BRAND_DEFAULT_PHOTOS[brand] : undefined);
+  const swatch = color ? COLOR_SWATCH[color] : null;
 
   return (
     <div
@@ -47,6 +53,12 @@ export function StatusRing({
           alt=""
           className="relative h-full w-full rounded-full object-cover"
         />
+      ) : swatch ? (
+        <div className="relative flex h-full w-full items-center justify-center rounded-full" style={{ backgroundColor: `${swatch}33` }}>
+          <span className="flex h-1/2 w-1/2" style={{ color: swatch }}>
+            <Icon className="h-full w-full" />
+          </span>
+        </div>
       ) : visual ? (
         <div className={`relative flex h-full w-full items-center justify-center rounded-full ${visual.bg}`}>
           <Icon className={`h-1/2 w-1/2 ${visual.fg}`} />
