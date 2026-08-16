@@ -2,7 +2,7 @@ import { getServerSession } from "next-auth";
 import { redirect, notFound } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { Navbar } from "@/components/Navbar";
+import { AppShell } from "@/components/AppShell";
 import { VehicleDetail } from "@/components/VehicleDetail";
 
 export const dynamic = "force-dynamic";
@@ -28,12 +28,11 @@ export default async function VehiclePage({ params }: { params: { id: string } }
   };
 
   return (
-    <>
-      <Navbar
-        counts={counts}
-        userName={session.user.name || session.user.email || ""}
-        role={session.user.role}
-      />
+    <AppShell
+      counts={counts}
+      userName={session.user.name || session.user.email || ""}
+      role={session.user.role}
+    >
       <VehicleDetail
         vehicle={{
           id: vehicle.id,
@@ -72,6 +71,6 @@ export default async function VehiclePage({ params }: { params: { id: string } }
         }}
         role={session.user.role}
       />
-    </>
+    </AppShell>
   );
 }

@@ -390,6 +390,16 @@ const ru = {
   payout_note_placeholder: "Например: за март",
   payout_add_btn: "+ Добавить выплату",
   delete_payout_confirm: "Удалить эту выплату?",
+
+  // боковая панель
+  sidebar_promo_title: "Приглашайте партнёров и развивайте сеть",
+  sidebar_promo_link: "Как это работает?",
+  footer_security_note: "Безопасность и конфиденциальность данных гарантированы",
+  actions_label: "Действия",
+  col_client: "Клиент",
+  per_page_label: "на странице",
+  total_clients_label: "Всего клиентов",
+  page_label: "Страница",
 } as const;
 
 export type TranslationKey = keyof typeof ru;
@@ -757,6 +767,15 @@ const pl: Dict = {
   payout_note_placeholder: "Np. za marzec",
   payout_add_btn: "+ Dodaj wypłatę",
   delete_payout_confirm: "Usunąć tę wypłatę?",
+
+  sidebar_promo_title: "Zapraszaj partnerów i rozwijaj sieć",
+  sidebar_promo_link: "Jak to działa?",
+  footer_security_note: "Bezpieczeństwo i poufność danych są gwarantowane",
+  actions_label: "Akcje",
+  col_client: "Klient",
+  per_page_label: "na stronie",
+  total_clients_label: "Łącznie klientów",
+  page_label: "Strona",
 };
 
 const uk: Dict = {
@@ -1121,6 +1140,15 @@ const uk: Dict = {
   payout_note_placeholder: "Наприклад: за березень",
   payout_add_btn: "+ Додати виплату",
   delete_payout_confirm: "Видалити цю виплату?",
+
+  sidebar_promo_title: "Запрошуйте партнерів і розвивайте мережу",
+  sidebar_promo_link: "Як це працює?",
+  footer_security_note: "Безпека та конфіденційність даних гарантовані",
+  actions_label: "Дії",
+  col_client: "Клієнт",
+  per_page_label: "на сторінці",
+  total_clients_label: "Всього клієнтів",
+  page_label: "Сторінка",
 };
 
 export const translations: Record<Lang, Dict> = { ru, pl, uk };

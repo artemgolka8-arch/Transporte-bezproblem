@@ -2,7 +2,7 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { Navbar } from "@/components/Navbar";
+import { AppShell } from "@/components/AppShell";
 import { FleetDashboard } from "@/components/FleetDashboard";
 
 export const dynamic = "force-dynamic";
@@ -44,13 +44,12 @@ export default async function HomePage() {
   }));
 
   return (
-    <>
-      <Navbar
-        counts={counts}
-        userName={session.user.name || session.user.email || ""}
-        role={session.user.role}
-      />
+    <AppShell
+      counts={counts}
+      userName={session.user.name || session.user.email || ""}
+      role={session.user.role}
+    >
       <FleetDashboard vehicles={cards} role={session.user.role} knownCities={knownCities} />
-    </>
+    </AppShell>
   );
 }

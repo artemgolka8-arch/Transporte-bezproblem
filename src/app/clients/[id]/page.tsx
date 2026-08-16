@@ -2,7 +2,7 @@ import { getServerSession } from "next-auth";
 import { redirect, notFound } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { Navbar } from "@/components/Navbar";
+import { AppShell } from "@/components/AppShell";
 import { ClientProfile } from "@/components/ClientProfile";
 
 export const dynamic = "force-dynamic";
@@ -34,12 +34,11 @@ export default async function ClientProfilePage({ params }: { params: { id: stri
   };
 
   return (
-    <>
-      <Navbar
-        counts={counts}
-        userName={session.user.name || session.user.email || ""}
-        role={session.user.role}
-      />
+    <AppShell
+      counts={counts}
+      userName={session.user.name || session.user.email || ""}
+      role={session.user.role}
+    >
       <ClientProfile
         client={{
           id: client.id,
@@ -70,6 +69,6 @@ export default async function ClientProfilePage({ params }: { params: { id: stri
         }}
         role={session.user.role}
       />
-    </>
+    </AppShell>
   );
 }

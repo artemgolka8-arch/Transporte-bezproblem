@@ -16,10 +16,20 @@ type StatsResponse = {
   byBrand: { brand: VehicleBrand; total: number }[];
 };
 
+function BarChartIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 20V10M12 20V4M20 20v-7" />
+    </svg>
+  );
+}
+
 export function StatsPanel({
   counts,
+  variant = "topbar",
 }: {
   counts: { AVAILABLE: number; WORKSHOP: number; RENTED: number };
+  variant?: "topbar" | "sidebar";
 }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -61,6 +71,7 @@ export function StatsPanel({
   }
 
   const totalFallback = counts.AVAILABLE + counts.WORKSHOP + counts.RENTED;
+  const sidebar = variant === "sidebar";
 
   return (
     <div className="relative" ref={rootRef}>
@@ -69,15 +80,26 @@ export function StatsPanel({
         onClick={toggle}
         aria-expanded={open}
         aria-haspopup="true"
-        className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-sm transition-colors ${
-          open ? "bg-panel2 text-ink" : "text-muted hover:text-ink"
-        }`}
+        className={
+          sidebar
+            ? `flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition-colors ${
+                open ? "bg-violetDim/70 text-violet font-medium" : "text-muted hover:bg-panel2/70 hover:text-ink"
+              }`
+            : `whitespace-nowrap rounded-lg px-3 py-1.5 text-sm transition-colors ${
+                open ? "bg-panel2 text-ink" : "text-muted hover:text-ink"
+              }`
+        }
       >
+        {sidebar && <BarChartIcon />}
         {t("nav_stats")}
       </button>
 
       {open && (
-        <div className="animate-rise scrollbar-thin panel absolute right-0 top-full z-40 mt-2 max-h-[70vh] w-[340px] overflow-y-auto p-4">
+        <div
+          className={`animate-rise scrollbar-thin panel z-40 mt-2 max-h-[70vh] w-[340px] overflow-y-auto p-4 ${
+            sidebar ? "absolute left-2 top-full" : "absolute right-0 top-full"
+          }`}
+        >
           <div className="mb-3 flex items-center justify-between">
             <div className="label-eyebrow">{t("stats_title")}</div>
             <div className="font-mono text-sm text-ink">{data?.total ?? totalFallback}</div>
