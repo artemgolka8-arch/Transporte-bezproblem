@@ -381,6 +381,15 @@ const ru = {
   invitation_rent: "Rent",
   invitation_fleet_partner_rent: "Fleet Partner+Rent",
   delete_referred_confirm: "Удалить этого приглашённого клиента?",
+  col_payout: "Выплата",
+  payout_label: "Выплата",
+  payout_total: "Всего выплачено",
+  payout_amount_label: "Сумма выплаты",
+  payout_amount_invalid: "Укажите корректную сумму",
+  payout_note_label: "Комментарий",
+  payout_note_placeholder: "Например: за март",
+  payout_add_btn: "+ Добавить выплату",
+  delete_payout_confirm: "Удалить эту выплату?",
 } as const;
 
 export type TranslationKey = keyof typeof ru;
@@ -739,6 +748,15 @@ const pl: Dict = {
   invitation_rent: "Rent",
   invitation_fleet_partner_rent: "Fleet Partner+Rent",
   delete_referred_confirm: "Usunąć ten polecony kontakt?",
+  col_payout: "Wypłata",
+  payout_label: "Wypłata",
+  payout_total: "Wypłacono łącznie",
+  payout_amount_label: "Kwota wypłaty",
+  payout_amount_invalid: "Podaj poprawną kwotę",
+  payout_note_label: "Komentarz",
+  payout_note_placeholder: "Np. za marzec",
+  payout_add_btn: "+ Dodaj wypłatę",
+  delete_payout_confirm: "Usunąć tę wypłatę?",
 };
 
 const uk: Dict = {
@@ -1094,6 +1112,15 @@ const uk: Dict = {
   invitation_rent: "Rent",
   invitation_fleet_partner_rent: "Fleet Partner+Rent",
   delete_referred_confirm: "Видалити цього запрошеного клієнта?",
+  col_payout: "Виплата",
+  payout_label: "Виплата",
+  payout_total: "Всього виплачено",
+  payout_amount_label: "Сума виплати",
+  payout_amount_invalid: "Вкажіть коректну суму",
+  payout_note_label: "Коментар",
+  payout_note_placeholder: "Наприклад: за березень",
+  payout_add_btn: "+ Додати виплату",
+  delete_payout_confirm: "Видалити цю виплату?",
 };
 
 export const translations: Record<Lang, Dict> = { ru, pl, uk };

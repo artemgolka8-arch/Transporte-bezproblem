@@ -20,7 +20,10 @@ export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
 
-  const referred = await prisma.referredClient.findMany({ orderBy: { createdAt: "desc" } });
+  const referred = await prisma.referredClient.findMany({
+    orderBy: { createdAt: "desc" },
+    include: { payouts: { orderBy: { createdAt: "desc" } } },
+  });
 
   // Подтягиваем технику, которую сейчас арендует каждый приглашённый (совпадение по телефону
   // с активной арендой на технике). Как только технику снимают с аренды, её телефон-снапшот
@@ -36,6 +39,7 @@ export async function GET() {
   const result = referred.map((r) => ({
     ...r,
     vehicles: rentedVehicles.filter((v) => v.renterPhone === r.phone),
+    payoutTotal: r.payouts.reduce((sum, p) => sum + p.amount, 0),
   }));
 
   return NextResponse.json(result);
@@ -76,5 +80,5 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  return NextResponse.json({ ...referred, vehicles: [] }, { status: 201 });
+  return NextResponse.json({ ...referred, vehicles: [], payouts: [], payoutTotal: 0 }, { status: 201 });
 }

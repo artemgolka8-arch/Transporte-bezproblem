@@ -11,7 +11,10 @@ export default async function ReferredClientsPage() {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/login");
 
-  const referred = await prisma.referredClient.findMany({ orderBy: { createdAt: "desc" } });
+  const referred = await prisma.referredClient.findMany({
+    orderBy: { createdAt: "desc" },
+    include: { payouts: { orderBy: { createdAt: "desc" } } },
+  });
 
   const phones = referred.map((r) => r.phone);
   const rentedVehicles = phones.length
@@ -31,6 +34,14 @@ export default async function ReferredClientsPage() {
     vehicles: rentedVehicles
       .filter((v) => v.renterPhone === r.phone)
       .map((v) => ({ id: v.id, code: v.code, name: v.name })),
+    payouts: r.payouts.map((p) => ({
+      id: p.id,
+      amount: p.amount,
+      note: p.note,
+      createdByName: p.createdByName,
+      createdAt: p.createdAt.toISOString(),
+    })),
+    payoutTotal: r.payouts.reduce((sum, p) => sum + p.amount, 0),
   }));
 
   const vehicles = await prisma.vehicle.findMany({ select: { status: true } });

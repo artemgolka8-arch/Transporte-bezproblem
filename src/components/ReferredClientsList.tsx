@@ -8,6 +8,14 @@ import { TranslationKey } from "@/lib/i18n/translations";
 
 type ReferredVehicle = { id: string; code: string; name: string };
 
+type Payout = {
+  id: string;
+  amount: number;
+  note: string | null;
+  createdByName: string | null;
+  createdAt: string;
+};
+
 type InvitationType = "FLEET_PARTNER" | "RENT" | "FLEET_PARTNER_RENT";
 
 const INVITATION_TYPES: InvitationType[] = ["FLEET_PARTNER", "RENT", "FLEET_PARTNER_RENT"];
@@ -27,7 +35,13 @@ type ReferredRow = {
   invitationType: InvitationType;
   city: string;
   vehicles: ReferredVehicle[];
+  payouts: Payout[];
+  payoutTotal: number;
 };
+
+function formatMoney(value: number) {
+  return `${value.toLocaleString("ru-RU", { maximumFractionDigits: 2 })} zł`;
+}
 
 export function ReferredClientsList({ referred, role }: { referred: ReferredRow[]; role: Role }) {
   const router = useRouter();
@@ -35,8 +49,18 @@ export function ReferredClientsList({ referred, role }: { referred: ReferredRow[
   const [rows, setRows] = useState<ReferredRow[]>(referred);
   const [query, setQuery] = useState("");
   const [formOpen, setFormOpen] = useState(false);
+  const [payoutRowId, setPayoutRowId] = useState<string | null>(null);
   const editable = canEdit(role);
   const canDelete = isAdmin(role);
+  const payoutRow = rows.find((r) => r.id === payoutRowId) || null;
+
+  function updateRowPayouts(id: string, payouts: Payout[]) {
+    setRows((prev) =>
+      prev.map((r) =>
+        r.id === id ? { ...r, payouts, payoutTotal: payouts.reduce((s, p) => s + p.amount, 0) } : r
+      )
+    );
+  }
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -95,6 +119,7 @@ export function ReferredClientsList({ referred, role }: { referred: ReferredRow[
                 <th className="px-5 py-3 font-normal label-eyebrow">{t("col_invitation_type")}</th>
                 <th className="px-5 py-3 font-normal label-eyebrow">{t("col_city")}</th>
                 <th className="px-5 py-3 font-normal label-eyebrow">{t("col_client_vehicle")}</th>
+                <th className="px-5 py-3 font-normal label-eyebrow">{t("col_payout")}</th>
                 {canDelete && <th className="px-5 py-3" />}
               </tr>
             </thead>
@@ -127,6 +152,18 @@ export function ReferredClientsList({ referred, role }: { referred: ReferredRow[
                       </div>
                     )}
                   </td>
+                  <td className="px-5 py-3">
+                    <button
+                      onClick={() => setPayoutRowId(r.id)}
+                      className={
+                        r.payoutTotal > 0
+                          ? "rounded-md border border-mint/40 bg-mintDim/40 px-2 py-0.5 text-[11px] text-mint transition-opacity hover:opacity-80"
+                          : "rounded-md border border-line px-2 py-0.5 text-[11px] text-muted transition-colors hover:border-mint/40 hover:text-mint"
+                      }
+                    >
+                      {r.payoutTotal > 0 ? `${t("payout_label")}: ${formatMoney(r.payoutTotal)}` : `+ ${t("payout_label")}`}
+                    </button>
+                  </td>
                   {canDelete && (
                     <td className="px-5 py-3 text-right">
                       <button
@@ -154,6 +191,158 @@ export function ReferredClientsList({ referred, role }: { referred: ReferredRow[
           }}
         />
       )}
+
+      {payoutRow && (
+        <PayoutModal
+          row={payoutRow}
+          editable={editable}
+          canDelete={canDelete}
+          onClose={() => setPayoutRowId(null)}
+          onChange={(payouts) => updateRowPayouts(payoutRow.id, payouts)}
+        />
+      )}
+    </div>
+  );
+}
+
+function PayoutModal({
+  row,
+  editable,
+  canDelete,
+  onClose,
+  onChange,
+}: {
+  row: ReferredRow;
+  editable: boolean;
+  canDelete: boolean;
+  onClose: () => void;
+  onChange: (payouts: Payout[]) => void;
+}) {
+  const { t } = useTranslation();
+  const [amount, setAmount] = useState("");
+  const [note, setNote] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    const value = Number(amount.replace(",", "."));
+    if (!Number.isFinite(value) || value <= 0) {
+      setError(t("payout_amount_invalid"));
+      return;
+    }
+    setError(null);
+    setLoading(true);
+    const res = await fetch(`/api/referred-clients/${row.id}/payouts`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ amount: value, note: note.trim() || undefined }),
+    });
+    setLoading(false);
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setError(data.error || t("create_failed"));
+      return;
+    }
+    const payout: Payout = await res.json();
+    onChange([payout, ...row.payouts]);
+    setAmount("");
+    setNote("");
+  }
+
+  async function removePayout(id: string) {
+    if (!confirm(t("delete_payout_confirm"))) return;
+    const res = await fetch(`/api/referred-clients/${row.id}/payouts/${id}`, { method: "DELETE" });
+    if (res.ok) {
+      onChange(row.payouts.filter((p) => p.id !== id));
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/60 backdrop-blur-sm px-4 py-8">
+      <div className="panel w-full max-w-sm p-6 animate-rise">
+        <div className="mb-1 flex items-center justify-between">
+          <h2 className="font-display text-lg font-semibold text-ink">{t("payout_label")}</h2>
+          <button type="button" onClick={onClose} className="text-muted hover:text-ink">
+            ✕
+          </button>
+        </div>
+        <div className="mb-4 text-xs text-muted">
+          {row.firstName} {row.lastName}
+        </div>
+
+        <div className="mb-4 flex items-center justify-between rounded-lg border border-mint/40 bg-mintDim/40 px-3 py-2">
+          <span className="text-xs text-muted">{t("payout_total")}</span>
+          <span className="font-display text-base font-semibold text-mint">{formatMoney(row.payoutTotal)}</span>
+        </div>
+
+        {row.payouts.length > 0 && (
+          <div className="mb-4 max-h-48 space-y-1.5 overflow-y-auto">
+            {row.payouts.map((p) => (
+              <div
+                key={p.id}
+                className="flex items-center justify-between rounded-lg border border-line bg-bg2 px-3 py-2 text-xs"
+              >
+                <div>
+                  <div className="text-ink">{formatMoney(p.amount)}</div>
+                  {p.note && <div className="text-faint">{p.note}</div>}
+                  <div className="text-faint">
+                    {new Date(p.createdAt).toLocaleDateString()}
+                    {p.createdByName ? ` · ${p.createdByName}` : ""}
+                  </div>
+                </div>
+                {canDelete && (
+                  <button
+                    onClick={() => removePayout(p.id)}
+                    className="text-danger hover:opacity-80"
+                    title={t("delete_action")}
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {editable && (
+          <form onSubmit={submit}>
+            <label className="mb-1 block label-eyebrow">{t("payout_amount_label")}</label>
+            <input
+              required
+              autoFocus
+              inputMode="decimal"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="0"
+              className="mb-3 w-full rounded-lg border border-line bg-bg2 px-3 py-2 text-sm text-ink outline-none focus:border-mint/50"
+            />
+            <label className="mb-1 block label-eyebrow">
+              {t("payout_note_label")} <span className="text-faint">({t("optional")})</span>
+            </label>
+            <input
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder={t("payout_note_placeholder")}
+              className="mb-3 w-full rounded-lg border border-line bg-bg2 px-3 py-2 text-sm text-ink outline-none focus:border-mint/50"
+            />
+
+            {error && (
+              <div className="mb-3 rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-xs text-danger">
+                {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full rounded-lg border border-mint/40 bg-mintDim/40 py-2.5 text-sm font-medium text-mint transition-opacity hover:opacity-90 disabled:opacity-50"
+            >
+              {loading ? t("saving") : t("payout_add_btn")}
+            </button>
+          </form>
+        )}
+      </div>
     </div>
   );
 }
