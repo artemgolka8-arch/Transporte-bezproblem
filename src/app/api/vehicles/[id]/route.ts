@@ -41,6 +41,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     renterLastName,
     renterPhone,
     renterEmail,
+    workshopDate,
+    workshopReason,
+    workshopMileage,
+    workshopCity,
   } = body;
 
   const current = await prisma.vehicle.findUnique({ where: { id: params.id } });
@@ -57,6 +61,20 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     if (!firstName?.trim() || !lastName?.trim() || !phone?.trim() || !email?.trim()) {
       return NextResponse.json(
         { error: "Для статуса «В аренде» заполните имя, фамилию, телефон и email клиента" },
+        { status: 400 }
+      );
+    }
+  }
+
+  // Переход в статус "В мастерской" разрешён только если заполнена заявка на ремонт
+  if (statusChanged && status === "WORKSHOP") {
+    const date = workshopDate !== undefined ? workshopDate : current.workshopDate;
+    const reason = workshopReason !== undefined ? workshopReason : current.workshopReason;
+    const mileage = workshopMileage !== undefined ? workshopMileage : current.workshopMileage;
+    const wCity = workshopCity !== undefined ? workshopCity : current.workshopCity;
+    if (!date || !reason?.trim() || mileage === null || mileage === undefined || !wCity?.trim()) {
+      return NextResponse.json(
+        { error: "Для статуса «В мастерской» заполните дату, причину, пробег и город" },
         { status: 400 }
       );
     }
@@ -82,6 +100,11 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     data.renter = [fn, ln].filter(Boolean).join(" ") || null;
   }
 
+  if (workshopDate !== undefined) data.workshopDate = workshopDate ? new Date(workshopDate) : null;
+  if (workshopReason !== undefined) data.workshopReason = workshopReason || null;
+  if (workshopMileage !== undefined) data.workshopMileage = workshopMileage === "" || workshopMileage === null ? null : Number(workshopMileage);
+  if (workshopCity !== undefined) data.workshopCity = workshopCity || null;
+
   // При выходе из аренды очищаем данные клиента, чтобы следующая аренда требовала новых данных
   if (statusChanged && current.status === "RENTED" && status !== "RENTED") {
     data.renter = null;
@@ -90,6 +113,14 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     data.renterPhone = null;
     data.renterEmail = null;
     data.rentedUntil = null;
+  }
+
+  // При выходе из мастерской очищаем заявку на ремонт, чтобы следующий заезд требовал новых данных
+  if (statusChanged && current.status === "WORKSHOP" && status !== "WORKSHOP") {
+    data.workshopDate = null;
+    data.workshopReason = null;
+    data.workshopMileage = null;
+    data.workshopCity = null;
   }
 
   const vehicle = await prisma.vehicle.update({

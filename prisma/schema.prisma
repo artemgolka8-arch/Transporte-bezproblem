@@ -67,6 +67,10 @@ model Vehicle {
   renterPhone        String?
   renterEmail        String?
   rentedUntil        DateTime?
+  workshopDate       DateTime?
+  workshopReason     String?
+  workshopMileage    Int?
+  workshopCity       String?
   keys               Key[]
   history            StatusLog[]
   createdAt          DateTime      @default(now())

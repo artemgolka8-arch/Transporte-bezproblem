@@ -34,11 +34,17 @@ export type VehicleFull = {
   renterLastName: string | null;
   renterPhone: string | null;
   renterEmail: string | null;
+  workshopDate: string | null;
+  workshopReason: string | null;
+  workshopMileage: number | null;
+  workshopCity: string | null;
   keys: KeyData[];
   history: HistoryEntry[];
 };
 
 const LOCALE_MAP: Record<Lang, string> = { ru: "ru-RU", pl: "pl-PL", uk: "uk-UA" };
+
+const WORKSHOP_CITIES = ["Wrocław", "Warszawa", "Kraków", "Poznań", "Gdańsk", "Łódź", "Szczecin"];
 
 const KEY_PRESETS = [
   "key_preset_a",
@@ -66,6 +72,7 @@ export function VehicleDetail({
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [rentModalOpen, setRentModalOpen] = useState(false);
+  const [workshopModalOpen, setWorkshopModalOpen] = useState(false);
   const editable = canEdit(role);
   const admin = isAdmin(role);
 
@@ -88,6 +95,10 @@ export function VehicleDetail({
         renterLastName: updated.renterLastName,
         renterPhone: updated.renterPhone,
         renterEmail: updated.renterEmail,
+        workshopDate: updated.workshopDate,
+        workshopReason: updated.workshopReason,
+        workshopMileage: updated.workshopMileage,
+        workshopCity: updated.workshopCity,
         history: updated.history,
       }));
       router.refresh();
@@ -100,6 +111,10 @@ export function VehicleDetail({
     if (!editable || status === v.status) return;
     if (status === "RENTED") {
       setRentModalOpen(true);
+      return;
+    }
+    if (status === "WORKSHOP") {
+      setWorkshopModalOpen(true);
       return;
     }
     changeStatus(status);
@@ -262,6 +277,7 @@ export function VehicleDetail({
       {tab === "overview" ? (
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
           {v.status === "RENTED" && <RenterCard vehicle={v} />}
+          {v.status === "WORKSHOP" && <WorkshopCard vehicle={v} />}
 
           <div className="panel p-6">
             <div className="label-eyebrow mb-3">{t("problem_desc_eyebrow")}</div>
@@ -383,6 +399,24 @@ export function VehicleDetail({
           }}
         />
       )}
+
+      {workshopModalOpen && (
+        <WorkshopVehicleModal
+          saving={savingStatus}
+          onClose={() => setWorkshopModalOpen(false)}
+          onSubmit={async (workshopData) => {
+            const ok = await changeStatus("WORKSHOP", {
+              workshopDate: workshopData.date,
+              workshopReason: workshopData.reason,
+              workshopMileage: Number(workshopData.mileage),
+              workshopCity: workshopData.city,
+              note: t("workshop_history_note", { city: workshopData.city }),
+            });
+            if (ok) setWorkshopModalOpen(false);
+            return ok;
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -447,6 +481,45 @@ function RenterCard({ vehicle }: { vehicle: VehicleFull }) {
               </div>
             </div>
           ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function WorkshopCard({ vehicle }: { vehicle: VehicleFull }) {
+  const { t, lang } = useTranslation();
+  const hasData = Boolean(
+    vehicle.workshopDate || vehicle.workshopReason || vehicle.workshopMileage != null || vehicle.workshopCity
+  );
+
+  return (
+    <div className="panel p-6 lg:col-span-2">
+      <div className="label-eyebrow mb-3">{t("workshop_card_eyebrow")}</div>
+      {!hasData ? (
+        <p className="text-sm text-muted">{t("workshop_card_empty")}</p>
+      ) : (
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <div>
+            <div className="text-[11px] text-faint">{t("workshop_card_date")}</div>
+            <div className="mt-0.5 text-sm text-ink">
+              {vehicle.workshopDate ? new Date(vehicle.workshopDate).toLocaleDateString(LOCALE_MAP[lang]) : "—"}
+            </div>
+          </div>
+          <div>
+            <div className="text-[11px] text-faint">{t("workshop_card_mileage")}</div>
+            <div className="mt-0.5 text-sm text-ink">
+              {vehicle.workshopMileage != null ? `${vehicle.workshopMileage} ${t("workshop_card_mileage_unit")}` : "—"}
+            </div>
+          </div>
+          <div>
+            <div className="text-[11px] text-faint">{t("workshop_card_city")}</div>
+            <div className="mt-0.5 text-sm text-ink">{vehicle.workshopCity || "—"}</div>
+          </div>
+          <div className="col-span-2 sm:col-span-1">
+            <div className="text-[11px] text-faint">{t("workshop_card_reason")}</div>
+            <div className="mt-0.5 text-sm text-ink">{vehicle.workshopReason || "—"}</div>
+          </div>
         </div>
       )}
     </div>
@@ -715,6 +788,113 @@ function RentVehicleModal({
           className="w-full rounded-lg border border-violet/40 bg-violetDim/40 py-2.5 text-sm font-medium text-violet transition-opacity hover:opacity-90 disabled:opacity-50"
         >
           {saving ? t("saving") : t("rent_confirm_btn")}
+        </button>
+      </form>
+    </div>
+  );
+}
+
+function WorkshopVehicleModal({
+  onClose,
+  onSubmit,
+  saving,
+}: {
+  onClose: () => void;
+  onSubmit: (data: { date: string; reason: string; mileage: string; city: string }) => Promise<boolean | void>;
+  saving: boolean;
+}) {
+  const { t } = useTranslation();
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const [date, setDate] = useState(todayIso);
+  const [reason, setReason] = useState("");
+  const [mileage, setMileage] = useState("");
+  const [city, setCity] = useState(WORKSHOP_CITIES[0]);
+  const [error, setError] = useState<string | null>(null);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!date || !reason.trim() || !mileage.trim() || !city.trim()) {
+      setError(t("workshop_fill_all_fields"));
+      return;
+    }
+    if (Number.isNaN(Number(mileage)) || Number(mileage) < 0) {
+      setError(t("workshop_mileage_invalid"));
+      return;
+    }
+    setError(null);
+    const ok = await onSubmit({ date, reason: reason.trim(), mileage: mileage.trim(), city });
+    if (ok === false) setError(t("workshop_save_failed"));
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+      <form onSubmit={submit} className="panel w-full max-w-sm p-6 animate-rise">
+        <div className="mb-1 flex items-center justify-between">
+          <h2 className="font-display text-lg font-semibold text-ink">{t("workshop_modal_title")}</h2>
+          <button type="button" onClick={onClose} className="text-muted hover:text-ink">
+            ✕
+          </button>
+        </div>
+        <p className="mb-5 text-xs text-muted">{t("workshop_modal_subtitle")}</p>
+
+        <label className="mb-1 block label-eyebrow">{t("field_workshop_date")}</label>
+        <input
+          required
+          autoFocus
+          type="date"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+          className="mb-4 w-full rounded-lg border border-line bg-bg2 px-3 py-2 text-sm text-ink outline-none focus:border-amber/50"
+        />
+
+        <label className="mb-1 block label-eyebrow">{t("field_workshop_city")}</label>
+        <select
+          required
+          value={city}
+          onChange={(e) => setCity(e.target.value)}
+          className="mb-4 w-full rounded-lg border border-line bg-bg2 px-3 py-2 text-sm text-ink outline-none focus:border-amber/50"
+        >
+          {WORKSHOP_CITIES.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </select>
+
+        <label className="mb-1 block label-eyebrow">{t("field_workshop_mileage")}</label>
+        <input
+          required
+          type="number"
+          min={0}
+          inputMode="numeric"
+          value={mileage}
+          onChange={(e) => setMileage(e.target.value)}
+          placeholder={t("workshop_mileage_placeholder")}
+          className="mb-4 w-full rounded-lg border border-line bg-bg2 px-3 py-2 text-sm text-ink outline-none focus:border-amber/50"
+        />
+
+        <label className="mb-1 block label-eyebrow">{t("field_workshop_reason")}</label>
+        <textarea
+          required
+          rows={3}
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          placeholder={t("workshop_reason_placeholder")}
+          className="mb-4 w-full resize-none rounded-lg border border-line bg-bg2 px-3 py-2.5 text-sm text-ink outline-none focus:border-amber/50"
+        />
+
+        {error && (
+          <div className="mb-4 rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-xs text-danger">
+            {error}
+          </div>
+        )}
+
+        <button
+          type="submit"
+          disabled={saving}
+          className="w-full rounded-lg border border-amber/40 bg-amberDim/40 py-2.5 text-sm font-medium text-amber transition-opacity hover:opacity-90 disabled:opacity-50"
+        >
+          {saving ? t("saving") : t("workshop_confirm_btn")}
         </button>
       </form>
     </div>

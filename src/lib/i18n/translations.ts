@@ -118,6 +118,30 @@ const ru = {
   renter_card_email_copied: "Почта была скопирована",
   rent_history_note: "Сдано в аренду: {name}",
 
+  // модалка отправки в мастерскую
+  workshop_modal_title: "Заявка на ремонт",
+  workshop_modal_subtitle: "Заполните данные, чтобы перевести технику в статус «В мастерской»",
+  field_workshop_date: "Дата отправки в ремонт",
+  field_workshop_city: "Город",
+  field_workshop_mileage: "Пробег",
+  field_workshop_reason: "Причина ремонта",
+  workshop_mileage_placeholder: "Например, 1240",
+  workshop_reason_placeholder: "Опишите причину неисправности",
+  workshop_confirm_btn: "Отправить в мастерскую",
+  workshop_fill_all_fields: "Заполните все поля",
+  workshop_mileage_invalid: "Укажите корректный пробег",
+  workshop_save_failed: "Не удалось сохранить. Попробуйте ещё раз",
+  workshop_history_note: "Отправлено в мастерскую, город: {city}",
+
+  // карточка заявки на ремонт
+  workshop_card_eyebrow: "Заявка на ремонт",
+  workshop_card_empty: "Данные о ремонте не указаны",
+  workshop_card_date: "Дата отправки",
+  workshop_card_mileage: "Пробег",
+  workshop_card_mileage_unit: "км",
+  workshop_card_city: "Город",
+  workshop_card_reason: "Причина",
+
   // страница техники
   back_to_fleet: "← К флоту",
   tab_overview: "Обзор",
@@ -299,6 +323,30 @@ const pl: Dict = {
   rent_fill_all_fields: "Uzupełnij wszystkie pola",
   rent_save_failed: "Nie udało się zapisać. Spróbuj ponownie",
   rent_history_note: "Wynajęto: {name}",
+
+  // modal wysłania do warsztatu
+  workshop_modal_title: "Zgłoszenie do warsztatu",
+  workshop_modal_subtitle: "Uzupełnij dane, aby zmienić status na „W warsztacie”",
+  field_workshop_date: "Data przekazania do naprawy",
+  field_workshop_city: "Miasto",
+  field_workshop_mileage: "Przebieg",
+  field_workshop_reason: "Przyczyna naprawy",
+  workshop_mileage_placeholder: "Np. 1240",
+  workshop_reason_placeholder: "Opisz przyczynę usterki",
+  workshop_confirm_btn: "Wyślij do warsztatu",
+  workshop_fill_all_fields: "Uzupełnij wszystkie pola",
+  workshop_mileage_invalid: "Podaj prawidłowy przebieg",
+  workshop_save_failed: "Nie udało się zapisać. Spróbuj ponownie",
+  workshop_history_note: "Wysłano do warsztatu, miasto: {city}",
+
+  // karta zgłoszenia do warsztatu
+  workshop_card_eyebrow: "Zgłoszenie do warsztatu",
+  workshop_card_empty: "Brak danych o naprawie",
+  workshop_card_date: "Data przekazania",
+  workshop_card_mileage: "Przebieg",
+  workshop_card_mileage_unit: "km",
+  workshop_card_city: "Miasto",
+  workshop_card_reason: "Przyczyna",
 
   // karta klienta
   renter_card_eyebrow: "Dane klienta",
@@ -483,6 +531,30 @@ const uk: Dict = {
   rent_fill_all_fields: "Заповніть усі поля",
   rent_save_failed: "Не вдалося зберегти. Спробуйте ще раз",
   rent_history_note: "Здано в оренду: {name}",
+
+  // модалка відправки в майстерню
+  workshop_modal_title: "Заявка на ремонт",
+  workshop_modal_subtitle: "Заповніть дані, щоб перевести техніку у статус «У майстерні»",
+  field_workshop_date: "Дата відправки в ремонт",
+  field_workshop_city: "Місто",
+  field_workshop_mileage: "Пробіг",
+  field_workshop_reason: "Причина ремонту",
+  workshop_mileage_placeholder: "Наприклад, 1240",
+  workshop_reason_placeholder: "Опишіть причину несправності",
+  workshop_confirm_btn: "Відправити в майстерню",
+  workshop_fill_all_fields: "Заповніть усі поля",
+  workshop_mileage_invalid: "Вкажіть коректний пробіг",
+  workshop_save_failed: "Не вдалося зберегти. Спробуйте ще раз",
+  workshop_history_note: "Відправлено в майстерню, місто: {city}",
+
+  // картка заявки на ремонт
+  workshop_card_eyebrow: "Заявка на ремонт",
+  workshop_card_empty: "Дані про ремонт не вказано",
+  workshop_card_date: "Дата відправки",
+  workshop_card_mileage: "Пробіг",
+  workshop_card_mileage_unit: "км",
+  workshop_card_city: "Місто",
+  workshop_card_reason: "Причина",
 
   // картка клієнта
   renter_card_eyebrow: "Дані клієнта",
