@@ -34,6 +34,7 @@ type ReferredRow = {
   phone: string;
   invitationType: InvitationType;
   city: string;
+  link: string | null;
   vehicles: ReferredVehicle[];
   payouts: Payout[];
   payoutTotal: number;
@@ -118,6 +119,100 @@ function ShieldIcon() {
   );
 }
 
+function ExternalLinkIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14 4h6v6M20 4 10 14M9 5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-3" />
+    </svg>
+  );
+}
+
+// Позволяет вставлять ссылку без "https://" — при открытии добавляем схему сами
+function normalizeUrl(raw: string) {
+  const trimmed = raw.trim();
+  if (!trimmed) return "";
+  return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+}
+
+function LinkCell({
+  row,
+  editable,
+  onSaved,
+}: {
+  row: ReferredRow;
+  editable: boolean;
+  onSaved: (link: string | null) => void;
+}) {
+  const { t } = useTranslation();
+  const [value, setValue] = useState(row.link ?? "");
+  const [saving, setSaving] = useState(false);
+
+  async function save() {
+    const original = row.link ?? "";
+    if (value === original) return;
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/referred-clients/${row.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ link: value }),
+      });
+      if (res.ok) {
+        const normalized = value.trim() || null;
+        onSaved(normalized);
+        setValue(normalized ?? "");
+      }
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (!editable) {
+    return row.link ? (
+      <a
+        href={normalizeUrl(row.link)}
+        target="_blank"
+        rel="noopener noreferrer"
+        title={t("link_open")}
+        className="inline-flex items-center gap-1.5 text-violet transition-colors hover:opacity-80"
+      >
+        <ExternalLinkIcon />
+        {t("link_open")}
+      </a>
+    ) : (
+      <span className="text-faint">—</span>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-1.5">
+      <input
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onBlur={save}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+        }}
+        placeholder={t("link_placeholder")}
+        className="w-40 rounded-lg border border-line bg-bg2 px-2.5 py-1.5 text-xs text-ink outline-none transition-colors focus:border-violet/50"
+      />
+      {saving && <span className="shrink-0 text-[10px] text-faint">…</span>}
+      {!saving && row.link && (
+        <a
+          href={normalizeUrl(row.link)}
+          target="_blank"
+          rel="noopener noreferrer"
+          title={t("link_open")}
+          onMouseDown={(e) => e.preventDefault()}
+          className="shrink-0 text-muted transition-colors hover:text-violet"
+        >
+          <ExternalLinkIcon />
+        </a>
+      )}
+    </div>
+  );
+}
+
 const PAGE_SIZE_OPTIONS = [10, 25, 50];
 
 export function ReferredClientsList({ referred, role }: { referred: ReferredRow[]; role: Role }) {
@@ -140,6 +235,10 @@ export function ReferredClientsList({ referred, role }: { referred: ReferredRow[
         r.id === id ? { ...r, payouts, payoutTotal: payouts.reduce((s, p) => s + p.amount, 0) } : r
       )
     );
+  }
+
+  function updateRowLink(id: string, link: string | null) {
+    setRows((prev) => prev.map((r) => (r.id === id ? { ...r, link } : r)));
   }
 
   const filtered = useMemo(() => {
@@ -206,7 +305,7 @@ export function ReferredClientsList({ referred, role }: { referred: ReferredRow[
       ) : (
         <div className="panel overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[860px] text-left text-sm">
+            <table className="w-full min-w-[980px] text-left text-sm">
               <thead>
                 <tr className="border-b border-line text-muted">
                   <th className="px-5 py-3.5 text-xs font-medium text-muted">
@@ -227,6 +326,7 @@ export function ReferredClientsList({ referred, role }: { referred: ReferredRow[
                   <th className="px-5 py-3.5 text-xs font-medium text-muted">
                     <span className="inline-flex items-center gap-1">{t("col_payout")}<SortIcon /></span>
                   </th>
+                  <th className="px-5 py-3.5 text-xs font-medium text-muted">{t("col_link")}</th>
                   <th className="px-5 py-3.5 text-xs font-medium text-muted">{t("actions_label")}</th>
                 </tr>
               </thead>
@@ -287,6 +387,9 @@ export function ReferredClientsList({ referred, role }: { referred: ReferredRow[
                         >
                           {r.payoutTotal > 0 ? formatMoney(r.payoutTotal) : `+ ${t("payout_label")}`}
                         </button>
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <LinkCell row={r} editable={editable} onSaved={(link) => updateRowLink(r.id, link)} />
                       </td>
                       <td className="px-5 py-3.5">
                         <div className="relative">

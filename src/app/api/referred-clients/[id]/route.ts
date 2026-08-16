@@ -27,7 +27,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (!current) return NextResponse.json({ error: "Не найдено" }, { status: 404 });
 
   const body = await req.json();
-  const { firstName, lastName, phone, invitationType, city } = body;
+  const { firstName, lastName, phone, invitationType, city, link } = body;
 
   if (phone !== undefined && phone.trim() !== current.phone) {
     const clash = await prisma.referredClient.findUnique({ where: { phone: phone.trim() } });
@@ -48,6 +48,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (phone !== undefined) data.phone = phone.trim();
   if (invitationType !== undefined) data.invitationType = invitationType;
   if (city !== undefined) data.city = city;
+  if (link !== undefined) data.link = link?.trim() || null;
 
   const referred = await prisma.referredClient.update({ where: { id: params.id }, data });
   return NextResponse.json(referred);

@@ -31,6 +31,7 @@ export default async function ReferredClientsPage() {
     phone: r.phone,
     invitationType: r.invitationType,
     city: r.city,
+    link: r.link,
     vehicles: rentedVehicles
       .filter((v) => v.renterPhone === r.phone)
       .map((v) => ({ id: v.id, code: v.code, name: v.name })),

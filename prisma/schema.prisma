@@ -160,6 +160,7 @@ model ReferredClient {
   phone          String                 @unique
   invitationType InvitationType
   city           String
+  link           String?
   payouts        ReferredClientPayout[]
   createdAt      DateTime               @default(now())
   updatedAt      DateTime               @updatedAt

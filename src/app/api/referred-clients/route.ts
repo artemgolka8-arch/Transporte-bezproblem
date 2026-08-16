@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { firstName, lastName, phone, invitationType, city } = body;
+  const { firstName, lastName, phone, invitationType, city, link } = body;
 
   if (!firstName?.trim() || !lastName?.trim() || !phone?.trim()) {
     return NextResponse.json({ error: "Заполните имя, фамилию и телефон" }, { status: 400 });
@@ -77,6 +77,7 @@ export async function POST(req: NextRequest) {
       phone: phone.trim(),
       invitationType,
       city,
+      link: link?.trim() || null,
     },
   });
 
