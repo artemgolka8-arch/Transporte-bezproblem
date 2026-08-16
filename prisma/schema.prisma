@@ -230,3 +230,15 @@ model DebtorMessage {
   sentBy    String?
   createdAt DateTime @default(now())
 }
+
+// Снапшот итогов на момент каждой синхронизации с ravapi.eu — нужен только для
+// карточки "Итого" (сравнение "было -> стало"). totalDebt хранится как положительное
+// число (сумма |currentBalance| по должникам с currentBalance < 0).
+model DebtorSyncSnapshot {
+  id              String   @id @default(cuid())
+  prevTotalDebt   Float
+  newTotalDebt    Float
+  prevDebtorCount Int
+  newDebtorCount  Int
+  createdAt       DateTime @default(now())
+}

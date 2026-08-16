@@ -16,6 +16,24 @@ export default async function DebtorsPage() {
     include: { messages: { orderBy: { createdAt: "desc" }, take: 20 } },
   });
 
+  const negativeDebtors = debtors.filter((d) => d.currentBalance < 0);
+  const totalDebt = negativeDebtors.reduce((sum, d) => sum + Math.abs(d.currentBalance), 0);
+  const debtorCount = negativeDebtors.length;
+  const lastSnapshot = await prisma.debtorSyncSnapshot.findFirst({ orderBy: { createdAt: "desc" } });
+  const summary = {
+    totalDebt,
+    debtorCount,
+    lastSync: lastSnapshot
+      ? {
+          prevTotalDebt: lastSnapshot.prevTotalDebt,
+          newTotalDebt: lastSnapshot.newTotalDebt,
+          prevDebtorCount: lastSnapshot.prevDebtorCount,
+          newDebtorCount: lastSnapshot.newDebtorCount,
+          createdAt: lastSnapshot.createdAt.toISOString(),
+        }
+      : null,
+  };
+
   const vehicles = await prisma.vehicle.findMany({ select: { status: true } });
   const counts = {
     AVAILABLE: vehicles.filter((v) => v.status === "AVAILABLE").length,
@@ -30,6 +48,7 @@ export default async function DebtorsPage() {
       role={session.user.role}
     >
       <DebtorsList
+        summary={summary}
         debtors={debtors.map((d) => ({
           id: d.id,
           firstName: d.firstName,

@@ -49,6 +49,9 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         sentBy: session.user.name || session.user.email || null,
       },
     });
+    if (!debtor.isContactedForDebt) {
+      await prisma.debtor.update({ where: { id: debtor.id }, data: { isContactedForDebt: true } });
+    }
     return NextResponse.json(record);
   } catch (err: any) {
     const errorMessage = err?.message ? String(err.message) : "Не удалось отправить";
