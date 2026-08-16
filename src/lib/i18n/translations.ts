@@ -28,6 +28,10 @@ const ru = {
   nav_clients: "Клиенты",
   sign_out: "Выйти",
 
+  // тема
+  theme_light: "Светлая тема",
+  theme_dark: "Тёмная тема",
+
   // статусы
   status_available: "Доступен",
   status_workshop: "В мастерской",
@@ -313,6 +317,9 @@ const pl: Dict = {
   nav_clients: "Klienci",
   sign_out: "Wyloguj",
 
+  theme_light: "Jasny motyw",
+  theme_dark: "Ciemny motyw",
+
   status_available: "Dostępny",
   status_workshop: "W warsztacie",
   status_rented: "Wynajęty",
@@ -580,6 +587,9 @@ const uk: Dict = {
   nav_profile: "Профіль",
   nav_clients: "Клієнти",
   sign_out: "Вийти",
+
+  theme_light: "Світла тема",
+  theme_dark: "Темна тема",
 
   status_available: "Доступний",
   status_workshop: "У майстерні",

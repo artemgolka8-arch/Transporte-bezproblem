@@ -1,27 +1,34 @@
 import type { Config } from "tailwindcss";
 
+// Позволяет использовать CSS-переменные вместе с прозрачностью Tailwind
+// (например bg-bg/50), сохраняя все существующие классы без изменений.
+function withOpacity(variable: string) {
+  return `rgb(var(${variable}) / <alpha-value>)`;
+}
+
 const config: Config = {
+  darkMode: "class",
   content: ["./src/**/*.{js,ts,jsx,tsx,mdx}"],
   theme: {
     extend: {
       colors: {
-        bg: "#F4F8FC",
-        bg2: "#FFFFFF",
-        panel: "#FFFFFF",
-        panel2: "#EAF2FB",
-        line: "#D7E4F3",
-        ink: "#0F2545",
-        muted: "#5B73A5",
-        faint: "#8CA0BF",
-        mint: "#12B76A",
-        mintDim: "#DDF6E9",
-        amber: "#DC8A0E",
-        amberDim: "#FBEED9",
-        violet: "#5B5FEE",
-        violetDim: "#E6E6FD",
-        cyan: "#1274E0",
-        cyanDim: "#E1EEFC",
-        danger: "#E23B5C",
+        bg: withOpacity("--color-bg"),
+        bg2: withOpacity("--color-bg2"),
+        panel: withOpacity("--color-panel"),
+        panel2: withOpacity("--color-panel2"),
+        line: withOpacity("--color-line"),
+        ink: withOpacity("--color-ink"),
+        muted: withOpacity("--color-muted"),
+        faint: withOpacity("--color-faint"),
+        mint: withOpacity("--color-mint"),
+        mintDim: withOpacity("--color-mint-dim"),
+        amber: withOpacity("--color-amber"),
+        amberDim: withOpacity("--color-amber-dim"),
+        violet: withOpacity("--color-violet"),
+        violetDim: withOpacity("--color-violet-dim"),
+        cyan: withOpacity("--color-cyan"),
+        cyanDim: withOpacity("--color-cyan-dim"),
+        danger: withOpacity("--color-danger"),
       },
       fontFamily: {
         display: ["var(--font-display)"],

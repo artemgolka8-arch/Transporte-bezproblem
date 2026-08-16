@@ -7,6 +7,7 @@ import { STATUS_CONFIG } from "./status";
 import { ROLE_LABEL_KEYS } from "@/lib/roles";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+import { ThemeToggle } from "./ThemeToggle";
 
 export function Navbar({
   counts,
@@ -91,7 +92,10 @@ export function Navbar({
           </Link>
         </nav>
 
-        <LanguageSwitcher />
+        <div className="flex items-center gap-2">
+          <LanguageSwitcher />
+          <ThemeToggle />
+        </div>
 
         <div className="flex items-center gap-3 border-l border-line pl-4">
           <div className="text-right leading-tight hidden sm:block">

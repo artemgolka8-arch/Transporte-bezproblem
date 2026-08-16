@@ -3,25 +3,71 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    /* Светлая тема (значения — R G B, без запятых, для работы с прозрачностью Tailwind) */
+    --color-bg: 244 248 252;
+    --color-bg2: 255 255 255;
+    --color-panel: 255 255 255;
+    --color-panel2: 234 242 251;
+    --color-line: 215 228 243;
+    --color-ink: 15 37 69;
+    --color-muted: 91 115 165;
+    --color-faint: 140 160 191;
+    --color-mint: 18 183 106;
+    --color-mint-dim: 221 246 233;
+    --color-amber: 220 138 14;
+    --color-amber-dim: 251 238 217;
+    --color-violet: 91 95 238;
+    --color-violet-dim: 230 230 253;
+    --color-cyan: 18 116 224;
+    --color-cyan-dim: 225 238 252;
+    --color-danger: 226 59 92;
+  }
+
+  .dark {
+    /* Тёмная тема */
+    --color-bg: 10 16 28;
+    --color-bg2: 16 26 44;
+    --color-panel: 18 28 48;
+    --color-panel2: 26 39 64;
+    --color-line: 38 52 79;
+    --color-ink: 232 238 249;
+    --color-muted: 147 165 201;
+    --color-faint: 94 110 143;
+    --color-mint: 52 211 153;
+    --color-mint-dim: 15 51 36;
+    --color-amber: 242 169 60;
+    --color-amber-dim: 58 42 14;
+    --color-violet: 129 140 255;
+    --color-violet-dim: 36 36 74;
+    --color-cyan: 77 163 255;
+    --color-cyan-dim: 14 42 70;
+    --color-danger: 255 107 129;
+  }
+
   * {
     @apply border-line;
   }
   html {
     color-scheme: light;
   }
+  html.dark {
+    color-scheme: dark;
+  }
   body {
     @apply bg-bg text-ink font-body antialiased;
     background-image:
-      radial-gradient(circle at 12% -10%, rgba(18,116,224,0.05), transparent 45%),
-      radial-gradient(circle at 88% 0%, rgba(91,95,238,0.04), transparent 40%);
+      radial-gradient(circle at 12% -10%, rgb(var(--color-cyan) / 0.05), transparent 45%),
+      radial-gradient(circle at 88% 0%, rgb(var(--color-violet) / 0.04), transparent 40%);
     background-attachment: fixed;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
   ::selection {
-    background: rgba(18, 116, 224, 0.2);
-    color: #0f2545;
+    background: rgb(var(--color-cyan) / 0.2);
+    color: rgb(var(--color-ink));
   }
   *:focus-visible {
-    outline: 2px solid #1274e0;
+    outline: 2px solid rgb(var(--color-cyan));
     outline-offset: 2px;
   }
 }
@@ -35,7 +81,7 @@
     background: transparent;
   }
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    background: #c3d6ec;
+    background: rgb(var(--color-line));
     border-radius: 8px;
   }
 

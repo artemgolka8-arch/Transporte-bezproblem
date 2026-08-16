@@ -4,6 +4,7 @@ import { Chakra_Petch, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/Providers";
 import { isLang, DEFAULT_LANG } from "@/lib/i18n/translations";
+import type { Theme } from "@/lib/theme/ThemeProvider";
 
 const display = Chakra_Petch({
   subsets: ["latin"],
@@ -31,10 +32,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const cookieLang = cookies().get("fleet_lang")?.value;
   const initialLang = isLang(cookieLang) ? cookieLang : DEFAULT_LANG;
 
+  const cookieTheme = cookies().get("fleet_theme")?.value;
+  const initialTheme: Theme = cookieTheme === "dark" ? "dark" : "light";
+
   return (
-    <html lang={initialLang} className={`${display.variable} ${body.variable} ${mono.variable}`}>
+    <html
+      lang={initialLang}
+      className={`${display.variable} ${body.variable} ${mono.variable} ${initialTheme === "dark" ? "dark" : ""}`}
+      style={{ colorScheme: initialTheme }}
+    >
       <body>
-        <Providers initialLang={initialLang}>{children}</Providers>
+        <Providers initialLang={initialLang} initialTheme={initialTheme}>
+          {children}
+        </Providers>
       </body>
     </html>
   );
