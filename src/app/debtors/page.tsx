@@ -13,6 +13,7 @@ export default async function DebtorsPage() {
 
   const debtors = await prisma.debtor.findMany({
     orderBy: { currentBalance: "asc" },
+    include: { messages: { orderBy: { createdAt: "desc" }, take: 20 } },
   });
 
   const vehicles = await prisma.vehicle.findMany({ select: { status: true } });
@@ -44,6 +45,15 @@ export default async function DebtorsPage() {
           debtNotes: d.debtNotes,
           isContactedForDebt: d.isContactedForDebt,
           lastSyncedAt: d.lastSyncedAt.toISOString(),
+          messages: d.messages.map((m) => ({
+            id: m.id,
+            target: m.target,
+            body: m.body,
+            status: m.status,
+            error: m.error,
+            sentBy: m.sentBy,
+            createdAt: m.createdAt.toISOString(),
+          })),
         }))}
         role={session.user.role}
       />

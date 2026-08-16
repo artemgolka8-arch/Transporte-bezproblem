@@ -5,6 +5,16 @@ import { useRouter } from "next/navigation";
 import { canEdit, Role } from "@/lib/roles";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
 
+type DebtorMessage = {
+  id: string;
+  target: string;
+  body: string;
+  status: string;
+  error: string | null;
+  sentBy: string | null;
+  createdAt: string;
+};
+
 type DebtorRow = {
   id: string;
   firstName: string;
@@ -18,6 +28,7 @@ type DebtorRow = {
   debtNotes: string | null;
   isContactedForDebt: boolean;
   lastSyncedAt: string;
+  messages: DebtorMessage[];
 };
 
 function formatMoney(value: number) {
@@ -78,6 +89,15 @@ function RefreshIcon({ spinning }: { spinning?: boolean }) {
   );
 }
 
+function SmsIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 5.5h16v10H9l-4 3.5v-3.5H4z" />
+      <path d="M8 9.5h8M8 12.5h5" />
+    </svg>
+  );
+}
+
 function ChevronLeftIcon() {
   return (
     <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -106,7 +126,13 @@ export function DebtorsList({ debtors, role }: { debtors: DebtorRow[]; role: Rol
   const [syncing, setSyncing] = useState(false);
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
+  const [smsRowId, setSmsRowId] = useState<string | null>(null);
   const editable = canEdit(role);
+  const smsRow = rows.find((r) => r.id === smsRowId) || null;
+
+  function updateRowMessages(id: string, messages: DebtorMessage[]) {
+    setRows((prev) => prev.map((r) => (r.id === id ? { ...r, messages } : r)));
+  }
 
   const lastSynced = rows.reduce<string | null>((latest, r) => {
     if (!latest || r.lastSyncedAt > latest) return r.lastSyncedAt;
@@ -218,6 +244,7 @@ export function DebtorsList({ debtors, role }: { debtors: DebtorRow[]; role: Rol
                   <th className="px-5 py-3.5 text-xs font-medium text-muted">{t("col_client_vehicle")}</th>
                   <th className="px-5 py-3.5 text-xs font-medium text-muted">{t("col_last_payoff")}</th>
                   <th className="px-5 py-3.5 text-xs font-medium text-muted">{t("col_balance")}</th>
+                  <th className="px-5 py-3.5 text-xs font-medium text-muted">{t("actions_label")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -264,6 +291,21 @@ export function DebtorsList({ debtors, role }: { debtors: DebtorRow[]; role: Rol
                         >
                           {formatMoney(r.currentBalance)}
                         </span>
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <button
+                          onClick={() => setSmsRowId(r.id)}
+                          disabled={!r.phoneNumber}
+                          title={r.phoneNumber ? t("debtors_send_sms_btn") : t("notify_no_phone")}
+                          className={
+                            r.messages.some((m) => m.status === "SENT")
+                              ? "inline-flex h-8 items-center gap-1.5 rounded-lg border border-mint/40 bg-mintDim/40 px-3 text-[12px] font-medium text-mint transition-opacity hover:opacity-80 disabled:opacity-40"
+                              : "inline-flex h-8 items-center gap-1.5 rounded-lg border border-line bg-bg2 px-3 text-[12px] font-medium text-ink transition-colors hover:border-violet/40 hover:text-violet disabled:opacity-40"
+                          }
+                        >
+                          <SmsIcon />
+                          {t("debtors_send_sms_btn")}
+                        </button>
                       </td>
                     </tr>
                   );
@@ -312,6 +354,113 @@ export function DebtorsList({ debtors, role }: { debtors: DebtorRow[]; role: Rol
           </div>
         </div>
       )}
+
+      {smsRow && (
+        <SmsModal
+          row={smsRow}
+          onClose={() => setSmsRowId(null)}
+          onChange={(messages) => updateRowMessages(smsRow.id, messages)}
+        />
+      )}
+    </div>
+  );
+}
+
+function SmsModal({
+  row,
+  onClose,
+  onChange,
+}: {
+  row: DebtorRow;
+  onClose: () => void;
+  onChange: (messages: DebtorMessage[]) => void;
+}) {
+  const { t } = useTranslation();
+  const template = t("debtors_sms_template")
+    .replace("{name}", row.firstName)
+    .replace("{amount}", formatMoney(Math.abs(row.currentBalance)));
+  const [message, setMessage] = useState(template);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [sent, setSent] = useState(false);
+
+  async function send() {
+    if (!message.trim()) return;
+    setSending(true);
+    setError(null);
+    setSent(false);
+    const res = await fetch(`/api/debtors/${row.id}/notify`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message }),
+    });
+    setSending(false);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setError(data.error || t("notify_send_failed"));
+      onChange([data, ...row.messages].filter((m) => m && m.id));
+      return;
+    }
+    setSent(true);
+    onChange([data, ...row.messages]);
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/60 backdrop-blur-sm px-4 py-8">
+      <div className="panel w-full max-w-sm p-6 animate-rise">
+        <div className="mb-1 flex items-center justify-between">
+          <h2 className="font-display text-lg font-semibold text-ink">{t("debtors_send_sms_btn")}</h2>
+          <button type="button" onClick={onClose} className="text-muted hover:text-ink">
+            ✕
+          </button>
+        </div>
+        <div className="mb-4 text-xs text-muted">
+          {row.firstName} {row.lastName} · {row.phoneNumber}
+        </div>
+
+        <label className="mb-1 block label-eyebrow">{t("notify_message_label")}</label>
+        <textarea
+          rows={4}
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          className="mb-3 w-full resize-none rounded-lg border border-line bg-bg2 px-3 py-2 text-sm text-ink outline-none focus:border-violet/50"
+        />
+
+        {error && (
+          <div className="mb-3 rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-xs text-danger">
+            {error}
+          </div>
+        )}
+        {sent && !error && (
+          <div className="mb-3 rounded-lg border border-mint/30 bg-mintDim/40 px-3 py-2 text-xs text-mint">
+            {t("notify_sent_ok")}
+          </div>
+        )}
+
+        <button
+          onClick={send}
+          disabled={sending || !message.trim()}
+          className="w-full rounded-lg border border-violet/40 bg-violetDim/40 py-2.5 text-sm font-medium text-violet transition-opacity hover:opacity-90 disabled:opacity-50"
+        >
+          {sending ? t("notify_sending") : t("notify_send_btn")}
+        </button>
+
+        {row.messages.length > 0 && (
+          <div className="mt-4 max-h-40 space-y-1.5 overflow-y-auto border-t border-line pt-3">
+            {row.messages.map((m) => (
+              <div key={m.id} className="rounded-lg border border-line bg-bg2 px-3 py-2 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-faint">{new Date(m.createdAt).toLocaleString("ru-RU")}</span>
+                  <span className={m.status === "SENT" ? "text-mint" : "text-danger"}>
+                    {m.status === "SENT" ? t("notify_status_sent") : t("notify_status_failed")}
+                  </span>
+                </div>
+                <p className="mt-1 text-ink">{m.body}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
