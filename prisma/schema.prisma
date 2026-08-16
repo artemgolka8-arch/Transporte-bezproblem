@@ -195,3 +195,25 @@ model StatusLog {
   userName  String?
   createdAt DateTime      @default(now())
 }
+
+// Снапшот должников, импортируемый вручную (по кнопке "Обновить") из внешней
+// системы ravapi.eu. externalId — их id клиента, чтобы при повторной синхронизации
+// обновлять запись, а не плодить дубликаты.
+model Debtor {
+  id                   String    @id @default(cuid())
+  externalId           Int       @unique
+  firstName            String
+  lastName             String
+  phoneNumber          String?
+  vehicleName          String?
+  organisation         String?
+  currentBalance       Float
+  balanceWithDeposits  Float?
+  dateOfFirstUnpaidPayoff DateTime?
+  dateOfLastUnpaidPayoff  DateTime?
+  debtNotes            String?
+  isContactedForDebt   Boolean   @default(false)
+  lastSyncedAt         DateTime  @default(now())
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+}
