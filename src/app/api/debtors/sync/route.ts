@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { canEdit } from "@/lib/roles";
 import { fetchAllDebtors } from "@/lib/ravapi";
 import { sendTelegramMessage } from "@/lib/telegram";
@@ -135,11 +136,11 @@ export async function POST() {
   // значит клиент погасил долг или перестал арендовать технику.
   // DebtorMessage удалятся автоматически (onDelete: Cascade в схеме).
   const remoteIds = remote.map((d) => d.id);
-  const { count: removed } = await prisma.debtor.deleteMany(
+  const deleteWhere: Prisma.DebtorWhereInput =
     remoteIds.length > 0
-      ? { where: { externalId: { notIn: remoteIds } } }
-      : { where: {} } // ravapi вернул пустой список — считаем, что должников не осталось
-  );
+      ? { externalId: { notIn: remoteIds } }
+      : {}; // ravapi вернул пустой список — считаем, что должников не осталось
+  const { count: removed } = await prisma.debtor.deleteMany({ where: deleteWhere });
 
   const { totalDebt: newTotalDebt, debtorCount: newDebtorCount } = await computeTotals();
 
