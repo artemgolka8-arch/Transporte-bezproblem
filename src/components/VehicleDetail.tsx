@@ -51,6 +51,7 @@ export type VehicleClientInfo = {
   lastName: string | null;
   phone: string;
   email: string | null;
+  notes: string | null;
 };
 
 export type DebtorMessageEntry = {
@@ -103,7 +104,7 @@ export function VehicleDetail({
 }) {
   const router = useRouter();
   const { t, lang } = useTranslation();
-  const [tab, setTab] = useState<"overview" | "debt" | "keys">("overview");
+  const [tab, setTab] = useState<"overview" | "debt" | "history" | "keys" | "documents" | "notes">("overview");
   const [v, setV] = useState(vehicle);
   const [problemDraft, setProblemDraft] = useState(vehicle.problemDescription || "");
   const [savingProblem, setSavingProblem] = useState(false);
@@ -257,6 +258,11 @@ export function VehicleDetail({
     router.refresh();
   }
 
+  // Долг клиента, привязанного к технике — считаем один раз здесь, чтобы
+  // бейдж в шапке был виден одинаково на всех вкладках, а не только на "Долге".
+  const headerHasDebt = Boolean(debtor && debtor.currentBalance < 0);
+  const headerTotalOwed = debtor ? Math.abs(debtor.currentBalance) : 0;
+
   return (
     <div className="mx-auto max-w-5xl px-5 py-8">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
@@ -381,9 +387,31 @@ export function VehicleDetail({
             })}
           </div>
         )}
+
+        {/* Бейдж задолженности клиента — часть шапки, поэтому виден на всех
+            вкладках техники, а не только внутри вкладки "Информация о долге". */}
+        {client && debtor && (
+          <div
+            className={`flex items-center gap-3 rounded-2xl border px-4 py-3 shadow-glowViolet ${
+              headerHasDebt
+                ? "border-violet/40 bg-gradient-to-br from-violet/25 via-violet/10 to-cyan/10"
+                : "border-mint/40 bg-mintDim/40"
+            }`}
+          >
+            <div>
+              <div className="text-[10px] uppercase tracking-wide text-muted">{t("vehicle_header_debt_badge")}</div>
+              <div className={`font-display text-xl font-bold ${headerHasDebt ? "text-danger" : "text-mint"}`}>
+                {formatMoney(headerHasDebt ? headerTotalOwed : 0)}
+              </div>
+              <div className="mt-0.5 text-[10px] text-faint">
+                {t("vehicle_header_debt_updated")}: {new Date(debtor.lastSyncedAt).toLocaleString(LOCALE_MAP[lang])}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
-      <div className="mb-5 flex items-center gap-1 rounded-lg border border-line bg-panel p-1 w-fit">
+      <div className="mb-5 flex flex-wrap items-center gap-1 rounded-lg border border-line bg-panel p-1 w-fit">
         <button
           onClick={() => setTab("overview")}
           className={`rounded-md px-4 py-1.5 text-sm transition-colors ${
@@ -408,12 +436,36 @@ export function VehicleDetail({
           </button>
         )}
         <button
+          onClick={() => setTab("history")}
+          className={`rounded-md px-4 py-1.5 text-sm transition-colors ${
+            tab === "history" ? "bg-panel2 text-ink" : "text-muted hover:text-ink"
+          }`}
+        >
+          {t("tab_history")}
+        </button>
+        <button
           onClick={() => setTab("keys")}
           className={`rounded-md px-4 py-1.5 text-sm transition-colors ${
             tab === "keys" ? "bg-panel2 text-ink" : "text-muted hover:text-ink"
           }`}
         >
           {t("tab_keys", { count: v.keys.length })}
+        </button>
+        <button
+          onClick={() => setTab("documents")}
+          className={`rounded-md px-4 py-1.5 text-sm transition-colors ${
+            tab === "documents" ? "bg-panel2 text-ink" : "text-muted hover:text-ink"
+          }`}
+        >
+          {t("tab_documents")}
+        </button>
+        <button
+          onClick={() => setTab("notes")}
+          className={`rounded-md px-4 py-1.5 text-sm transition-colors ${
+            tab === "notes" ? "bg-panel2 text-ink" : "text-muted hover:text-ink"
+          }`}
+        >
+          {t("tab_notes")}
         </button>
       </div>
 
@@ -448,35 +500,90 @@ export function VehicleDetail({
             )}
           </div>
 
+          {/* Компактная карточка клиента — краткая сводка видна прямо в
+              обзоре техники, полная информация о долге на соседней вкладке. */}
           <div className="panel p-6">
-            <div className="label-eyebrow mb-3">{t("status_history_eyebrow")}</div>
-            <div className="max-h-72 space-y-3 overflow-y-auto scrollbar-thin pr-1">
-              {v.history.length === 0 && (
-                <p className="text-sm text-muted">{t("no_history")}</p>
-              )}
-              {v.history.map((h) => {
-                const c = STATUS_CONFIG[h.status];
-                return (
-                  <div key={h.id} className="flex gap-3">
-                    <div className={`mt-1 h-2 w-2 shrink-0 rounded-full ${c.dot}`} />
-                    <div>
-                      <div className="text-xs text-ink">
-                        <span className={c.text}>{t(c.labelKey)}</span>
-                        {h.note ? ` — ${h.note}` : ""}
-                      </div>
-                      <div className="text-[11px] text-faint">
-                        {new Date(h.createdAt).toLocaleString(LOCALE_MAP[lang])}
-                        {h.userName ? ` · ${h.userName}` : ""}
-                      </div>
-                    </div>
+            <div className="label-eyebrow mb-3">{t("vehicle_header_client_eyebrow")}</div>
+            {client ? (
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <div className="font-display text-base font-semibold text-ink">
+                    {[client.firstName, client.lastName].filter(Boolean).join(" ") || "—"}
                   </div>
-                );
-              })}
-            </div>
+                  <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
+                    {client.phone && (
+                      <a href={`tel:${client.phone}`} className="text-cyan transition-opacity hover:opacity-80">
+                        {client.phone}
+                      </a>
+                    )}
+                    {client.email && (
+                      <a href={`mailto:${client.email}`} className="text-cyan transition-opacity hover:opacity-80">
+                        {client.email}
+                      </a>
+                    )}
+                  </div>
+                </div>
+                {debtor ? (
+                  <button
+                    onClick={() => setTab("debt")}
+                    className={`rounded-xl border px-3.5 py-2 text-xs font-medium transition-opacity hover:opacity-90 ${
+                      headerHasDebt
+                        ? "border-violet/40 bg-gradient-to-br from-violet/25 via-violet/10 to-cyan/10 text-danger"
+                        : "border-mint/40 bg-mintDim/40 text-mint"
+                    }`}
+                  >
+                    {formatMoney(headerHasDebt ? headerTotalOwed : 0)}
+                  </button>
+                ) : (
+                  client.id && (
+                    <a
+                      href={`/clients/${client.id}`}
+                      className="text-xs text-violet transition-opacity hover:opacity-80"
+                    >
+                      {t("vehicle_debt_view_client_btn")}
+                    </a>
+                  )
+                )}
+              </div>
+            ) : (
+              <p className="text-sm text-muted">{t("vehicle_header_no_client")}</p>
+            )}
           </div>
         </div>
       ) : tab === "debt" && client ? (
         <DebtTab client={client} debtor={debtor} editable={editable} />
+      ) : tab === "history" ? (
+        <div className="panel p-6">
+          <div className="label-eyebrow mb-4">{t("status_history_eyebrow")}</div>
+          <div className="space-y-4">
+            {v.history.length === 0 && <p className="text-sm text-muted">{t("no_history")}</p>}
+            {v.history.map((h) => {
+              const c = STATUS_CONFIG[h.status];
+              return (
+                <div key={h.id} className="flex gap-3">
+                  <div className={`mt-1 h-2 w-2 shrink-0 rounded-full ${c.dot}`} />
+                  <div>
+                    <div className="text-sm text-ink">
+                      <span className={c.text}>{t(c.labelKey)}</span>
+                      {h.note ? ` — ${h.note}` : ""}
+                    </div>
+                    <div className="text-[11px] text-faint">
+                      {new Date(h.createdAt).toLocaleString(LOCALE_MAP[lang])}
+                      {h.userName ? ` · ${h.userName}` : ""}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ) : tab === "documents" ? (
+        <div className="panel flex flex-col items-center gap-1 py-14 text-center">
+          <div className="text-sm text-ink">{t("documents_empty_title")}</div>
+          <div className="max-w-sm text-xs text-muted">{t("documents_empty_subtitle")}</div>
+        </div>
+      ) : tab === "notes" ? (
+        <NotesTab client={client} editable={editable} />
       ) : (
         <div className="panel p-6">
           <div className="mb-5 flex items-center justify-between">
@@ -629,6 +736,7 @@ function DebtTab({
   const [savingContacted, setSavingContacted] = useState(false);
 
   const [messages, setMessages] = useState(debtor?.messages || []);
+  const [paymentsExpanded, setPaymentsExpanded] = useState(false);
   const [reminderOpen, setReminderOpen] = useState(false);
   const [reminderText, setReminderText] = useState(
     t("vehicle_debt_reminder_template").replace("{name}", client.firstName || "")
@@ -721,6 +829,14 @@ function DebtTab({
       ? details.items.reduce((sum, i) => sum + Math.max(0, i.quota - i.remainingPayoff), 0)
       : null;
   const totalCharged = details && details.items.length ? details.items.reduce((sum, i) => sum + i.quota, 0) : null;
+  // "Спорные" (disputed) — в источнике данных ravapi.eu нет отдельного статуса
+  // спора, поэтому пока всегда 0; сумма при этом сходится: просрочено + оплачено = долг.
+  const disputedAmount = 0;
+  const paidItems = details ? details.items.filter((i) => itemStatus(i) === "paid" && i.date) : [];
+  const sortedPaidItems = [...paidItems].sort(
+    (a, b) => new Date(b.date as string).getTime() - new Date(a.date as string).getTime()
+  );
+  const visiblePayments = paymentsExpanded ? sortedPaidItems : sortedPaidItems.slice(0, 5);
 
   return (
     <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
@@ -774,7 +890,7 @@ function DebtTab({
       {debtor && (
         <>
           {/* Разбивка */}
-          <div className="panel grid grid-cols-1 divide-y divide-line p-0 sm:grid-cols-3 sm:divide-x sm:divide-y-0 lg:col-span-3">
+          <div className="panel grid grid-cols-2 divide-y divide-line p-0 sm:grid-cols-4 sm:divide-x sm:divide-y-0 lg:col-span-3">
             <div className="px-5 py-4">
               <div className="label-eyebrow">{t("vehicle_debt_breakdown_total")}</div>
               <div className="mt-1 font-display text-xl font-semibold text-ink">
@@ -782,7 +898,7 @@ function DebtTab({
               </div>
             </div>
             <div className="px-5 py-4">
-              <div className="label-eyebrow">{t("vehicle_debt_breakdown_remaining")}</div>
+              <div className="label-eyebrow">{t("vehicle_debt_overdue_label")}</div>
               <div className="mt-1 font-display text-xl font-semibold text-danger">{formatMoney(totalOwed)}</div>
             </div>
             <div className="px-5 py-4">
@@ -791,11 +907,15 @@ function DebtTab({
                 {paidSoFar != null ? formatMoney(paidSoFar) : "—"}
               </div>
             </div>
+            <div className="px-5 py-4">
+              <div className="label-eyebrow">{t("vehicle_debt_disputed_label")}</div>
+              <div className="mt-1 font-display text-xl font-semibold text-amber">{formatMoney(disputedAmount)}</div>
+            </div>
           </div>
 
           {/* Расшифровка задолженности */}
           <div className="panel p-6 lg:col-span-2">
-            <div className="mb-3 flex items-center justify-between">
+            <div className="mb-1 flex items-center justify-between">
               <div className="label-eyebrow">{t("debtors_debt_info_title")}</div>
               {!loadingDetails && (
                 <button
@@ -806,6 +926,7 @@ function DebtTab({
                 </button>
               )}
             </div>
+            <div className="mb-3 text-[11px] text-faint">{t("vehicle_debt_synced_note")}</div>
 
             {loadingDetails && <div className="py-8 text-sm text-muted">{t("debtors_debt_info_loading")}</div>}
 
@@ -824,8 +945,9 @@ function DebtTab({
                     <table className="w-full text-left text-xs">
                       <thead>
                         <tr className="border-b border-line bg-bg2 text-muted">
+                          <th className="px-3 py-2 font-medium">{t("vehicle_debt_col_description")}</th>
                           <th className="px-3 py-2 font-medium">{t("debtors_debt_info_col_date")}</th>
-                          <th className="px-3 py-2 font-medium">{t("debtors_debt_info_col_reason")}</th>
+                          <th className="px-3 py-2 font-medium">{t("vehicle_debt_col_type")}</th>
                           <th className="px-3 py-2 font-medium">{t("debtors_debt_info_col_amount")}</th>
                           <th className="px-3 py-2 font-medium">{t("vehicle_debt_col_status")}</th>
                         </tr>
@@ -834,17 +956,20 @@ function DebtTab({
                         {details.items.map((item) => {
                           const st = itemStatus(item);
                           const style = ITEM_STATUS_STYLE[st];
+                          const label = reasonLabel(item.reason, t);
+                          const shortType = label.split(" ")[0];
                           return (
                             <tr key={item.id} className="border-b border-line/60 last:border-0">
+                              <td className="px-3 py-2 text-ink">
+                                {label}
+                                <div className="mt-0.5 text-[11px] text-faint">
+                                  {item.comments || item.vehicleName || "—"}
+                                </div>
+                              </td>
                               <td className="whitespace-nowrap px-3 py-2 text-muted">
                                 {item.date ? new Date(item.date).toLocaleDateString(LOCALE_MAP[lang]) : "—"}
                               </td>
-                              <td className="px-3 py-2 text-ink">
-                                {reasonLabel(item.reason, t)}
-                                {item.comments && (
-                                  <div className="mt-0.5 text-[11px] text-faint">{item.comments}</div>
-                                )}
-                              </td>
+                              <td className="whitespace-nowrap px-3 py-2 text-muted">{shortType}</td>
                               <td className="whitespace-nowrap px-3 py-2 font-medium text-ink">
                                 {formatMoney(item.quota)}
                               </td>
@@ -861,6 +986,49 @@ function DebtTab({
                   </div>
                 )}
               </>
+            )}
+          </div>
+
+          {/* История оплат — производные данные из погашенных строк задолженности */}
+          <div className="panel p-6 lg:col-span-2">
+            <div className="mb-1 flex items-center justify-between">
+              <div className="label-eyebrow">{t("vehicle_debt_payments_eyebrow")}</div>
+              {sortedPaidItems.length > 5 && (
+                <button
+                  onClick={() => setPaymentsExpanded((v) => !v)}
+                  className="text-[11px] text-cyan transition-opacity hover:opacity-80"
+                >
+                  {paymentsExpanded ? t("cancel") : t("vehicle_debt_payments_show_all")}
+                </button>
+              )}
+            </div>
+            <div className="mb-3 text-[11px] text-faint">{t("vehicle_debt_payments_subtitle")}</div>
+
+            {sortedPaidItems.length === 0 ? (
+              <div className="py-6 text-center text-sm text-muted">{t("vehicle_debt_payments_empty")}</div>
+            ) : (
+              <div className="space-y-3">
+                {visiblePayments.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-line/60 px-3 py-2.5"
+                  >
+                    <div>
+                      <div className="text-xs text-ink">{reasonLabel(item.reason, t)}</div>
+                      <div className="text-[11px] text-faint">
+                        {item.date ? new Date(item.date).toLocaleString(LOCALE_MAP[lang]) : "—"} ·{" "}
+                        {t("vehicle_debt_payment_method")}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-xs font-medium text-ink">{formatMoney(item.quota)}</span>
+                      <span className="rounded-full bg-mintDim/50 px-2 py-0.5 text-[10px] font-medium text-mint">
+                        {t("vehicle_debt_status_paid")}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
 
@@ -982,6 +1150,75 @@ function DebtTab({
             </div>
           </div>
         </>
+      )}
+    </div>
+  );
+}
+
+function NotesTab({ client, editable }: { client: VehicleClientInfo | null; editable: boolean }) {
+  const { t } = useTranslation();
+  const [notesDraft, setNotesDraft] = useState(client?.notes || "");
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  async function save() {
+    if (!client?.id) return;
+    setSaving(true);
+    setSaved(false);
+    const res = await fetch(`/api/clients/${client.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ notes: notesDraft }),
+    });
+    setSaving(false);
+    if (res.ok) setSaved(true);
+  }
+
+  if (!client) {
+    return (
+      <div className="panel flex flex-col items-center gap-1 py-14 text-center">
+        <div className="text-sm text-ink">{t("notes_no_client_title")}</div>
+        <div className="max-w-sm text-xs text-muted">{t("notes_no_client_subtitle")}</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="panel p-6">
+      <div className="mb-1 flex items-center justify-between">
+        <div className="label-eyebrow">{t("notes_client_eyebrow")}</div>
+        <div className="text-xs text-muted">
+          {[client.firstName, client.lastName].filter(Boolean).join(" ")}
+        </div>
+      </div>
+      {client.id ? (
+        <>
+          <textarea
+            value={notesDraft}
+            onChange={(e) => {
+              setNotesDraft(e.target.value);
+              setSaved(false);
+            }}
+            disabled={!editable}
+            rows={8}
+            placeholder={t("notes_placeholder")}
+            className="mt-3 w-full resize-none rounded-lg border border-line bg-bg2 px-3 py-2.5 text-sm text-ink outline-none focus:border-cyan/50 disabled:opacity-70"
+          />
+          {editable && (
+            <div className="mt-3 flex items-center gap-3">
+              <button
+                onClick={save}
+                disabled={saving}
+                className="rounded-lg border border-cyan/40 bg-cyanDim/40 px-4 py-2 text-xs font-medium text-cyan transition-opacity hover:opacity-90 disabled:opacity-50"
+              >
+                {saving ? t("saving") : t("save")}
+              </button>
+              {saved && <span className="text-[11px] text-mint">{t("notes_saved_note")}</span>}
+            </div>
+          )}
+        </>
+      ) : (
+        <p className="mt-3 text-sm text-muted">{client.notes || "—"}</p>
       )}
     </div>
   );

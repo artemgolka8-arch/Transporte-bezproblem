@@ -94,6 +94,7 @@ export default async function VehiclePage({ params }: { params: { id: string } }
                 lastName: clientLastName,
                 phone: clientPhone,
                 email: clientEmail,
+                notes: vehicle.client?.notes || null,
               }
             : null
         }

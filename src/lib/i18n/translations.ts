@@ -235,7 +235,16 @@ const ru = {
   back_to_fleet: "← К флоту",
   tab_overview: "Обзор",
   tab_debt: "Информация о долге",
+  tab_history: "История",
   tab_keys: "Ключи · {count}",
+  tab_documents: "Документы",
+  tab_notes: "Заметки",
+
+  // шапка карточки техники — бейдж задолженности, виден на всех вкладках
+  vehicle_header_debt_badge: "Общая задолженность",
+  vehicle_header_debt_updated: "Обновлено",
+  vehicle_header_client_eyebrow: "Клиент техники",
+  vehicle_header_no_client: "Клиент не привязан",
 
   // вкладка "Информация о долге" на карточке техники
   vehicle_debt_client_eyebrow: "Клиент",
@@ -246,7 +255,11 @@ const ru = {
   vehicle_debt_breakdown_total: "Общая сумма долга",
   vehicle_debt_breakdown_remaining: "Осталось оплатить",
   vehicle_debt_breakdown_paid: "Оплачено",
+  vehicle_debt_overdue_label: "Просрочено",
+  vehicle_debt_disputed_label: "Спорные",
   vehicle_debt_col_status: "Статус",
+  vehicle_debt_col_description: "Описание",
+  vehicle_debt_col_type: "Тип списания",
   vehicle_debt_status_paid: "Оплачено",
   vehicle_debt_status_overdue: "Просрочено",
   vehicle_debt_status_partial: "Частично",
@@ -258,6 +271,24 @@ const ru = {
   vehicle_debt_call_client: "Связаться с клиентом",
   vehicle_debt_reminder_template:
     "Здравствуйте, {name}! Напоминаем о задолженности по аренде транспорта. Пожалуйста, погасите её как можно скорее.",
+  vehicle_debt_payments_eyebrow: "История оплат",
+  vehicle_debt_payments_subtitle: "Последние поступления",
+  vehicle_debt_payments_empty: "Оплат пока не было",
+  vehicle_debt_payments_show_all: "Показать все",
+  vehicle_debt_payment_method: "Банковский перевод",
+  vehicle_debt_synced_note: "Данные синхронизированы с ravapi.eu",
+
+  // вкладка "Документы"
+  documents_empty_title: "Документов пока нет",
+  documents_empty_subtitle: "Загрузка документов появится здесь в одном из следующих обновлений.",
+
+  // вкладка "Заметки"
+  notes_client_eyebrow: "Заметка о клиенте",
+  notes_no_client_title: "Клиент не привязан к этой технике",
+  notes_no_client_subtitle: "Заметки появятся, когда к технике будет привязана карточка клиента.",
+  notes_placeholder: "Например: предпочитает связь по WhatsApp, постоянный клиент…",
+  notes_saved_note: "Сохранено",
+
   problem_desc_eyebrow: "описание проблем",
   problem_placeholder: "Например: спущено колесо, требуется замена тормозных колодок…",
   no_problems: "Проблем не зафиксировано.",
@@ -745,7 +776,15 @@ const pl: Dict = {
   back_to_fleet: "← Do floty",
   tab_overview: "Przegląd",
   tab_debt: "Informacje o długu",
+  tab_history: "Historia",
   tab_keys: "Klucze · {count}",
+  tab_documents: "Dokumenty",
+  tab_notes: "Notatki",
+
+  vehicle_header_debt_badge: "Łączne zadłużenie",
+  vehicle_header_debt_updated: "Zaktualizowano",
+  vehicle_header_client_eyebrow: "Klient pojazdu",
+  vehicle_header_no_client: "Klient nie przypisany",
 
   vehicle_debt_client_eyebrow: "Klient",
   vehicle_debt_view_client_btn: "Otwórz kartę klienta →",
@@ -755,7 +794,11 @@ const pl: Dict = {
   vehicle_debt_breakdown_total: "Łączna kwota długu",
   vehicle_debt_breakdown_remaining: "Pozostało do zapłaty",
   vehicle_debt_breakdown_paid: "Zapłacono",
+  vehicle_debt_overdue_label: "Zaległe",
+  vehicle_debt_disputed_label: "Sporne",
   vehicle_debt_col_status: "Status",
+  vehicle_debt_col_description: "Opis",
+  vehicle_debt_col_type: "Typ obciążenia",
   vehicle_debt_status_paid: "Zapłacono",
   vehicle_debt_status_overdue: "Zaległe",
   vehicle_debt_status_partial: "Częściowo",
@@ -767,6 +810,22 @@ const pl: Dict = {
   vehicle_debt_call_client: "Skontaktuj się z klientem",
   vehicle_debt_reminder_template:
     "Dzień dobry, {name}! Przypominamy o zadłużeniu z tytułu wynajmu pojazdu. Prosimy o jak najszybszą spłatę.",
+  vehicle_debt_payments_eyebrow: "Historia płatności",
+  vehicle_debt_payments_subtitle: "Ostatnie wpłaty",
+  vehicle_debt_payments_empty: "Nie było jeszcze żadnych płatności",
+  vehicle_debt_payments_show_all: "Pokaż wszystkie",
+  vehicle_debt_payment_method: "Przelew bankowy",
+  vehicle_debt_synced_note: "Dane zsynchronizowane z ravapi.eu",
+
+  documents_empty_title: "Brak dokumentów",
+  documents_empty_subtitle: "Przesyłanie dokumentów pojawi się tutaj w jednej z kolejnych aktualizacji.",
+
+  notes_client_eyebrow: "Notatka o kliencie",
+  notes_no_client_title: "Do tego pojazdu nie przypisano klienta",
+  notes_no_client_subtitle: "Notatki pojawią się, gdy do pojazdu zostanie przypisana karta klienta.",
+  notes_placeholder: "Np. preferuje kontakt przez WhatsApp, stały klient…",
+  notes_saved_note: "Zapisano",
+
   problem_desc_eyebrow: "opis usterki",
   problem_placeholder: "Np. spuszczone koło, wymagana wymiana klocków hamulcowych…",
   no_problems: "Nie odnotowano problemów.",
@@ -1239,7 +1298,15 @@ const uk: Dict = {
   back_to_fleet: "← До флоту",
   tab_overview: "Огляд",
   tab_debt: "Інформація про борг",
+  tab_history: "Історія",
   tab_keys: "Ключі · {count}",
+  tab_documents: "Документи",
+  tab_notes: "Нотатки",
+
+  vehicle_header_debt_badge: "Загальна заборгованість",
+  vehicle_header_debt_updated: "Оновлено",
+  vehicle_header_client_eyebrow: "Клієнт техніки",
+  vehicle_header_no_client: "Клієнта не прив'язано",
 
   vehicle_debt_client_eyebrow: "Клієнт",
   vehicle_debt_view_client_btn: "Відкрити картку клієнта →",
@@ -1249,7 +1316,11 @@ const uk: Dict = {
   vehicle_debt_breakdown_total: "Загальна сума боргу",
   vehicle_debt_breakdown_remaining: "Залишилось сплатити",
   vehicle_debt_breakdown_paid: "Сплачено",
+  vehicle_debt_overdue_label: "Прострочено",
+  vehicle_debt_disputed_label: "Спірні",
   vehicle_debt_col_status: "Статус",
+  vehicle_debt_col_description: "Опис",
+  vehicle_debt_col_type: "Тип списання",
   vehicle_debt_status_paid: "Сплачено",
   vehicle_debt_status_overdue: "Прострочено",
   vehicle_debt_status_partial: "Частково",
@@ -1261,6 +1332,22 @@ const uk: Dict = {
   vehicle_debt_call_client: "Зв'язатися з клієнтом",
   vehicle_debt_reminder_template:
     "Доброго дня, {name}! Нагадуємо про заборгованість за оренду транспорту. Будь ласка, погасіть її якомога швидше.",
+  vehicle_debt_payments_eyebrow: "Історія оплат",
+  vehicle_debt_payments_subtitle: "Останні надходження",
+  vehicle_debt_payments_empty: "Оплат ще не було",
+  vehicle_debt_payments_show_all: "Показати всі",
+  vehicle_debt_payment_method: "Банківський переказ",
+  vehicle_debt_synced_note: "Дані синхронізовано з ravapi.eu",
+
+  documents_empty_title: "Документів поки немає",
+  documents_empty_subtitle: "Завантаження документів з'явиться тут в одному з наступних оновлень.",
+
+  notes_client_eyebrow: "Нотатка про клієнта",
+  notes_no_client_title: "До цієї техніки не прив'язано клієнта",
+  notes_no_client_subtitle: "Нотатки з'являться, коли до техніки буде прив'язана картка клієнта.",
+  notes_placeholder: "Наприклад: надає перевагу зв'язку через WhatsApp, постійний клієнт…",
+  notes_saved_note: "Збережено",
+
   problem_desc_eyebrow: "опис проблем",
   problem_placeholder: "Наприклад: спущене колесо, потрібна заміна гальмівних колодок…",
   no_problems: "Проблем не зафіксовано.",
