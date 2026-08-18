@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { canEdit, Role } from "@/lib/roles";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
+import type { TranslationKey } from "@/lib/i18n/translations";
 import { DebtorsSummaryCard, type DebtorsSummary } from "./DebtorsSummaryCard";
 import { SMS_SENDERS, type SmsSender } from "@/lib/smsSenders";
 
@@ -822,10 +823,11 @@ function SmsModal({
 type DebtDetailItem = {
   id: number;
   date: string | null;
-  amount: number;
-  reason: string | null;
-  category: string | null;
   vehicleName: string | null;
+  reason: string | null;
+  quota: number;
+  remainingPayoff: number;
+  comments: string | null;
 };
 
 type DebtDetailsResponse = {
@@ -834,6 +836,20 @@ type DebtDetailsResponse = {
   items: DebtDetailItem[];
   fetchedAt: string;
 };
+
+const REASON_LABEL_KEYS: Partial<Record<string, TranslationKey>> = {
+  TransportRent: "debtors_reason_transport_rent",
+};
+
+// ravapi.eu отдаёт "reason" как код (например "TransportRent"), а не готовый
+// текст. Известные коды переводим через словарь выше; для незнакомых —
+// разбиваем CamelCase на слова, чтобы было хоть немного читаемо.
+function reasonLabel(code: string | null, t: (key: TranslationKey) => string): string {
+  if (!code) return t("debtors_debt_info_no_reason");
+  const key = REASON_LABEL_KEYS[code];
+  if (key) return t(key);
+  return code.replace(/([a-z0-9])([A-Z])/g, "$1 $2");
+}
 
 function DebtInfoModal({ row, onClose }: { row: DebtorRow; onClose: () => void }) {
   const { t } = useTranslation();
@@ -927,8 +943,8 @@ function DebtInfoModal({ row, onClose }: { row: DebtorRow; onClose: () => void }
                     <tr className="border-b border-line bg-bg2 text-muted">
                       <th className="px-3 py-2 font-medium">{t("debtors_debt_info_col_date")}</th>
                       <th className="px-3 py-2 font-medium">{t("debtors_debt_info_col_reason")}</th>
-                      <th className="px-3 py-2 font-medium">{t("debtors_debt_info_col_category")}</th>
                       <th className="px-3 py-2 font-medium">{t("debtors_debt_info_col_amount")}</th>
+                      <th className="px-3 py-2 font-medium">{t("debtors_debt_info_col_remaining")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -938,14 +954,19 @@ function DebtInfoModal({ row, onClose }: { row: DebtorRow; onClose: () => void }
                           {item.date ? new Date(item.date).toLocaleDateString("ru-RU") : "—"}
                         </td>
                         <td className="px-3 py-2 text-ink">
-                          {item.reason || t("debtors_debt_info_no_reason")}
+                          {reasonLabel(item.reason, t)}
                           {item.vehicleName && (
                             <span className="ml-1 text-faint">({item.vehicleName})</span>
                           )}
+                          {item.comments && (
+                            <div className="mt-0.5 text-[11px] text-faint">{item.comments}</div>
+                          )}
                         </td>
-                        <td className="px-3 py-2 text-muted">{item.category || "—"}</td>
                         <td className="whitespace-nowrap px-3 py-2 text-right font-medium text-danger">
-                          {formatMoney(item.amount)}
+                          {formatMoney(item.quota)}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-2 text-right text-muted">
+                          {formatMoney(item.remainingPayoff)}
                         </td>
                       </tr>
                     ))}

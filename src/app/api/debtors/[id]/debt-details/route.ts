@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { fetchDebtorDebtDetails } from "@/lib/ravapi";
+import { fetchDebtorPayoffs } from "@/lib/ravapi";
 
 // Отдаёт расшифровку задолженности конкретного должника (за что списано,
 // какие суммы, по каким основаниям) — данные тянутся из ravapi.eu "вживую"
@@ -15,12 +15,20 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
   if (!debtor) return NextResponse.json({ error: "Должник не найден" }, { status: 404 });
 
   try {
-    const items = await fetchDebtorDebtDetails(debtor.externalId);
+    const payoffs = await fetchDebtorPayoffs(debtor.externalId);
     return NextResponse.json({
       debtorId: debtor.id,
       currentBalance: debtor.currentBalance,
       balanceWithDeposits: debtor.balanceWithDeposits,
-      items,
+      items: payoffs.map((p) => ({
+        id: p.id,
+        date: p.date,
+        vehicleName: p.vehicleName,
+        reason: p.reason,
+        quota: p.quota,
+        remainingPayoff: p.remainingPayoff,
+        comments: p.comments,
+      })),
       fetchedAt: new Date().toISOString(),
     });
   } catch (err) {

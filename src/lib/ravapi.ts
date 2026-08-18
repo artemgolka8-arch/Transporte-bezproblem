@@ -188,38 +188,29 @@ export async function fetchAllDebtors(): Promise<RavapiDebtor[]> {
 // ---------------------------------------------------------------------------
 // Расшифровка задолженности конкретного клиента (списания/начисления).
 //
-// ⚠️ ВАЖНО: GetDebtors (выше) отдаёт только итоговый баланс клиента — без
-// построчной детализации "за что и когда списано". Построчных данных для
-// эндпойнта ниже пока нет: URL, тело запроса и структура ответа ("Не удалось
-// проверить эндпойнт ravapi.eu — TODO...") — это ЗАГЛУШКА по образцу
-// GetDebtors, которую нужно поправить под реальный запрос.
-//
-// Как найти реальный запрос: откройте portal.ravapi.eu → карточку клиента,
-// где видна детализация списаний → DevTools → вкладка Network → найдите
-// запрос, который уходит при открытии этой детализации → скопируйте:
-//   1) URL и метод
-//   2) тело запроса (скорее всего { driverId: <id>, ... })
-//   3) пример ответа (JSON) — поля даты/суммы/причины списания
-// и замените ими код ниже (URL, тело fetch и парсинг ответа).
+// Использует внутренний эндпойнт ravapi.eu POST /api/Payoff/GetPaged —
+// та же логика cookie-сессии, что и у GetDebtors. Как и GetDebtors, это
+// недокументированный API: формат может измениться без предупреждения
+// (см. README, раздел 5.3, про то, как перепроверить запрос через DevTools).
 // ---------------------------------------------------------------------------
 
-export type RavapiDebtItem = {
+export type RavapiPayoff = {
   id: number;
   date: string | null;
-  amount: number; // отрицательное число = списание (увеличивает долг)
-  reason: string | null; // за что: аренда/штраф/ущерб/комиссия и т.п.
-  category: string | null; // основание/тип операции, если ravapi его отдаёт отдельно
   vehicleName: string | null;
+  reason: string | null; // код-основание, например "TransportRent"
+  quota: number; // сумма позиции (отрицательное число = списание/долг)
+  remainingPayoff: number; // сколько из этой позиции ещё не погашено
+  comments: string | null;
+  isDeleted: boolean;
 };
 
-// TODO: заменить на реальный путь недокументированного API ravapi.eu, когда
-// он будет найден через DevTools (см. комментарий выше). Текущее значение —
-// предположение по аналогии с "/api/Drivers/GetDebtors".
-const DEBT_DETAILS_ENDPOINT = "/api/Drivers/GetDebtorPayoffs";
-
-export async function fetchDebtorDebtDetails(driverExternalId: number): Promise<RavapiDebtItem[]> {
-  const jar = await login();
-
+async function fetchDebtorPayoffsPage(
+  jar: Record<string, string>,
+  driverId: number,
+  skip: number,
+  take: number
+): Promise<{ items: RavapiPayoff[]; total: number | null }> {
   const headers: Record<string, string> = {
     ...BROWSER_HEADERS,
     "Content-Type": "application/json",
@@ -229,16 +220,32 @@ export async function fetchDebtorDebtDetails(driverExternalId: number): Promise<
     headers["X-XSRF-TOKEN"] = decodeURIComponent(jar["XSRF-TOKEN"]);
   }
 
-  const res = await fetch(`${BASE_URL}${DEBT_DETAILS_ENDPOINT}`, {
+  const res = await fetch(`${BASE_URL}/api/Payoff/GetPaged`, {
     method: "POST",
     headers,
-    // TODO: тело запроса тоже нужно проверить и поправить под реальный API —
-    // сейчас это предположение по аналогии с GetDebtors.
     body: JSON.stringify({
-      driverId: driverExternalId,
-      skip: 0,
-      take: 200,
+      driverId,
+      skip,
+      take,
       sortItems: [],
+      propertiesNames: [
+        "Id",
+        "DriverFullName",
+        "VehicleName",
+        "Organisation",
+        "Quota",
+        "Date",
+        "IsRavapiTransportCommission",
+        "IsBezproblemTransportCommission",
+        "IsAdvancePayment",
+        "Reason",
+        "IsDeleted",
+        "RemainingPayoff",
+        "IsCommissionForDailySettlement",
+        "Comments",
+        "PayoffTypeId",
+        "OnlinePaymentPublicId",
+      ],
     }),
   });
 
@@ -251,14 +258,37 @@ export async function fetchDebtorDebtDetails(driverExternalId: number): Promise<
 
   const data = await res.json();
   const items = data?.result?.items ?? data?.items ?? [];
+  const total = data?.result?.total ?? data?.total ?? null;
 
-  // TODO: поправить маппинг полей под реальные имена из ответа ravapi.eu.
-  return items.map((raw: Record<string, unknown>): RavapiDebtItem => ({
-    id: Number(raw.id ?? raw.Id ?? 0),
-    date: (raw.date ?? raw.Date ?? raw.createdAt ?? null) as string | null,
-    amount: Number(raw.amount ?? raw.Amount ?? 0),
-    reason: (raw.reason ?? raw.Reason ?? raw.description ?? raw.Description ?? null) as string | null,
-    category: (raw.category ?? raw.Category ?? raw.type ?? raw.Type ?? null) as string | null,
-    vehicleName: (raw.vehicleName ?? raw.VehicleName ?? null) as string | null,
+  const mapped: RavapiPayoff[] = items.map((raw: Record<string, unknown>) => ({
+    id: Number(raw.id ?? 0),
+    date: (raw.date as string | null) ?? null,
+    vehicleName: (raw.vehicleName as string | null) ?? null,
+    reason: (raw.reason as string | null) ?? null,
+    quota: Number(raw.quota ?? 0),
+    remainingPayoff: Number(raw.remainingPayoff ?? raw.quota ?? 0),
+    comments: (raw.comments as string | null) ?? null,
+    isDeleted: !!raw.isDeleted,
   }));
+
+  return { items: mapped, total: typeof total === "number" ? total : null };
+}
+
+// Забирает все позиции списаний/начислений конкретного должника (постранично,
+// как и fetchAllDebtors) и отфильтровывает удалённые (isDeleted) записи —
+// они не должны попадать в расшифровку долга пользователю.
+export async function fetchDebtorPayoffs(driverId: number): Promise<RavapiPayoff[]> {
+  const jar = await login();
+  const take = 100;
+  const maxPages = 20;
+  const all: RavapiPayoff[] = [];
+
+  for (let page = 0; page < maxPages; page++) {
+    const { items, total } = await fetchDebtorPayoffsPage(jar, driverId, page * take, take);
+    all.push(...items);
+    if (items.length < take) break;
+    if (total !== null && all.length >= total) break;
+  }
+
+  return all.filter((p) => !p.isDeleted);
 }
