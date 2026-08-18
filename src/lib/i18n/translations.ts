@@ -219,6 +219,7 @@ const ru = {
   notify_template_return_body:
     "Здравствуйте, {name}! Просим вас вернуть арендованную технику в ближайшее время. Спасибо за понимание.",
   notify_message_label: "Текст сообщения",
+  notify_sender_label: "Отправитель (Pole Nadawcy)",
   notify_send_btn: "Отправить",
   notify_sending: "Отправка…",
   notify_sent_ok: "Сообщение отправлено",
@@ -690,6 +691,7 @@ const pl: Dict = {
   notify_template_return_body:
     "Dzień dobry, {name}! Prosimy o zwrot wynajętego sprzętu w najbliższym czasie. Dziękujemy za zrozumienie.",
   notify_message_label: "Treść wiadomości",
+  notify_sender_label: "Pole Nadawcy",
   notify_send_btn: "Wyślij",
   notify_sending: "Wysyłanie…",
   notify_sent_ok: "Wiadomość wysłana",
@@ -1145,6 +1147,7 @@ const uk: Dict = {
   notify_template_return_body:
     "Доброго дня, {name}! Просимо повернути орендовану техніку найближчим часом. Дякуємо за розуміння.",
   notify_message_label: "Текст повідомлення",
+  notify_sender_label: "Відправник (Pole Nadawcy)",
   notify_send_btn: "Надіслати",
   notify_sending: "Надсилання…",
   notify_sent_ok: "Повідомлення надіслано",

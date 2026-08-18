@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
+import { SMS_SENDERS, type SmsSender } from "@/lib/smsSenders";
 
 type Channel = "EMAIL" | "SMS";
 
@@ -37,6 +38,7 @@ export function ClientNotifyPanel({
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [channel, setChannel] = useState<Channel>(hasEmail ? "EMAIL" : "SMS");
+  const [sender, setSender] = useState<SmsSender>("TEST");
   const [template, setTemplate] = useState<"reminder" | "return" | "custom">("reminder");
   const [message, setMessage] = useState(
     t("notify_template_reminder_body").replace("{name}", firstName)
@@ -61,7 +63,7 @@ export function ClientNotifyPanel({
     const res = await fetch(`/api/clients/${clientId}/notify`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ channel, message }),
+      body: JSON.stringify({ channel, message, sender: channel === "SMS" ? sender : undefined }),
     });
     setSending(false);
     const data = await res.json().catch(() => ({}));
@@ -124,6 +126,23 @@ export function ClientNotifyPanel({
                   <option value="custom">{t("notify_template_custom")}</option>
                 </select>
               </div>
+
+              {channel === "SMS" && (
+                <div>
+                  <label className="mb-1.5 block label-eyebrow">{t("notify_sender_label")}</label>
+                  <select
+                    value={sender}
+                    onChange={(e) => setSender(e.target.value as SmsSender)}
+                    className={FIELD_CLASS}
+                  >
+                    {SMS_SENDERS.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               <div>
                 <label className="mb-1.5 block label-eyebrow">{t("notify_message_label")}</label>

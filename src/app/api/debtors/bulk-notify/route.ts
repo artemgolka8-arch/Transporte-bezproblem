@@ -17,6 +17,7 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
   const ids = Array.isArray(body.ids) ? (body.ids as string[]).filter((id) => typeof id === "string") : [];
   const template = typeof body.message === "string" ? body.message : "";
+  const sender = typeof body.sender === "string" ? body.sender : undefined;
 
   if (ids.length === 0) {
     return NextResponse.json({ error: "Не выбраны должники" }, { status: 400 });
@@ -42,7 +43,7 @@ export async function POST(req: NextRequest) {
     }
 
     try {
-      await sendSms(target, message);
+      await sendSms(target, message, sender);
       await prisma.debtorMessage.create({
         data: { debtorId: debtor.id, target, body: message, status: "SENT", sentBy },
       });

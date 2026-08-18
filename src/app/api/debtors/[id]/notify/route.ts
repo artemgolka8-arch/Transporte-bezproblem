@@ -26,6 +26,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
   const body = await req.json();
   const message = (body.message as string | undefined)?.trim();
+  const sender = body.sender as string | undefined;
   if (!message) {
     return NextResponse.json({ error: "Заполните текст сообщения" }, { status: 400 });
   }
@@ -39,7 +40,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   }
 
   try {
-    await sendSms(target, message);
+    await sendSms(target, message, sender);
     const record = await prisma.debtorMessage.create({
       data: {
         debtorId: debtor.id,

@@ -16,10 +16,13 @@ export async function sendEmail(to: string, subject: string, text: string) {
   if (error) throw new Error(error.message);
 }
 
+import { SMS_SENDERS } from "@/lib/smsSenders";
+
 // SMSPlanet.pl — https://smsplanet.pl/doc/slate/index.html
-export async function sendSms(to: string, body: string) {
+export async function sendSms(to: string, body: string, sender?: string) {
   const token = process.env.SMSPLANET_API_TOKEN;
-  const from = process.env.SMSPLANET_SENDER || "TEST";
+  const fallback = process.env.SMSPLANET_SENDER || "TEST";
+  const from = sender && (SMS_SENDERS as readonly string[]).includes(sender) ? sender : fallback;
   if (!token) throw new Error("SMSPLANET_API_TOKEN не настроен");
 
   const params = new URLSearchParams();

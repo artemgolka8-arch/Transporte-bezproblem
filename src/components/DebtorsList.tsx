@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { canEdit, Role } from "@/lib/roles";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
 import { DebtorsSummaryCard, type DebtorsSummary } from "./DebtorsSummaryCard";
+import { SMS_SENDERS, type SmsSender } from "@/lib/smsSenders";
 
 type DebtorMessage = {
   id: string;
@@ -668,6 +669,7 @@ function SmsModal({
 
   const [template, setTemplate] = useState<Template>("soft");
   const [message, setMessage] = useState(templateBody("soft"));
+  const [sender, setSender] = useState<SmsSender>("TEST");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
@@ -686,7 +688,7 @@ function SmsModal({
     const res = await fetch(`/api/debtors/${row.id}/notify`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message }),
+      body: JSON.stringify({ message, sender }),
     });
     setSending(false);
     const data = await res.json().catch(() => ({}));
@@ -727,6 +729,21 @@ function SmsModal({
             <option value="hard">{t("debtors_template_hard_title")}</option>
             <option value="final">{t("debtors_template_final_title")}</option>
             <option value="custom">{t("notify_template_custom")}</option>
+          </select>
+        </div>
+
+        <div className="mb-3">
+          <label className="mb-1 block label-eyebrow">{t("notify_sender_label")}</label>
+          <select
+            value={sender}
+            onChange={(e) => setSender(e.target.value as SmsSender)}
+            className="w-full rounded-lg border border-line bg-bg2 px-3 py-2 text-sm text-ink outline-none focus:border-violet/50"
+          >
+            {SMS_SENDERS.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -792,6 +809,7 @@ function BulkSmsModal({
 
   const [template, setTemplate] = useState<Template>("soft");
   const [message, setMessage] = useState(t("debtors_template_soft_body"));
+  const [sender, setSender] = useState<SmsSender>("TEST");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<{ sent: number; failed: number } | null>(null);
@@ -812,7 +830,7 @@ function BulkSmsModal({
     const res = await fetch("/api/debtors/bulk-notify", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ids: withPhone.map((d) => d.id), message }),
+      body: JSON.stringify({ ids: withPhone.map((d) => d.id), message, sender }),
     });
     setSending(false);
     const data = await res.json().catch(() => ({}));
@@ -859,6 +877,21 @@ function BulkSmsModal({
                 <option value="hard">{t("debtors_template_hard_title")}</option>
                 <option value="final">{t("debtors_template_final_title")}</option>
                 <option value="custom">{t("notify_template_custom")}</option>
+              </select>
+            </div>
+
+            <div className="mb-3">
+              <label className="mb-1 block label-eyebrow">{t("notify_sender_label")}</label>
+              <select
+                value={sender}
+                onChange={(e) => setSender(e.target.value as SmsSender)}
+                className="w-full rounded-lg border border-line bg-bg2 px-3 py-2 text-sm text-ink outline-none focus:border-violet/50"
+              >
+                {SMS_SENDERS.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
               </select>
             </div>
 

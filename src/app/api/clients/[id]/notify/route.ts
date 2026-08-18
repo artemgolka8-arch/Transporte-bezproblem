@@ -28,6 +28,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   const channel = body.channel as "EMAIL" | "SMS";
   const message = (body.message as string | undefined)?.trim();
   const subject = (body.subject as string | undefined)?.trim() || "BezProblem";
+  const sender = body.sender as string | undefined;
 
   if ((channel !== "EMAIL" && channel !== "SMS") || !message) {
     return NextResponse.json({ error: "Заполните текст сообщения" }, { status: 400 });
@@ -48,7 +49,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     if (channel === "EMAIL") {
       await sendEmail(target, subject, message);
     } else {
-      await sendSms(target, message);
+      await sendSms(target, message, sender);
     }
 
     const record = await prisma.clientMessage.create({
