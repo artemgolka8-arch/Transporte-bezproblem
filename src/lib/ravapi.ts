@@ -184,3 +184,81 @@ export async function fetchAllDebtors(): Promise<RavapiDebtor[]> {
 
   return all;
 }
+
+// ---------------------------------------------------------------------------
+// Расшифровка задолженности конкретного клиента (списания/начисления).
+//
+// ⚠️ ВАЖНО: GetDebtors (выше) отдаёт только итоговый баланс клиента — без
+// построчной детализации "за что и когда списано". Построчных данных для
+// эндпойнта ниже пока нет: URL, тело запроса и структура ответа ("Не удалось
+// проверить эндпойнт ravapi.eu — TODO...") — это ЗАГЛУШКА по образцу
+// GetDebtors, которую нужно поправить под реальный запрос.
+//
+// Как найти реальный запрос: откройте portal.ravapi.eu → карточку клиента,
+// где видна детализация списаний → DevTools → вкладка Network → найдите
+// запрос, который уходит при открытии этой детализации → скопируйте:
+//   1) URL и метод
+//   2) тело запроса (скорее всего { driverId: <id>, ... })
+//   3) пример ответа (JSON) — поля даты/суммы/причины списания
+// и замените ими код ниже (URL, тело fetch и парсинг ответа).
+// ---------------------------------------------------------------------------
+
+export type RavapiDebtItem = {
+  id: number;
+  date: string | null;
+  amount: number; // отрицательное число = списание (увеличивает долг)
+  reason: string | null; // за что: аренда/штраф/ущерб/комиссия и т.п.
+  category: string | null; // основание/тип операции, если ravapi его отдаёт отдельно
+  vehicleName: string | null;
+};
+
+// TODO: заменить на реальный путь недокументированного API ravapi.eu, когда
+// он будет найден через DevTools (см. комментарий выше). Текущее значение —
+// предположение по аналогии с "/api/Drivers/GetDebtors".
+const DEBT_DETAILS_ENDPOINT = "/api/Drivers/GetDebtorPayoffs";
+
+export async function fetchDebtorDebtDetails(driverExternalId: number): Promise<RavapiDebtItem[]> {
+  const jar = await login();
+
+  const headers: Record<string, string> = {
+    ...BROWSER_HEADERS,
+    "Content-Type": "application/json",
+    Cookie: cookieHeader(jar),
+  };
+  if (jar["XSRF-TOKEN"]) {
+    headers["X-XSRF-TOKEN"] = decodeURIComponent(jar["XSRF-TOKEN"]);
+  }
+
+  const res = await fetch(`${BASE_URL}${DEBT_DETAILS_ENDPOINT}`, {
+    method: "POST",
+    headers,
+    // TODO: тело запроса тоже нужно проверить и поправить под реальный API —
+    // сейчас это предположение по аналогии с GetDebtors.
+    body: JSON.stringify({
+      driverId: driverExternalId,
+      skip: 0,
+      take: 200,
+      sortItems: [],
+    }),
+  });
+
+  if (res.status === 401 || res.status === 403) {
+    throw new RavapiError("ravapi.eu отклонил сессию (401/403) — возможно, истёк логин");
+  }
+  if (!res.ok) {
+    throw new RavapiError(`Ошибка запроса расшифровки долга (статус ${res.status})`);
+  }
+
+  const data = await res.json();
+  const items = data?.result?.items ?? data?.items ?? [];
+
+  // TODO: поправить маппинг полей под реальные имена из ответа ravapi.eu.
+  return items.map((raw: Record<string, unknown>): RavapiDebtItem => ({
+    id: Number(raw.id ?? raw.Id ?? 0),
+    date: (raw.date ?? raw.Date ?? raw.createdAt ?? null) as string | null,
+    amount: Number(raw.amount ?? raw.Amount ?? 0),
+    reason: (raw.reason ?? raw.Reason ?? raw.description ?? raw.Description ?? null) as string | null,
+    category: (raw.category ?? raw.Category ?? raw.type ?? raw.Type ?? null) as string | null,
+    vehicleName: (raw.vehicleName ?? raw.VehicleName ?? null) as string | null,
+  }));
+}

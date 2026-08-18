@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { canEdit, Role } from "@/lib/roles";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
@@ -100,6 +100,15 @@ function SmsIcon() {
   );
 }
 
+function InfoIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 11v5.5M12 8v.01" />
+    </svg>
+  );
+}
+
 function DownloadIcon() {
   return (
     <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -193,8 +202,10 @@ export function DebtorsList({
   const [smsRowId, setSmsRowId] = useState<string | null>(null);
   const [bulkOpen, setBulkOpen] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [debtInfoRowId, setDebtInfoRowId] = useState<string | null>(null);
   const editable = canEdit(role);
   const smsRow = rows.find((r) => r.id === smsRowId) || null;
+  const debtInfoRow = rows.find((r) => r.id === debtInfoRowId) || null;
 
   function updateRow(id: string, patch: Partial<DebtorRow>) {
     setRows((prev) => prev.map((r) => (r.id === id ? { ...r, ...patch } : r)));
@@ -492,19 +503,29 @@ export function DebtorsList({
                         <NotesCell debtor={r} editable={editable} onSaved={(notes) => updateRow(r.id, { debtNotes: notes })} />
                       </td>
                       <td className="px-5 py-3.5">
-                        <button
-                          onClick={() => setSmsRowId(r.id)}
-                          disabled={!r.phoneNumber}
-                          title={r.phoneNumber ? t("debtors_send_sms_btn") : t("notify_no_phone")}
-                          className={
-                            r.messages.some((m) => m.status === "SENT")
-                              ? "inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-lg border border-mint/40 bg-mintDim/40 px-3 text-[12px] font-medium text-mint transition-opacity hover:opacity-80 disabled:opacity-40"
-                              : "inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-lg border border-line bg-bg2 px-3 text-[12px] font-medium text-ink transition-colors hover:border-violet/40 hover:text-violet disabled:opacity-40"
-                          }
-                        >
-                          <SmsIcon />
-                          {t("debtors_send_sms_btn")}
-                        </button>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <button
+                            onClick={() => setDebtInfoRowId(r.id)}
+                            title={t("debtors_debt_info_btn")}
+                            className="inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-lg border border-line bg-bg2 px-3 text-[12px] font-medium text-ink transition-colors hover:border-cyan/40 hover:text-cyan"
+                          >
+                            <InfoIcon />
+                            {t("debtors_debt_info_btn")}
+                          </button>
+                          <button
+                            onClick={() => setSmsRowId(r.id)}
+                            disabled={!r.phoneNumber}
+                            title={r.phoneNumber ? t("debtors_send_sms_btn") : t("notify_no_phone")}
+                            className={
+                              r.messages.some((m) => m.status === "SENT")
+                                ? "inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-lg border border-mint/40 bg-mintDim/40 px-3 text-[12px] font-medium text-mint transition-opacity hover:opacity-80 disabled:opacity-40"
+                                : "inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-lg border border-line bg-bg2 px-3 text-[12px] font-medium text-ink transition-colors hover:border-violet/40 hover:text-violet disabled:opacity-40"
+                            }
+                          >
+                            <SmsIcon />
+                            {t("debtors_send_sms_btn")}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -565,6 +586,10 @@ export function DebtorsList({
             updateRow(smsRow.id, { messages: [message, ...smsRow.messages] });
           }}
         />
+      )}
+
+      {debtInfoRow && (
+        <DebtInfoModal row={debtInfoRow} onClose={() => setDebtInfoRowId(null)} />
       )}
 
       {bulkOpen && (
@@ -788,6 +813,149 @@ function SmsModal({
               </div>
             ))}
           </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+type DebtDetailItem = {
+  id: number;
+  date: string | null;
+  amount: number;
+  reason: string | null;
+  category: string | null;
+  vehicleName: string | null;
+};
+
+type DebtDetailsResponse = {
+  currentBalance: number;
+  balanceWithDeposits: number | null;
+  items: DebtDetailItem[];
+  fetchedAt: string;
+};
+
+function DebtInfoModal({ row, onClose }: { row: DebtorRow; onClose: () => void }) {
+  const { t } = useTranslation();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [data, setData] = useState<DebtDetailsResponse | null>(null);
+
+  async function load() {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/debtors/${row.id}/debt-details`);
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(body.error || t("debtors_debt_info_error"));
+        return;
+      }
+      setData(body);
+    } catch {
+      setError(t("debtors_debt_info_error"));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Всегда свежие данные — тянем заново при каждом открытии окна.
+  useEffect(() => {
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [row.id]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/60 backdrop-blur-sm px-4 py-8">
+      <div className="panel w-full max-w-lg p-6 animate-rise">
+        <div className="mb-1 flex items-center justify-between">
+          <h2 className="font-display text-lg font-semibold text-ink">{t("debtors_debt_info_title")}</h2>
+          <button type="button" onClick={onClose} className="text-muted hover:text-ink">
+            ✕
+          </button>
+        </div>
+        <div className="mb-4 text-xs text-muted">
+          {row.firstName} {row.lastName}
+          {row.vehicleName ? ` · ${row.vehicleName}` : ""}
+        </div>
+
+        {loading && (
+          <div className="flex items-center gap-2 py-8 text-sm text-muted">
+            <RefreshIcon spinning />
+            {t("debtors_debt_info_loading")}
+          </div>
+        )}
+
+        {!loading && error && (
+          <div className="space-y-3">
+            <div className="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-xs text-danger">
+              {error}
+            </div>
+            <button
+              onClick={load}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-bg2 px-3.5 py-2 text-xs font-medium text-ink transition-colors hover:border-violet/40 hover:text-violet"
+            >
+              <RefreshIcon />
+              {t("debtors_debt_info_retry")}
+            </button>
+          </div>
+        )}
+
+        {!loading && !error && data && (
+          <>
+            <div className="mb-4 flex items-center justify-between rounded-xl border border-line bg-bg2 px-4 py-3">
+              <span className="text-xs text-muted">{t("debtors_debt_info_current_balance")}</span>
+              <span
+                className={
+                  data.currentBalance < 0
+                    ? "text-sm font-semibold text-danger"
+                    : "text-sm font-semibold text-ink"
+                }
+              >
+                {formatMoney(data.currentBalance)}
+              </span>
+            </div>
+
+            {data.items.length === 0 ? (
+              <div className="panel flex flex-col items-center gap-1 py-10 text-center">
+                <div className="text-sm text-ink">{t("debtors_debt_info_empty")}</div>
+              </div>
+            ) : (
+              <div className="max-h-80 overflow-y-auto rounded-xl border border-line">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-line bg-bg2 text-muted">
+                      <th className="px-3 py-2 font-medium">{t("debtors_debt_info_col_date")}</th>
+                      <th className="px-3 py-2 font-medium">{t("debtors_debt_info_col_reason")}</th>
+                      <th className="px-3 py-2 font-medium">{t("debtors_debt_info_col_category")}</th>
+                      <th className="px-3 py-2 font-medium">{t("debtors_debt_info_col_amount")}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.items.map((item) => (
+                      <tr key={item.id} className="border-b border-line/60 last:border-0">
+                        <td className="whitespace-nowrap px-3 py-2 text-muted">
+                          {item.date ? new Date(item.date).toLocaleDateString("ru-RU") : "—"}
+                        </td>
+                        <td className="px-3 py-2 text-ink">
+                          {item.reason || t("debtors_debt_info_no_reason")}
+                          {item.vehicleName && (
+                            <span className="ml-1 text-faint">({item.vehicleName})</span>
+                          )}
+                        </td>
+                        <td className="px-3 py-2 text-muted">{item.category || "—"}</td>
+                        <td className="whitespace-nowrap px-3 py-2 text-right font-medium text-danger">
+                          {formatMoney(item.amount)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            <div className="mt-3 text-[10px] text-faint">{t("debtors_debt_info_fetched_at")}</div>
+          </>
         )}
       </div>
     </div>
