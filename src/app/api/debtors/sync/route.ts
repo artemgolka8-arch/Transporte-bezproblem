@@ -69,9 +69,9 @@ async function notifyManagersAboutNewDebtors(
 }
 
 // Тянет актуальный список должников из ravapi.eu и обновляет локальную таблицу:
-// существующие (по externalId) обновляются, новые создаются. Ничего не удаляем —
-// если клиент погасил долг и пропал из выдачи ravapi, запись остаётся как история,
-// её можно будет позже скрывать по currentBalance >= 0.
+// существующие (по externalId) обновляются, новые создаются, а те, кто пропал
+// из ответа ravapi (оплатили долг или перестали арендовать технику) —
+// удаляются вместе с их историей SMS (каскадно, см. схему Prisma).
 //
 // Заодно: 1) сохраняет снапшот "было -> стало" для карточки "Итого",
 // 2) шлёт менеджерам в Telegram уведомление о новых должниках с крупной суммой.
@@ -131,6 +131,16 @@ export async function POST() {
     }
   }
 
+  // Удаляем локальные записи, которых больше нет в ответе ravapi.eu —
+  // значит клиент погасил долг или перестал арендовать технику.
+  // DebtorMessage удалятся автоматически (onDelete: Cascade в схеме).
+  const remoteIds = remote.map((d) => d.id);
+  const { count: removed } = await prisma.debtor.deleteMany(
+    remoteIds.length > 0
+      ? { where: { externalId: { notIn: remoteIds } } }
+      : { where: {} } // ravapi вернул пустой список — считаем, что должников не осталось
+  );
+
   const { totalDebt: newTotalDebt, debtorCount: newDebtorCount } = await computeTotals();
 
   await prisma.debtorSyncSnapshot.create({
@@ -142,6 +152,7 @@ export async function POST() {
   return NextResponse.json({
     created,
     updated,
+    removed,
     total: remote.length,
     newLargeDebtors: newLargeDebtors.length,
   });

@@ -281,7 +281,7 @@ export function DebtorsList({
         return;
       }
       setSyncMessage(
-        `${t("debtors_sync_success")}: ${data.created ?? 0} ${t("debtors_new")}, ${data.updated ?? 0} ${t("debtors_updated")}`
+        `${t("debtors_sync_success")}: ${data.created ?? 0} ${t("debtors_new")}, ${data.updated ?? 0} ${t("debtors_updated")}, ${data.removed ?? 0} ${t("debtors_removed")}`
       );
       const listRes = await fetch("/api/debtors");
       if (listRes.ok) {
