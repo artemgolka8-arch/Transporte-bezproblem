@@ -170,6 +170,20 @@ async function fetchDebtorsPage(
 // Забирает всех должников постранично (take=100 за раз, максимум 20 страниц —
 // то есть до 2000 записей, с запасом на рост).
 export async function fetchAllDebtors(): Promise<RavapiDebtor[]> {
+  return fetchAllDrivers();
+}
+
+// GetDebtors с фильтром isRentingFleetVehicle:true, несмотря на название,
+// отдаёт вообще ВСЕХ, кто сейчас арендует технику — а не только тех, у кого
+// есть задолженность (баланс может быть и положительным/нулевым). Используем
+// один и тот же вызов и для раздела "Должники", и для автосинхронизации
+// статусов техники (src/app/api/vehicles/ravapi-sync) — под именем,
+// нейтральным к смыслу "долг".
+export async function fetchActiveRentals(): Promise<RavapiDebtor[]> {
+  return fetchAllDrivers();
+}
+
+async function fetchAllDrivers(): Promise<RavapiDebtor[]> {
   const jar = await login();
   const take = 100;
   const maxPages = 20;

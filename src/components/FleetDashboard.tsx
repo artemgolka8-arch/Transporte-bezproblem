@@ -15,10 +15,12 @@ export function FleetDashboard({
   vehicles,
   role,
   knownCities = [],
+  lastRavapiSync = null,
 }: {
   vehicles: VehicleCardData[];
   role: "ADMIN" | "MANAGER" | "VIEWER";
   knownCities?: string[];
+  lastRavapiSync?: string | null;
 }) {
   const router = useRouter();
   const { t } = useTranslation();
@@ -27,10 +29,38 @@ export function FleetDashboard({
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("ALL");
   const [modalOpen, setModalOpen] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
+  const [syncError, setSyncError] = useState<string | null>(null);
+  const [syncedAt, setSyncedAt] = useState(lastRavapiSync);
 
   useEffect(() => {
     setList(vehicles);
   }, [vehicles]);
+
+  async function syncWithRavapi() {
+    setSyncing(true);
+    setSyncError(null);
+    setSyncMessage(null);
+    try {
+      const res = await fetch("/api/vehicles/ravapi-sync", { method: "POST" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setSyncError(data.error || t("vehicles_sync_error"));
+        return;
+      }
+      setSyncMessage(
+        `${t("vehicles_sync_success")}: ${data.rented ?? 0} ${t("vehicles_sync_rented")}, ${data.released ?? 0} ${t("vehicles_sync_released")}` +
+          (data.unmatched ? `, ${data.unmatched} ${t("vehicles_sync_unmatched")}` : "")
+      );
+      setSyncedAt(new Date().toISOString());
+      router.refresh();
+    } catch {
+      setSyncError(t("vehicles_sync_error"));
+    } finally {
+      setSyncing(false);
+    }
+  }
 
   const filtered = useMemo(() => {
     return list.filter((v) => {
@@ -67,12 +97,42 @@ export function FleetDashboard({
             {t("dashboard_count", { filtered: filtered.length, total: list.length })}
           </p>
         </div>
-        {canEdit(role) && (
-          <button onClick={() => setModalOpen(true)} className="btn-primary">
-            {t("add_vehicle_btn")}
-          </button>
-        )}
+        <div className="flex flex-wrap items-center gap-2">
+          {canEdit(role) && (
+            <button
+              onClick={syncWithRavapi}
+              disabled={syncing}
+              className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl border border-line bg-bg2 px-4 py-2.5 text-sm font-medium text-ink transition-colors hover:border-violet/40 hover:text-violet disabled:opacity-60"
+            >
+              <RefreshIcon spinning={syncing} />
+              {syncing ? t("vehicles_syncing") : t("vehicles_sync_btn")}
+            </button>
+          )}
+          {canEdit(role) && (
+            <button onClick={() => setModalOpen(true)} className="btn-primary">
+              {t("add_vehicle_btn")}
+            </button>
+          )}
+        </div>
       </div>
+
+      {canEdit(role) && (
+        <div className="mb-4 text-xs text-muted">
+          {syncedAt
+            ? `${t("vehicles_last_synced")}: ${new Date(syncedAt).toLocaleString("ru-RU")}`
+            : t("vehicles_never_synced")}
+        </div>
+      )}
+      {syncMessage && (
+        <div className="mb-4 rounded-lg border border-mint/30 bg-mintDim/40 px-3 py-2 text-xs text-mint">
+          {syncMessage}
+        </div>
+      )}
+      {syncError && (
+        <div className="mb-4 rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-xs text-danger">
+          {syncError}
+        </div>
+      )}
 
       <div className="mb-7 flex flex-wrap items-center gap-3">
         <input
@@ -146,6 +206,27 @@ export function FleetDashboard({
         />
       )}
     </div>
+  );
+}
+
+function RefreshIcon({ spinning }: { spinning?: boolean }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="15"
+      height="15"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={spinning ? "animate-spin" : ""}
+    >
+      <path d="M20 11A8 8 0 0 0 6.3 6.3L4 8.5" />
+      <path d="M4 4v4.5h4.5" />
+      <path d="M4 13a8 8 0 0 0 13.7 4.7L20 15.5" />
+      <path d="M20 20v-4.5h-4.5" />
+    </svg>
   );
 }
 

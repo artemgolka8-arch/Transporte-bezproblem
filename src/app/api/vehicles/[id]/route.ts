@@ -127,6 +127,11 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       },
     });
     data.clientId = client.id;
+    // Аренда оформлена вручную сотрудником — снимаем метку "из ravapi", чтобы
+    // автосинхронизация (см. /api/vehicles/ravapi-sync) не закрыла её позже,
+    // если этого клиента не окажется среди активных арендаторов в ravapi.
+    data.renterExternalId = null;
+    data.ravapiSyncedAt = null;
   }
 
   if (workshopDate !== undefined) data.workshopDate = workshopDate ? new Date(workshopDate) : null;
@@ -145,6 +150,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     data.renterEmail = null;
     data.rentedUntil = null;
     data.clientId = null;
+    data.renterExternalId = null;
+    data.ravapiSyncedAt = null;
   }
 
   // При выходе из мастерской очищаем заявку на ремонт, чтобы следующий заезд требовал новых данных

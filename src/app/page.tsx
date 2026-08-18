@@ -27,6 +27,15 @@ export default async function HomePage() {
     new Set(vehicles.map((v) => v.city).filter((c): c is string => !!c))
   ).sort();
 
+  // Время последней автосинхронизации с ravapi.eu — самая свежая отметка среди техники
+  const ravapiSyncTimes = vehicles
+    .map((v) => v.ravapiSyncedAt)
+    .filter((d): d is Date => !!d);
+  const lastRavapiSync =
+    ravapiSyncTimes.length > 0
+      ? new Date(Math.max(...ravapiSyncTimes.map((d) => d.getTime()))).toISOString()
+      : null;
+
   // Передаём в клиентский компонент только простые сериализуемые поля
   const cards = vehicles.map((v) => ({
     id: v.id,
@@ -50,7 +59,12 @@ export default async function HomePage() {
       userName={session.user.name || session.user.email || ""}
       role={session.user.role}
     >
-      <FleetDashboard vehicles={cards} role={session.user.role} knownCities={knownCities} />
+      <FleetDashboard
+        vehicles={cards}
+        role={session.user.role}
+        knownCities={knownCities}
+        lastRavapiSync={lastRavapiSync}
+      />
     </AppShell>
   );
 }
