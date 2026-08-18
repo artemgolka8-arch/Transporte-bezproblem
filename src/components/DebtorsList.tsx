@@ -303,7 +303,7 @@ export function DebtorsList({
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-5 py-8 sm:px-8">
+    <div className="mx-auto max-w-[1800px] px-5 py-8 sm:px-8">
       <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="font-display text-[26px] font-semibold text-ink">{t("debtors_title")}</h1>
@@ -413,7 +413,7 @@ export function DebtorsList({
       ) : (
         <div className="panel overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1180px] text-left text-sm">
+            <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-line text-muted">
                   {editable && (
@@ -883,7 +883,7 @@ function DebtInfoModal({ row, onClose }: { row: DebtorRow; onClose: () => void }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/60 backdrop-blur-sm px-4 py-8">
-      <div className="panel w-full max-w-lg p-6 animate-rise">
+      <div className="panel w-full max-w-2xl p-6 animate-rise">
         <div className="mb-1 flex items-center justify-between">
           <h2 className="font-display text-lg font-semibold text-ink">{t("debtors_debt_info_title")}</h2>
           <button type="button" onClick={onClose} className="text-muted hover:text-ink">

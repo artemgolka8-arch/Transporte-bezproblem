@@ -1,22 +1,36 @@
-import { Resend } from "resend";
-
-let resendClient: Resend | null = null;
-function getResend() {
-  if (!process.env.RESEND_API_KEY) return null;
-  if (!resendClient) resendClient = new Resend(process.env.RESEND_API_KEY);
-  return resendClient;
-}
-
-export async function sendEmail(to: string, subject: string, text: string) {
-  const client = getResend();
-  if (!client) throw new Error("RESEND_API_KEY не настроен");
-
-  const from = process.env.RESEND_FROM_EMAIL || "BezProblem <onboarding@resend.dev>";
-  const { error } = await client.emails.send({ from, to, subject, text });
-  if (error) throw new Error(error.message);
-}
-
 import { SMS_SENDERS } from "@/lib/smsSenders";
+
+// Brevo (ex-Sendinblue) — транзакционные письма через REST API.
+// Документация: https://developers.brevo.com/reference/sendtransacemail
+export async function sendEmail(to: string, subject: string, text: string) {
+  const apiKey = process.env.BREVO_API_KEY;
+  if (!apiKey) throw new Error("BREVO_API_KEY не настроен");
+
+  const fromEmail = process.env.BREVO_FROM_EMAIL;
+  if (!fromEmail) throw new Error("BREVO_FROM_EMAIL не настроен");
+  const fromName = process.env.BREVO_FROM_NAME || "BezProblem";
+
+  const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      "api-key": apiKey,
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify({
+      sender: { name: fromName, email: fromEmail },
+      to: [{ email: to }],
+      subject,
+      textContent: text,
+    }),
+  });
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    const msg = data?.message || `Ошибка Brevo (HTTP ${res.status})`;
+    throw new Error(msg);
+  }
+}
 
 // SMSPlanet.pl — https://smsplanet.pl/doc/slate/index.html
 export async function sendSms(to: string, body: string, sender?: string) {
