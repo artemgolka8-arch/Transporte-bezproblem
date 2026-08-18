@@ -138,22 +138,17 @@ export function Sidebar({
 
   return (
     <div className="flex h-full w-[276px] shrink-0 flex-col border-r border-line/70 bg-bg2">
-      <Link href="/" onClick={onNavigate} className="flex items-center gap-3 px-5 py-6">
+      <Link href="/" onClick={onNavigate} className="flex items-center px-5 py-6">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/logo.png"
+          src="/logo-wordmark.png"
           alt="BezProblem"
-          className="h-10 w-10 shrink-0 rounded-full object-cover shadow-brand ring-2 ring-cyan/20"
+          className="h-8 w-auto drop-shadow-sm"
         />
-        <div className="leading-tight">
-          <div className="font-display text-[17px] font-semibold tracking-wide text-ink">
-            Bez<span className="text-gradient-brand">Problem</span>
-          </div>
-          <div className="text-[11px] font-medium uppercase tracking-[0.14em] text-faint -mt-0.5">
-            {t("tagline")}
-          </div>
-        </div>
       </Link>
+      <div className="-mt-3 mb-2 px-5 text-[11px] font-medium uppercase tracking-[0.14em] text-faint">
+        {t("tagline")}
+      </div>
 
       <nav className="flex-1 space-y-1 overflow-y-auto scrollbar-thin px-3 pb-4">
         {NAV_ITEMS.filter((item) => !item.adminOnly || role === "ADMIN").map((item) => {

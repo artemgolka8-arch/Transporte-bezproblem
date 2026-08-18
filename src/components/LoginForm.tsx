@@ -54,14 +54,11 @@ export function LoginForm() {
         <div className="mb-7 flex flex-col items-center text-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/logo.png"
+            src="/logo-wordmark.png"
             alt="BezProblem"
-            className="mb-3 h-16 w-16 rounded-full object-cover shadow-brand ring-4 ring-cyan/15"
+            className="mb-4 h-11 w-auto drop-shadow-md"
           />
-          <div className="font-display text-xl font-semibold tracking-wide text-ink">
-            Bez<span className="text-gradient-brand">Problem</span>
-          </div>
-          <div className="label-eyebrow mt-1">{t("login_tagline")}</div>
+          <div className="label-eyebrow">{t("login_tagline")}</div>
         </div>
 
         <label className="mb-1 block label-eyebrow">{t("field_email")}</label>
