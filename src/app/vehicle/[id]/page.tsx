@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { AppShell } from "@/components/AppShell";
 import { VehicleDetail } from "@/components/VehicleDetail";
+import { phonesMatch } from "@/lib/phone";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +17,7 @@ export default async function VehiclePage({ params }: { params: { id: string } }
     include: {
       keys: { orderBy: { createdAt: "asc" } },
       history: { orderBy: { createdAt: "desc" } },
+      client: true,
     },
   });
   if (!vehicle) notFound();
@@ -26,6 +28,19 @@ export default async function VehiclePage({ params }: { params: { id: string } }
     WORKSHOP: allVehicles.filter((v) => v.status === "WORKSHOP").length,
     RENTED: allVehicles.filter((v) => v.status === "RENTED").length,
   };
+
+  // Клиент, привязанный к технике: сперва карточка в справочнике Client
+  // (заводится при оформлении аренды), иначе — данные текущего арендатора,
+  // сохранённые прямо на технике.
+  const clientPhone = vehicle.client?.phone || vehicle.renterPhone || null;
+  const clientFirstName = vehicle.client?.firstName || vehicle.renterFirstName || null;
+  const clientLastName = vehicle.client?.lastName || vehicle.renterLastName || null;
+  const clientEmail = vehicle.client?.email || vehicle.renterEmail || null;
+
+  // Ищем должника из синхронизированного снапшота ravapi.eu, у которого
+  // телефон совпадает с телефоном клиента этой техники. Из-за разных
+  // форматов хранения номеров сравниваем по последним 9 цифрам.
+  const debtor = clientPhone ? await loadDebtor(clientPhone) : null;
 
   return (
     <AppShell
@@ -71,8 +86,55 @@ export default async function VehiclePage({ params }: { params: { id: string } }
             createdAt: h.createdAt.toISOString(),
           })),
         }}
+        client={
+          clientPhone
+            ? {
+                id: vehicle.client?.id || null,
+                firstName: clientFirstName,
+                lastName: clientLastName,
+                phone: clientPhone,
+                email: clientEmail,
+              }
+            : null
+        }
+        debtor={
+          debtor
+            ? {
+                id: debtor.id,
+                currentBalance: debtor.currentBalance,
+                balanceWithDeposits: debtor.balanceWithDeposits,
+                dateOfFirstUnpaidPayoff: debtor.dateOfFirstUnpaidPayoff
+                  ? debtor.dateOfFirstUnpaidPayoff.toISOString()
+                  : null,
+                dateOfLastUnpaidPayoff: debtor.dateOfLastUnpaidPayoff
+                  ? debtor.dateOfLastUnpaidPayoff.toISOString()
+                  : null,
+                debtNotes: debtor.debtNotes,
+                isContactedForDebt: debtor.isContactedForDebt,
+                lastSyncedAt: debtor.lastSyncedAt.toISOString(),
+                messages: debtor.messages.map((m) => ({
+                  id: m.id,
+                  target: m.target,
+                  body: m.body,
+                  status: m.status,
+                  error: m.error,
+                  sentBy: m.sentBy,
+                  createdAt: m.createdAt.toISOString(),
+                })),
+              }
+            : null
+        }
         role={session.user.role}
       />
     </AppShell>
   );
+}
+
+async function loadDebtor(phone: string) {
+  // В базе нет индекса по нормализованному телефону, поэтому сверяем
+  // локально — таблица должников достаточно небольшая для этого.
+  const debtors = await prisma.debtor.findMany({
+    include: { messages: { orderBy: { createdAt: "desc" }, take: 10 } },
+  });
+  return debtors.find((d) => phonesMatch(d.phoneNumber, phone)) || null;
 }

@@ -13,6 +13,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
     include: {
       keys: { orderBy: { createdAt: "asc" } },
       history: { orderBy: { createdAt: "desc" } },
+      client: true,
     },
   });
   if (!vehicle) return NextResponse.json({ error: "Не найдено" }, { status: 404 });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { StatusRing } from "./StatusRing";
 import { StatusBadge, STATUS_CONFIG, VehicleStatus } from "./status";
@@ -45,7 +45,41 @@ export type VehicleFull = {
   history: HistoryEntry[];
 };
 
+export type VehicleClientInfo = {
+  id: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  phone: string;
+  email: string | null;
+};
+
+export type DebtorMessageEntry = {
+  id: string;
+  target: string;
+  body: string;
+  status: string;
+  error: string | null;
+  sentBy: string | null;
+  createdAt: string;
+};
+
+export type VehicleDebtorInfo = {
+  id: string;
+  currentBalance: number;
+  balanceWithDeposits: number | null;
+  dateOfFirstUnpaidPayoff: string | null;
+  dateOfLastUnpaidPayoff: string | null;
+  debtNotes: string | null;
+  isContactedForDebt: boolean;
+  lastSyncedAt: string;
+  messages: DebtorMessageEntry[];
+};
+
 const LOCALE_MAP: Record<Lang, string> = { ru: "ru-RU", pl: "pl-PL", uk: "uk-UA" };
+
+function formatMoney(value: number) {
+  return `${value.toLocaleString("ru-RU", { maximumFractionDigits: 2 })}\u00A0zł`;
+}
 
 const WORKSHOP_CITIES = ["Wrocław", "Warszawa", "Kraków", "Poznań", "Gdańsk", "Łódź", "Szczecin"];
 
@@ -58,14 +92,18 @@ const KEY_PRESETS = [
 
 export function VehicleDetail({
   vehicle,
+  client,
+  debtor,
   role,
 }: {
   vehicle: VehicleFull;
+  client: VehicleClientInfo | null;
+  debtor: VehicleDebtorInfo | null;
   role: "ADMIN" | "MANAGER" | "VIEWER";
 }) {
   const router = useRouter();
   const { t, lang } = useTranslation();
-  const [tab, setTab] = useState<"overview" | "keys">("overview");
+  const [tab, setTab] = useState<"overview" | "debt" | "keys">("overview");
   const [v, setV] = useState(vehicle);
   const [problemDraft, setProblemDraft] = useState(vehicle.problemDescription || "");
   const [savingProblem, setSavingProblem] = useState(false);
@@ -354,6 +392,21 @@ export function VehicleDetail({
         >
           {t("tab_overview")}
         </button>
+        {client && (
+          <button
+            onClick={() => setTab("debt")}
+            className={`flex items-center gap-1.5 rounded-md px-4 py-1.5 text-sm transition-colors ${
+              tab === "debt" ? "bg-panel2 text-ink" : "text-muted hover:text-ink"
+            }`}
+          >
+            {t("tab_debt")}
+            {debtor && debtor.currentBalance < 0 && (
+              <span className="rounded-full bg-danger/15 px-1.5 py-0.5 font-mono text-[10px] text-danger">
+                {formatMoney(Math.abs(debtor.currentBalance))}
+              </span>
+            )}
+          </button>
+        )}
         <button
           onClick={() => setTab("keys")}
           className={`rounded-md px-4 py-1.5 text-sm transition-colors ${
@@ -422,6 +475,8 @@ export function VehicleDetail({
             </div>
           </div>
         </div>
+      ) : tab === "debt" && client ? (
+        <DebtTab client={client} debtor={debtor} editable={editable} />
       ) : (
         <div className="panel p-6">
           <div className="mb-5 flex items-center justify-between">
@@ -506,6 +561,427 @@ export function VehicleDetail({
             return ok;
           }}
         />
+      )}
+    </div>
+  );
+}
+
+type DebtDetailItem = {
+  id: number;
+  date: string | null;
+  vehicleName: string | null;
+  reason: string | null;
+  quota: number;
+  remainingPayoff: number;
+  comments: string | null;
+};
+
+type DebtDetailsResponse = {
+  currentBalance: number;
+  balanceWithDeposits: number | null;
+  items: DebtDetailItem[];
+  fetchedAt: string;
+};
+
+const REASON_LABEL_KEYS: Partial<Record<string, TranslationKey>> = {
+  TransportRent: "debtors_reason_transport_rent",
+};
+
+function reasonLabel(code: string | null, t: (key: TranslationKey) => string): string {
+  if (!code) return t("debtors_debt_info_no_reason");
+  const key = REASON_LABEL_KEYS[code];
+  if (key) return t(key);
+  return code.replace(/([a-z0-9])([A-Z])/g, "$1 $2");
+}
+
+// Статус по строке задолженности выводим из реальных цифр ravapi.eu
+// (сумма списания vs. остаток к оплате) — своего поля "статус" у элемента нет.
+function itemStatus(item: DebtDetailItem): "paid" | "overdue" | "partial" {
+  if (item.remainingPayoff <= 0) return "paid";
+  if (item.remainingPayoff >= item.quota) return "overdue";
+  return "partial";
+}
+
+const ITEM_STATUS_STYLE: Record<"paid" | "overdue" | "partial", { text: string; bg: string; labelKey: TranslationKey }> = {
+  paid: { text: "text-mint", bg: "bg-mintDim/50", labelKey: "vehicle_debt_status_paid" },
+  overdue: { text: "text-danger", bg: "bg-danger/10", labelKey: "vehicle_debt_status_overdue" },
+  partial: { text: "text-amber", bg: "bg-amberDim/50", labelKey: "vehicle_debt_status_partial" },
+};
+
+function DebtTab({
+  client,
+  debtor,
+  editable,
+}: {
+  client: VehicleClientInfo;
+  debtor: VehicleDebtorInfo | null;
+  editable: boolean;
+}) {
+  const { t, lang } = useTranslation();
+  const [details, setDetails] = useState<DebtDetailsResponse | null>(null);
+  const [loadingDetails, setLoadingDetails] = useState(false);
+  const [detailsError, setDetailsError] = useState<string | null>(null);
+
+  const [notesDraft, setNotesDraft] = useState(debtor?.debtNotes || "");
+  const [editingNotes, setEditingNotes] = useState(false);
+  const [savingNotes, setSavingNotes] = useState(false);
+  const [contacted, setContacted] = useState(debtor?.isContactedForDebt || false);
+  const [savingContacted, setSavingContacted] = useState(false);
+
+  const [messages, setMessages] = useState(debtor?.messages || []);
+  const [reminderOpen, setReminderOpen] = useState(false);
+  const [reminderText, setReminderText] = useState(
+    t("vehicle_debt_reminder_template").replace("{name}", client.firstName || "")
+  );
+  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
+  const [sent, setSent] = useState(false);
+
+  async function loadDetails() {
+    if (!debtor) return;
+    setLoadingDetails(true);
+    setDetailsError(null);
+    try {
+      const res = await fetch(`/api/debtors/${debtor.id}/debt-details`);
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setDetailsError(body.error || t("debtors_debt_info_error"));
+        return;
+      }
+      setDetails(body);
+    } catch {
+      setDetailsError(t("debtors_debt_info_error"));
+    } finally {
+      setLoadingDetails(false);
+    }
+  }
+
+  useEffect(() => {
+    loadDetails();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debtor?.id]);
+
+  async function saveNotes() {
+    if (!debtor) return;
+    setSavingNotes(true);
+    const res = await fetch(`/api/debtors/${debtor.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ debtNotes: notesDraft }),
+    });
+    setSavingNotes(false);
+    if (res.ok) setEditingNotes(false);
+  }
+
+  async function toggleContacted() {
+    if (!debtor || !editable) return;
+    const next = !contacted;
+    setContacted(next);
+    setSavingContacted(true);
+    await fetch(`/api/debtors/${debtor.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isContactedForDebt: next }),
+    });
+    setSavingContacted(false);
+  }
+
+  async function sendReminder() {
+    if (!debtor || !reminderText.trim()) return;
+    setSending(true);
+    setSendError(null);
+    setSent(false);
+    try {
+      const res = await fetch(`/api/debtors/${debtor.id}/notify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: reminderText }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setSendError(body.error || t("notify_send_failed"));
+        return;
+      }
+      setMessages((prev) => [body, ...prev]);
+      setContacted(true);
+      setSent(true);
+      setReminderOpen(false);
+    } catch {
+      setSendError(t("notify_send_failed"));
+    } finally {
+      setSending(false);
+    }
+  }
+
+  const fullName = [client.firstName, client.lastName].filter(Boolean).join(" ") || t("vehicle_debt_client_eyebrow");
+  const hasDebt = debtor && debtor.currentBalance < 0;
+  const totalOwed = debtor ? Math.abs(debtor.currentBalance) : 0;
+  const paidSoFar =
+    details && details.items.length
+      ? details.items.reduce((sum, i) => sum + Math.max(0, i.quota - i.remainingPayoff), 0)
+      : null;
+  const totalCharged = details && details.items.length ? details.items.reduce((sum, i) => sum + i.quota, 0) : null;
+
+  return (
+    <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+      {/* Клиент + общая сумма долга */}
+      <div className="panel flex flex-wrap items-center justify-between gap-4 p-6 lg:col-span-3">
+        <div>
+          <div className="label-eyebrow mb-1">{t("vehicle_debt_client_eyebrow")}</div>
+          <div className="font-display text-lg font-semibold text-ink">{fullName}</div>
+          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
+            {client.phone && (
+              <a href={`tel:${client.phone}`} className="text-cyan transition-opacity hover:opacity-80">
+                {client.phone}
+              </a>
+            )}
+            {client.email && (
+              <a href={`mailto:${client.email}`} className="text-cyan transition-opacity hover:opacity-80">
+                {client.email}
+              </a>
+            )}
+            {client.id && (
+              <a href={`/clients/${client.id}`} className="text-violet transition-opacity hover:opacity-80">
+                {t("vehicle_debt_view_client_btn")}
+              </a>
+            )}
+          </div>
+        </div>
+
+        {debtor ? (
+          <div
+            className={`flex items-center gap-4 rounded-2xl border px-5 py-3.5 shadow-glowViolet ${
+              hasDebt ? "border-violet/40 bg-gradient-to-br from-violet/20 via-violet/10 to-cyan/10" : "border-mint/40 bg-mintDim/40"
+            }`}
+          >
+            <div>
+              <div className="text-[11px] uppercase tracking-wide text-muted">{t("vehicle_debt_total_label")}</div>
+              <div className={`font-display text-2xl font-bold ${hasDebt ? "text-danger" : "text-mint"}`}>
+                {hasDebt ? formatMoney(totalOwed) : formatMoney(0)}
+              </div>
+              <div className="mt-0.5 text-[10px] text-faint">
+                {t("vehicle_debt_updated_label")}: {new Date(debtor.lastSyncedAt).toLocaleString(LOCALE_MAP[lang])}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-mint/40 bg-mintDim/40 px-5 py-3.5">
+            <div className="text-sm font-medium text-mint">{t("vehicle_debt_no_debtor_title")}</div>
+          </div>
+        )}
+      </div>
+
+      {debtor && (
+        <>
+          {/* Разбивка */}
+          <div className="panel grid grid-cols-1 divide-y divide-line p-0 sm:grid-cols-3 sm:divide-x sm:divide-y-0 lg:col-span-3">
+            <div className="px-5 py-4">
+              <div className="label-eyebrow">{t("vehicle_debt_breakdown_total")}</div>
+              <div className="mt-1 font-display text-xl font-semibold text-ink">
+                {totalCharged != null ? formatMoney(totalCharged) : "—"}
+              </div>
+            </div>
+            <div className="px-5 py-4">
+              <div className="label-eyebrow">{t("vehicle_debt_breakdown_remaining")}</div>
+              <div className="mt-1 font-display text-xl font-semibold text-danger">{formatMoney(totalOwed)}</div>
+            </div>
+            <div className="px-5 py-4">
+              <div className="label-eyebrow">{t("vehicle_debt_breakdown_paid")}</div>
+              <div className="mt-1 font-display text-xl font-semibold text-mint">
+                {paidSoFar != null ? formatMoney(paidSoFar) : "—"}
+              </div>
+            </div>
+          </div>
+
+          {/* Расшифровка задолженности */}
+          <div className="panel p-6 lg:col-span-2">
+            <div className="mb-3 flex items-center justify-between">
+              <div className="label-eyebrow">{t("debtors_debt_info_title")}</div>
+              {!loadingDetails && (
+                <button
+                  onClick={loadDetails}
+                  className="text-[11px] text-cyan transition-opacity hover:opacity-80"
+                >
+                  {t("debtors_debt_info_retry")}
+                </button>
+              )}
+            </div>
+
+            {loadingDetails && <div className="py-8 text-sm text-muted">{t("debtors_debt_info_loading")}</div>}
+
+            {!loadingDetails && detailsError && (
+              <div className="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-xs text-danger">
+                {detailsError}
+              </div>
+            )}
+
+            {!loadingDetails && !detailsError && details && (
+              <>
+                {details.items.length === 0 ? (
+                  <div className="py-8 text-center text-sm text-muted">{t("debtors_debt_info_empty")}</div>
+                ) : (
+                  <div className="max-h-96 overflow-y-auto rounded-xl border border-line scrollbar-thin">
+                    <table className="w-full text-left text-xs">
+                      <thead>
+                        <tr className="border-b border-line bg-bg2 text-muted">
+                          <th className="px-3 py-2 font-medium">{t("debtors_debt_info_col_date")}</th>
+                          <th className="px-3 py-2 font-medium">{t("debtors_debt_info_col_reason")}</th>
+                          <th className="px-3 py-2 font-medium">{t("debtors_debt_info_col_amount")}</th>
+                          <th className="px-3 py-2 font-medium">{t("vehicle_debt_col_status")}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {details.items.map((item) => {
+                          const st = itemStatus(item);
+                          const style = ITEM_STATUS_STYLE[st];
+                          return (
+                            <tr key={item.id} className="border-b border-line/60 last:border-0">
+                              <td className="whitespace-nowrap px-3 py-2 text-muted">
+                                {item.date ? new Date(item.date).toLocaleDateString(LOCALE_MAP[lang]) : "—"}
+                              </td>
+                              <td className="px-3 py-2 text-ink">
+                                {reasonLabel(item.reason, t)}
+                                {item.comments && (
+                                  <div className="mt-0.5 text-[11px] text-faint">{item.comments}</div>
+                                )}
+                              </td>
+                              <td className="whitespace-nowrap px-3 py-2 font-medium text-ink">
+                                {formatMoney(item.quota)}
+                              </td>
+                              <td className="whitespace-nowrap px-3 py-2">
+                                <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${style.bg} ${style.text}`}>
+                                  {t(style.labelKey)}
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+
+          {/* Заметка + связаться с клиентом */}
+          <div className="flex flex-col gap-5">
+            <div className="panel p-6">
+              <div className="mb-3 flex items-center justify-between">
+                <div className="label-eyebrow">{t("vehicle_debt_notes_eyebrow")}</div>
+                {editable && !editingNotes && (
+                  <button
+                    onClick={() => setEditingNotes(true)}
+                    className="text-[11px] text-cyan transition-opacity hover:opacity-80"
+                  >
+                    {debtor.debtNotes ? t("edit") : t("add")}
+                  </button>
+                )}
+              </div>
+              {editingNotes ? (
+                <div>
+                  <textarea
+                    autoFocus
+                    value={notesDraft}
+                    onChange={(e) => setNotesDraft(e.target.value)}
+                    rows={3}
+                    placeholder={t("debtors_notes_placeholder")}
+                    className="w-full resize-none rounded-lg border border-line bg-bg2 px-3 py-2 text-sm text-ink outline-none focus:border-cyan/50"
+                  />
+                  <div className="mt-2 flex gap-2">
+                    <button
+                      onClick={saveNotes}
+                      disabled={savingNotes}
+                      className="rounded-lg border border-cyan/40 bg-cyanDim/40 px-3 py-1.5 text-xs font-medium text-cyan transition-opacity hover:opacity-90 disabled:opacity-50"
+                    >
+                      {savingNotes ? t("saving") : t("save")}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setNotesDraft(debtor.debtNotes || "");
+                        setEditingNotes(false);
+                      }}
+                      className="text-xs text-muted transition-colors hover:text-ink"
+                    >
+                      {t("cancel")}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-muted">{debtor.debtNotes || "—"}</p>
+              )}
+
+              <label className="mt-4 flex items-center gap-2 text-xs text-muted">
+                <input
+                  type="checkbox"
+                  checked={contacted}
+                  disabled={!editable || savingContacted}
+                  onChange={toggleContacted}
+                  className="h-3.5 w-3.5 rounded border-line accent-violet"
+                />
+                {t("vehicle_debt_contacted_label")}
+              </label>
+            </div>
+
+            <div className="panel p-6">
+              <div className="label-eyebrow mb-3">{t("vehicle_debt_history_eyebrow")}</div>
+              <div className="max-h-52 space-y-3 overflow-y-auto scrollbar-thin pr-1">
+                {messages.length === 0 && <p className="text-sm text-muted">{t("vehicle_debt_no_messages")}</p>}
+                {messages.map((m) => (
+                  <div key={m.id} className="text-xs">
+                    <div className="flex items-center justify-between text-faint">
+                      <span>{new Date(m.createdAt).toLocaleString(LOCALE_MAP[lang])}</span>
+                      <span className={m.status === "SENT" ? "text-mint" : "text-danger"}>
+                        {m.status === "SENT" ? t("notify_status_sent") : t("notify_status_failed")}
+                      </span>
+                    </div>
+                    <p className="mt-0.5 text-ink">{m.body}</p>
+                  </div>
+                ))}
+              </div>
+
+              {editable && (
+                <>
+                  {reminderOpen ? (
+                    <div className="mt-4 border-t border-line pt-4">
+                      <textarea
+                        autoFocus
+                        value={reminderText}
+                        onChange={(e) => setReminderText(e.target.value)}
+                        rows={3}
+                        className="w-full resize-none rounded-lg border border-line bg-bg2 px-3 py-2 text-sm text-ink outline-none focus:border-cyan/50"
+                      />
+                      {sendError && <div className="mt-1.5 text-[11px] text-danger">{sendError}</div>}
+                      <div className="mt-2 flex gap-2">
+                        <button
+                          onClick={sendReminder}
+                          disabled={sending}
+                          className="flex-1 rounded-lg bg-violet py-2 text-xs font-medium text-white shadow-glowViolet transition-opacity hover:opacity-90 disabled:opacity-50"
+                        >
+                          {sending ? t("notify_sending") : t("vehicle_debt_send_reminder")}
+                        </button>
+                        <button
+                          onClick={() => setReminderOpen(false)}
+                          className="rounded-lg border border-line px-3 py-2 text-xs text-muted transition-colors hover:text-ink"
+                        >
+                          {t("cancel")}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setReminderOpen(true)}
+                      className="mt-4 w-full rounded-lg bg-violet py-2.5 text-xs font-medium text-white shadow-glowViolet transition-opacity hover:opacity-90"
+                    >
+                      {t("vehicle_debt_call_client")}
+                    </button>
+                  )}
+                  {sent && <div className="mt-2 text-center text-[11px] text-mint">{t("notify_sent_ok")}</div>}
+                </>
+              )}
+            </div>
+          </div>
+        </>
       )}
     </div>
   );
