@@ -4,44 +4,44 @@
 
 @layer base {
   :root {
-    /* Светлая тема (значения — R G B, без запятых, для работы с прозрачностью Tailwind) */
-    --color-bg: 244 248 252;
+    /* Светлая тема — фирменная бирюза + глубокий графит-навy (по логотипу BezProblem) */
+    --color-bg: 246 250 249;
     --color-bg2: 255 255 255;
     --color-panel: 255 255 255;
-    --color-panel2: 234 242 251;
-    --color-line: 215 228 243;
-    --color-ink: 15 37 69;
-    --color-muted: 91 115 165;
-    --color-faint: 140 160 191;
-    --color-mint: 18 183 106;
-    --color-mint-dim: 221 246 233;
-    --color-amber: 220 138 14;
-    --color-amber-dim: 251 238 217;
-    --color-violet: 91 95 238;
-    --color-violet-dim: 230 230 253;
-    --color-cyan: 18 116 224;
-    --color-cyan-dim: 225 238 252;
-    --color-danger: 226 59 92;
+    --color-panel2: 234 245 243;
+    --color-line: 213 232 229;
+    --color-ink: 11 32 42;
+    --color-muted: 90 121 126;
+    --color-faint: 145 171 174;
+    --color-mint: 15 158 105;
+    --color-mint-dim: 217 245 233;
+    --color-amber: 199 122 17;
+    --color-amber-dim: 250 235 211;
+    --color-violet: 99 91 214;
+    --color-violet-dim: 232 230 250;
+    --color-cyan: 15 148 137;
+    --color-cyan-dim: 213 241 237;
+    --color-danger: 214 58 78;
   }
 
   .dark {
-    /* Тёмная тема */
-    --color-bg: 10 16 28;
-    --color-bg2: 16 26 44;
-    --color-panel: 18 28 48;
-    --color-panel2: 26 39 64;
-    --color-line: 38 52 79;
-    --color-ink: 232 238 249;
-    --color-muted: 147 165 201;
-    --color-faint: 94 110 143;
+    /* Тёмная тема — премиальный тил на глубоком графите */
+    --color-bg: 7 15 19;
+    --color-bg2: 11 22 27;
+    --color-panel: 14 27 33;
+    --color-panel2: 19 37 44;
+    --color-line: 28 51 58;
+    --color-ink: 231 245 243;
+    --color-muted: 145 176 176;
+    --color-faint: 90 120 122;
     --color-mint: 52 211 153;
-    --color-mint-dim: 15 51 36;
+    --color-mint-dim: 13 45 35;
     --color-amber: 242 169 60;
-    --color-amber-dim: 58 42 14;
-    --color-violet: 129 140 255;
-    --color-violet-dim: 36 36 74;
-    --color-cyan: 77 163 255;
-    --color-cyan-dim: 14 42 70;
+    --color-amber-dim: 53 39 14;
+    --color-violet: 150 142 255;
+    --color-violet-dim: 33 32 66;
+    --color-cyan: 45 212 191;
+    --color-cyan-dim: 11 42 40;
     --color-danger: 255 107 129;
   }
 
@@ -57,8 +57,9 @@
   body {
     @apply bg-bg text-ink font-body antialiased;
     background-image:
-      radial-gradient(circle at 12% -10%, rgb(var(--color-cyan) / 0.05), transparent 45%),
-      radial-gradient(circle at 88% 0%, rgb(var(--color-violet) / 0.04), transparent 40%);
+      radial-gradient(circle at 12% -10%, rgb(var(--color-cyan) / 0.07), transparent 45%),
+      radial-gradient(circle at 88% 0%, rgb(var(--color-violet) / 0.05), transparent 40%),
+      radial-gradient(circle at 50% 110%, rgb(var(--color-cyan) / 0.04), transparent 55%);
     background-attachment: fixed;
     transition: background-color 0.2s ease, color 0.2s ease;
   }
@@ -89,8 +90,35 @@
     @apply bg-panel border border-line rounded-2xl shadow-panel;
   }
 
+  .panel-elevated {
+    @apply bg-panel border border-line rounded-2xl shadow-panelLg;
+  }
+
+  .card-hover {
+    @apply transition-all duration-200 hover:-translate-y-0.5 hover:border-cyan/35 hover:shadow-brand;
+  }
+
   .label-eyebrow {
     @apply font-mono text-[11px] tracking-[0.18em] uppercase text-faint;
+  }
+
+  .text-gradient-brand {
+    background-image: theme("backgroundImage.brandText");
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-brand transition-all duration-200 hover:brightness-110 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:pointer-events-none;
+    background-image: theme("backgroundImage.brandGradient");
+  }
+
+  .icon-tile {
+    @apply flex h-10 w-10 shrink-0 items-center justify-center rounded-xl;
+    background-image: theme("backgroundImage.brandGradient");
+    color: white;
+    box-shadow: 0 8px 20px -8px rgb(var(--color-cyan) / 0.55);
   }
 }
 

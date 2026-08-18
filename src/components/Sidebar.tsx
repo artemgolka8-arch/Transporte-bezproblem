@@ -137,17 +137,21 @@ export function Sidebar({
   }
 
   return (
-    <div className="flex h-full w-[272px] shrink-0 flex-col border-r border-line/70 bg-bg2">
-      <Link href="/" onClick={onNavigate} className="flex items-center gap-2.5 px-5 py-5">
+    <div className="flex h-full w-[276px] shrink-0 flex-col border-r border-line/70 bg-bg2">
+      <Link href="/" onClick={onNavigate} className="flex items-center gap-3 px-5 py-6">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyanDim/60 text-cyan">
-          <TruckIcon />
-        </span>
+        <img
+          src="/logo.png"
+          alt="BezProblem"
+          className="h-10 w-10 shrink-0 rounded-full object-cover shadow-brand ring-2 ring-cyan/20"
+        />
         <div className="leading-tight">
-          <div className="font-display text-base font-semibold tracking-wide text-ink">
-            Bez<span className="text-cyan">Problem</span>
+          <div className="font-display text-[17px] font-semibold tracking-wide text-ink">
+            Bez<span className="text-gradient-brand">Problem</span>
           </div>
-          <div className="text-[12px] text-muted -mt-0.5">{t("tagline")}</div>
+          <div className="text-[11px] font-medium uppercase tracking-[0.14em] text-faint -mt-0.5">
+            {t("tagline")}
+          </div>
         </div>
       </Link>
 
@@ -160,13 +164,22 @@ export function Sidebar({
               key={item.href}
               href={item.href}
               onClick={onNavigate}
-              className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors ${
+              className={`group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-150 ${
                 active
-                  ? "bg-violetDim/70 text-violet font-medium"
+                  ? "bg-cyanDim/60 font-semibold text-cyan"
                   : "text-muted hover:bg-panel2/70 hover:text-ink"
               }`}
             >
-              <Icon />
+              {active && (
+                <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-cyan" />
+              )}
+              <span
+                className={`flex h-7 w-7 shrink-0 items-center justify-center transition-colors ${
+                  active ? "text-cyan" : "text-faint group-hover:text-ink"
+                }`}
+              >
+                <Icon />
+              </span>
               {t(item.labelKey)}
             </Link>
           );
@@ -175,14 +188,15 @@ export function Sidebar({
         <StatsPanel counts={counts} variant="sidebar" />
       </nav>
 
-      <div className="mx-3 mb-3 rounded-2xl bg-violetDim/50 p-4">
-        <span className="mb-2 flex h-7 w-7 items-center justify-center rounded-lg bg-bg2/70 text-violet">
+      <div className="relative mx-3 mb-3 overflow-hidden rounded-2xl p-4" style={{ backgroundImage: "linear-gradient(135deg, rgb(var(--color-cyan) / 0.14), rgb(var(--color-violet) / 0.10))" }}>
+        <div className="pointer-events-none absolute -right-6 -top-6 h-20 w-20 rounded-full bg-cyan/10 blur-2xl" />
+        <span className="mb-2 flex h-7 w-7 items-center justify-center rounded-lg bg-bg2/80 text-cyan">
           <SparkleIcon />
         </span>
         <div className="mb-1.5 text-[13px] font-medium leading-snug text-ink">
           {t("sidebar_promo_title")}
         </div>
-        <Link href="/referred-clients" className="inline-flex items-center gap-1 text-[13px] text-violet hover:opacity-80">
+        <Link href="/referred-clients" className="inline-flex items-center gap-1 text-[13px] font-medium text-cyan hover:opacity-80">
           {t("sidebar_promo_link")}
           <ChevronRightIcon />
         </Link>
@@ -193,7 +207,7 @@ export function Sidebar({
         onClick={onNavigate}
         className="flex items-center gap-3 border-t border-line/70 px-4 py-3.5 transition-colors hover:bg-panel2/60"
       >
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-violetDim/70 text-xs font-semibold text-violet">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brandGradient text-xs font-semibold text-white shadow-brand">
           {initials(userName)}
         </span>
         <div className="min-w-0 flex-1 leading-tight">

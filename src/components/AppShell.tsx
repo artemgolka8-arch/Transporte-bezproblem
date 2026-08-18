@@ -115,25 +115,28 @@ export function AppShell({
       )}
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 border-b border-line/70 bg-bg2/90 backdrop-blur-md">
+        <header className="sticky top-0 z-30 border-b border-line/70 bg-bg2/85 backdrop-blur-md">
           <div className="flex items-center gap-3 px-5 py-4">
             <button
               type="button"
               onClick={() => setMobileOpen(true)}
-              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-line/70 text-muted lg:hidden"
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-line/70 text-muted transition-colors hover:border-cyan/40 hover:text-cyan lg:hidden"
               aria-label="Menu"
             >
               <MenuIcon />
             </button>
 
-            <div className="text-sm font-medium text-muted">{title}</div>
+            <div className="flex items-center gap-2">
+              <span className="hidden h-1.5 w-1.5 rounded-full bg-cyan sm:block" />
+              <div className="font-display text-[15px] font-semibold tracking-wide text-ink">{title}</div>
+            </div>
 
             <div className="ml-auto flex items-center gap-2">
               <div className="relative">
                 <button
                   type="button"
                   onClick={() => setLangOpen((v) => !v)}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-line/70 bg-bg2 px-3 py-1.5 text-xs font-medium text-ink transition-colors hover:border-violet/40"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-line/70 bg-bg2 px-3 py-1.5 text-xs font-medium text-ink transition-colors hover:border-cyan/40 hover:text-cyan"
                 >
                   <GlobeIcon />
                   {lang.toUpperCase()}
@@ -150,7 +153,7 @@ export function AppShell({
                           setLangOpen(false);
                         }}
                         className={`block w-full rounded-lg px-3 py-1.5 text-left text-sm transition-colors ${
-                          lang === l.code ? "bg-violetDim/70 text-violet" : "text-muted hover:bg-panel2/70 hover:text-ink"
+                          lang === l.code ? "bg-cyanDim/70 text-cyan font-medium" : "text-muted hover:bg-panel2/70 hover:text-ink"
                         }`}
                       >
                         {l.label}
@@ -165,7 +168,7 @@ export function AppShell({
                 onClick={toggleTheme}
                 title={isDark ? t("theme_light") : t("theme_dark")}
                 aria-label={isDark ? t("theme_light") : t("theme_dark")}
-                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-line/70 text-muted transition-colors hover:border-violet/40 hover:text-ink"
+                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-line/70 text-muted transition-colors hover:border-cyan/40 hover:text-cyan"
               >
                 {isDark ? <SunIcon /> : <MoonIcon />}
               </button>

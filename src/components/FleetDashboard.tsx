@@ -68,10 +68,7 @@ export function FleetDashboard({
           </p>
         </div>
         {canEdit(role) && (
-          <button
-            onClick={() => setModalOpen(true)}
-            className="rounded-lg border border-cyan/40 bg-cyanDim/40 px-4 py-2.5 text-sm font-medium text-cyan shadow-glowCyan transition-opacity hover:opacity-90"
-          >
+          <button onClick={() => setModalOpen(true)} className="btn-primary">
             {t("add_vehicle_btn")}
           </button>
         )}

@@ -111,10 +111,7 @@ export function TasksBoard({
           <h1 className="font-display text-2xl font-semibold text-ink">{t("tasks_title")}</h1>
         </div>
         {editable && (
-          <button
-            onClick={() => setFormOpen(true)}
-            className="rounded-lg border border-cyan/40 bg-cyanDim/40 px-4 py-2.5 text-sm font-medium text-cyan shadow-glowCyan transition-opacity hover:opacity-90"
-          >
+          <button onClick={() => setFormOpen(true)} className="btn-primary">
             {t("new_task_btn")}
           </button>
         )}

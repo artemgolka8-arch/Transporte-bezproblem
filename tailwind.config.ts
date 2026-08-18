@@ -36,11 +36,14 @@ const config: Config = {
         mono: ["var(--font-mono)"],
       },
       boxShadow: {
-        glowCyan: "0 0 20px rgba(18,116,224,0.18)",
-        glowMint: "0 0 20px rgba(18,183,106,0.18)",
-        glowAmber: "0 0 20px rgba(220,138,14,0.18)",
-        glowViolet: "0 0 20px rgba(91,95,238,0.18)",
-        panel: "0 1px 0 rgba(255,255,255,0.6) inset, 0 12px 28px -18px rgba(15,37,69,0.18)",
+        glowCyan: "0 0 24px rgba(15,148,137,0.22)",
+        glowMint: "0 0 20px rgba(16,168,110,0.18)",
+        glowAmber: "0 0 20px rgba(202,122,15,0.18)",
+        glowViolet: "0 0 20px rgba(99,91,214,0.18)",
+        panel: "0 1px 0 rgba(255,255,255,0.7) inset, 0 16px 36px -20px rgba(9,32,38,0.20)",
+        panelLg: "0 1px 0 rgba(255,255,255,0.7) inset, 0 28px 60px -24px rgba(9,32,38,0.28)",
+        card: "0 1px 0 rgba(255,255,255,0.6) inset, 0 10px 24px -16px rgba(9,32,38,0.16)",
+        brand: "0 18px 40px -18px rgba(15,148,137,0.45)",
       },
       keyframes: {
         pulseBeacon: {
@@ -67,9 +70,13 @@ const config: Config = {
         rise: "rise 0.45s ease both",
       },
       backgroundImage: {
-        grid: "linear-gradient(rgba(15,37,69,0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(15,37,69,0.045) 1px, transparent 1px)",
+        grid: "linear-gradient(rgba(12,34,45,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(12,34,45,0.05) 1px, transparent 1px)",
         scanline:
-          "linear-gradient(90deg, transparent, rgba(18,116,224,0.45), transparent)",
+          "linear-gradient(90deg, transparent, rgba(20,166,153,0.55), transparent)",
+        brandRadial:
+          "radial-gradient(circle at 15% -10%, rgba(20,166,153,0.16), transparent 45%), radial-gradient(circle at 85% 0%, rgba(99,91,214,0.10), transparent 42%), radial-gradient(circle at 50% 120%, rgba(20,166,153,0.10), transparent 50%)",
+        brandGradient: "linear-gradient(135deg, #0F9489 0%, #14b8a6 45%, #635BD6 130%)",
+        brandText: "linear-gradient(120deg, #0F9489 0%, #17BFB2 55%, #635BD6 130%)",
       },
       backgroundSize: {
         gridcell: "36px 36px",

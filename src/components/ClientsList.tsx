@@ -79,10 +79,7 @@ export function ClientsList({
             >
               {syncing ? "Переносим…" : "Перенести из аренды"}
             </button>
-            <button
-              onClick={() => setFormOpen(true)}
-              className="rounded-lg border border-cyan/40 bg-cyanDim/40 px-4 py-2.5 text-sm font-medium text-cyan shadow-glowCyan transition-opacity hover:opacity-90"
-            >
+            <button onClick={() => setFormOpen(true)} className="btn-primary">
               {t("new_client_btn")}
             </button>
           </div>

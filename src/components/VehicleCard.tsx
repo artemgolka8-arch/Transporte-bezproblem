@@ -41,7 +41,7 @@ export function VehicleCard({
     <Link
       href={`/vehicle/${vehicle.id}`}
       style={{ animationDelay: `${Math.min(index * 40, 400)}ms` }}
-      className="group panel relative flex flex-col gap-4 p-5 animate-rise transition-all hover:-translate-y-0.5 hover:border-cyan/30"
+      className="group panel card-hover relative flex flex-col gap-4 p-5 animate-rise"
     >
       {onDelete && (
         <button
