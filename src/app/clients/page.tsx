@@ -41,6 +41,7 @@ export default async function ClientsPage() {
           lastName: c.lastName,
           phone: c.phone,
           email: c.email,
+          createdAt: c.createdAt.toISOString(),
           vehicles: c.vehicles,
         }))}
         role={session.user.role}
