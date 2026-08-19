@@ -33,9 +33,14 @@ function splitDriverName(fullName: string): { firstName: string; lastName: strin
 //
 // Источник активной аренды — POST /api/Vehicles/GetAll (vehicleStatus:2 —
 // "передана водителю"): для каждой единицы техники там есть VIN и
-// "Регистрационный номер" по отдельности, поэтому технику из ravapi
-// сопоставляем с нашей базой по VIN (если он указан у обеих сторон), а если
-// нет — по "Коду" (полю "Регистрационный номер" в нашей карточке техники).
+// "Регистрационный номер" по отдельности. В ravapi VIN реально заполняют
+// только скутерам — у велосипедов его роль играет "Регистрационный номер".
+// Поэтому сопоставление с нашей базой (где поле vin используется для обоих
+// типов техники) идёт по-разному в зависимости от типа: скутер сверяем по
+// VIN ravapi, велосипед — по "Регистрационному номеру" ravapi (как по VIN).
+// Если совпадения по VIN нет ни у той, ни у другой техники — общий запасной
+// вариант для обоих типов: сверка по "Коду" (полю "Регистрационный номер"
+// ravapi против нашего "Кода").
 // Имя текущего водителя приходит вместе с этой же техникой; телефон клиента
 // подтягиваем отдельно из GetDebtors (там же, где раздел "Должники"),
 // сопоставляя по ФИО — это только обогащение, на сам факт аренды не влияет.
@@ -70,12 +75,30 @@ export async function POST() {
   // Только техника, у которой реально указан текущий водитель.
   const active = remoteVehicles.filter((rv) => rv.drivers.length > 0 && rv.drivers[0]?.trim());
 
-  // Индексы для сопоставления с нашей техникой: по VIN и по "Коду" (рег. номеру).
+  // Индексы для сопоставления с нашей техникой.
+  //
+  // В ravapi поле Vin реально заполнено только у скутеров. У велосипедов VIN
+  // не ведут — вместо этого их "вин" вписывают в RegistrationNumber. У нас же
+  // в карточке техники поле vin используется для обоих типов (и скутер, и
+  // велосипед хранят там свой VIN). Поэтому одной картой byVin не обойтись:
+  //   - byVin: rv.Vin → техника ravapi. Годится для сверки со скутерами
+  //     (v.vin скутера сравнивается с rv.vin).
+  //   - byRegAsVin: rv.RegistrationNumber, нормализованный как VIN → техника
+  //     ravapi. Годится для сверки с великами (v.vin велосипеда на самом деле
+  //     хранит то же значение, что ravapi кладёт в RegistrationNumber).
+  //   - byRegNumber: rv.RegistrationNumber, нормализованный как обычная
+  //     строка → техника ravapi. Запасной вариант сопоставления по нашему
+  //     полю "Код" (v.code), если по VIN совпадения нет — для обоих типов.
   const byVin = new Map<string, RavapiVehicle>();
+  const byRegAsVin = new Map<string, RavapiVehicle>();
   const byRegNumber = new Map<string, RavapiVehicle>();
   for (const rv of active) {
     const vinKey = normalizeVin(rv.vin);
     if (vinKey && !byVin.has(vinKey)) byVin.set(vinKey, rv);
+
+    const regAsVinKey = normalizeVin(rv.registrationNumber);
+    if (regAsVinKey && !byRegAsVin.has(regAsVinKey)) byRegAsVin.set(regAsVinKey, rv);
+
     const regKey = normalizeKey(rv.registrationNumber);
     if (regKey && !byRegNumber.has(regKey)) byRegNumber.set(regKey, rv);
   }
@@ -105,7 +128,13 @@ export async function POST() {
   const matchedRemoteIds = new Set<number>();
 
   for (const v of vehicles) {
-    const matched = byVin.get(normalizeVin(v.vin)) ?? byRegNumber.get(normalizeKey(v.code));
+    // Скутеры сверяем с ravapi по VIN (rv.vin), велосипеды — по VIN, но
+    // сравнивая с полем RegistrationNumber ravapi (там у них лежит тот же
+    // "вин", просто под другим именем). Если по VIN не нашлось — обоим типам
+    // общий запасной вариант: сверка по "Коду" (rv.registrationNumber ↔ v.code).
+    const vinKey = normalizeVin(v.vin);
+    const byVinMatch = v.type === "BIKE" ? byRegAsVin.get(vinKey) : byVin.get(vinKey);
+    const matched = byVinMatch ?? byRegNumber.get(normalizeKey(v.code));
 
     if (matched) {
       matchedRemoteIds.add(matched.id);
