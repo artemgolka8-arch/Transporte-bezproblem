@@ -47,7 +47,10 @@ function splitDriverName(fullName: string): { firstName: string; lastName: strin
 //
 //   1. Нашлось совпадение по VIN/коду → техника переходит в "В аренде", в неё
 //      подставляются данные клиента (заводится/обновляется карточка в
-//      справочнике "Клиенты" по телефону, если телефон известен).
+//      справочнике "Клиенты"). Карточка клиента ищется сначала по телефону,
+//      а если телефон в этот раз не пришёл или записан иначе — по
+//      "имя фамилия", чтобы не терять существующую карточку и не плодить
+//      дубли (телефон от ravapi не всегда стабилен между синхронизациями).
 //   2. Техника раньше была синхронизирована из ravapi (стоит renterExternalId),
 //      но сейчас не встретилась среди переданной водителям техники — аренда
 //      завершена, техника переходит в "Доступен".
@@ -115,9 +118,17 @@ export async function POST() {
 
   const existingClients = await prisma.client.findMany();
   const clientsByPhone = new Map<string, (typeof existingClients)[number]>();
+  // Телефон от ravapi не всегда приходит (или приходит в другом формате), из-за
+  // чего сопоставление только по телефону теряет уже существующую карточку
+  // клиента: то плодятся дубли, то у техники обнуляется clientId, хотя клиент
+  // на самом деле тот же самый. Поэтому дополнительно индексируем клиентов по
+  // "имя фамилия" — как запасной ключ, когда по телефону совпадения нет.
+  const clientsByName = new Map<string, (typeof existingClients)[number]>();
   for (const c of existingClients) {
-    const key = normalizePhone(c.phone);
-    if (key) clientsByPhone.set(key, c);
+    const phoneKey = normalizePhone(c.phone);
+    if (phoneKey) clientsByPhone.set(phoneKey, c);
+    const nameKey = normalizeKey(`${c.firstName} ${c.lastName}`);
+    if (nameKey && !clientsByName.has(nameKey)) clientsByName.set(nameKey, c);
   }
 
   const actorName = session.user.name || session.user.email || "Ravapi";
@@ -150,30 +161,56 @@ export async function POST() {
       const isNewRenter = v.renterExternalId !== matched.id || v.renter !== renterName;
       const needsStatusChange = v.status !== "RENTED";
 
-      if (!isNewRenter && !needsStatusChange) {
-        // Тот же арендатор, статус уже верный — просто освежаем отметку синхронизации
+      // Тот же арендатор, статус уже верный, и карточка клиента привязана —
+      // просто освежаем отметку синхронизации. Если clientId почему-то пуст
+      // (например, раньше не удалось сопоставить клиента) — не выходим
+      // досрочно, а пытаемся сопоставить клиента ниже, чтобы починить связь.
+      if (!isNewRenter && !needsStatusChange && v.clientId !== null) {
         await prisma.vehicle.update({ where: { id: v.id }, data: { ravapiSyncedAt: now } });
         continue;
       }
 
+      // Сопоставление клиента: сначала по телефону (надёжнее всего, поле
+      // уникальное), а если по телефону не нашли (телефон не пришёл в этот
+      // раз с ravapi, либо записан в другом формате) — по имени+фамилии,
+      // чтобы не терять уже существующую карточку и не плодить дубль.
       let clientId: string | null = null;
-      if (phone) {
-        const key = normalizePhone(phone);
-        let client = key ? clientsByPhone.get(key) : undefined;
-        if (client) {
-          client = await prisma.client.update({
-            where: { id: client.id },
-            data: {
-              firstName: firstName || client.firstName,
-              lastName: lastName || client.lastName,
-            },
-          });
-        } else {
-          client = await prisma.client.create({
-            data: { firstName: firstName || "", lastName: lastName || "", phone },
-          });
-        }
-        if (key) clientsByPhone.set(key, client);
+      const nameKey = normalizeKey(`${firstName} ${lastName}`);
+      const phoneKey = phone ? normalizePhone(phone) : "";
+
+      let client = phoneKey ? clientsByPhone.get(phoneKey) : undefined;
+      if (!client && nameKey) {
+        client = clientsByName.get(nameKey);
+      }
+
+      if (client) {
+        // Нашли существующую карточку (по телефону или по имени) — освежаем
+        // данные. Телефон перезаписываем только если он не занят другим
+        // клиентом (поле phone уникальное) — иначе просто оставляем как есть,
+        // связь с клиентом всё равно устанавливаем по найденной карточке.
+        const canUpdatePhone =
+          !!phone && (!phoneKey || !clientsByPhone.has(phoneKey) || clientsByPhone.get(phoneKey)?.id === client.id);
+        client = await prisma.client.update({
+          where: { id: client.id },
+          data: {
+            firstName: firstName || client.firstName,
+            lastName: lastName || client.lastName,
+            phone: canUpdatePhone ? phone! : client.phone,
+          },
+        });
+      } else if (phone) {
+        // Ни по телефону, ни по имени существующей карточки нет — заводим новую.
+        // Без телефона создать нельзя (обязательное уникальное поле).
+        client = await prisma.client.create({
+          data: { firstName: firstName || "", lastName: lastName || "", phone },
+        });
+      }
+
+      if (client) {
+        const newPhoneKey = normalizePhone(client.phone);
+        if (newPhoneKey) clientsByPhone.set(newPhoneKey, client);
+        const newNameKey = normalizeKey(`${client.firstName} ${client.lastName}`);
+        if (newNameKey) clientsByName.set(newNameKey, client);
         clientId = client.id;
       }
 
