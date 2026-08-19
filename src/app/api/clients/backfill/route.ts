@@ -4,9 +4,21 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { canEdit } from "@/lib/roles";
 
+function normalizeKey(value: string | null | undefined): string {
+  return (value ?? "").trim().toLowerCase().replace(/\s+/g, " ");
+}
+
 // Переносит в раздел "Клиенты" данные со всей техники, которая уже в аренде,
 // но по каким-то причинам (например, была сдана в аренду до появления
-// автоматического переноса) ещё не привязана к карточке клиента.
+// автоматического переноса, либо ravapi в свой раз не отдал телефон) ещё не
+// привязана к карточке клиента.
+//
+// Сопоставление клиента: сначала по телефону (надёжно, поле уникальное).
+// Если телефона у техники нет (renterPhone пуст) — пробуем найти уже
+// существующую карточку клиента по "имя фамилия" и просто привязать её,
+// не создавая новую и не считая это "пропуском". Завести новую карточку без
+// телефона нельзя (обязательное уникальное поле) — вот тогда действительно
+// пропускаем.
 export async function POST() {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
@@ -17,6 +29,13 @@ export async function POST() {
   const vehicles = await prisma.vehicle.findMany({
     where: { status: "RENTED", clientId: null },
   });
+
+  const existingClients = await prisma.client.findMany();
+  const clientsByName = new Map<string, (typeof existingClients)[number]>();
+  for (const c of existingClients) {
+    const key = normalizeKey(`${c.firstName} ${c.lastName}`);
+    if (key && !clientsByName.has(key)) clientsByName.set(key, c);
+  }
 
   let created = 0;
   let linked = 0;
@@ -29,7 +48,17 @@ export async function POST() {
     const email = v.renterEmail?.trim() || null;
 
     if (!phone) {
-      skipped.push({ code: v.code, name: v.name });
+      const nameKey = normalizeKey(`${firstName} ${lastName}`);
+      const byName = nameKey ? clientsByName.get(nameKey) : undefined;
+      if (!byName) {
+        skipped.push({ code: v.code, name: v.name });
+        continue;
+      }
+      await prisma.vehicle.update({
+        where: { id: v.id },
+        data: { clientId: byName.id },
+      });
+      linked++;
       continue;
     }
 
@@ -52,6 +81,9 @@ export async function POST() {
 
     if (existing) linked++;
     else created++;
+
+    const clientNameKey = normalizeKey(`${client.firstName} ${client.lastName}`);
+    if (clientNameKey) clientsByName.set(clientNameKey, client);
 
     await prisma.vehicle.update({
       where: { id: v.id },
