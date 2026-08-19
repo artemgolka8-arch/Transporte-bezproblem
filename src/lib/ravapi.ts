@@ -200,6 +200,113 @@ async function fetchAllDrivers(): Promise<RavapiDebtor[]> {
 }
 
 // ---------------------------------------------------------------------------
+// Список техники ravapi.eu (POST /api/Vehicles/GetAll, фильтр vehicleStatus:2 —
+// это "передана водителю", то есть прямо сейчас находится в аренде/на руках у
+// клиента). В отличие от GetDebtors, тут есть VIN и "Регистрационный номер"
+// (registrationNumber) каждой единицы техники по отдельности — а не склеенные
+// в одну строку vehicleName. Используется автосинхронизацией статусов техники
+// (src/app/api/vehicles/ravapi-sync) как основной источник: сопоставление
+// с техникой в нашей базе идёт по VIN, а если VIN не указан — по "Коду"
+// (регистрационному номеру). GetDebtors по-прежнему используется отдельно —
+// только чтобы подтянуть телефон клиента по имени водителя.
+// ---------------------------------------------------------------------------
+
+export type RavapiVehicle = {
+  id: number;
+  brand: string | null;
+  model: string | null;
+  registrationNumber: string | null;
+  vin: string | null;
+  drivers: string[];
+  vehicleStatus: number;
+  isDeleted: boolean;
+};
+
+async function fetchVehiclesPage(
+  jar: Record<string, string>,
+  skip: number,
+  take: number
+): Promise<{ items: RavapiVehicle[]; total: number | null }> {
+  const headers: Record<string, string> = {
+    ...BROWSER_HEADERS,
+    "Content-Type": "application/json",
+    Cookie: cookieHeader(jar),
+  };
+  if (jar["XSRF-TOKEN"]) {
+    headers["X-XSRF-TOKEN"] = decodeURIComponent(jar["XSRF-TOKEN"]);
+  }
+
+  const res = await fetch(`${BASE_URL}/api/Vehicles/GetAll`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      type: null,
+      model: "",
+      registrationNumber: "",
+      brand: "",
+      isOwnedByDriver: false,
+      // vehicleStatus: 2 — техника, переданная водителю (то есть в аренде).
+      vehicleStatus: 2,
+      skip,
+      take,
+      sortItems: [],
+      propertiesNames: [
+        "Id",
+        "Brand",
+        "Model",
+        "RegistrationNumber",
+        "Vin",
+        "Drivers",
+        "VehicleStatus",
+        "IsDeleted",
+      ],
+    }),
+  });
+
+  if (res.status === 401 || res.status === 403) {
+    throw new RavapiError("ravapi.eu отклонил сессию (401/403) — возможно, истёк логин");
+  }
+  if (!res.ok) {
+    throw new RavapiError(`Ошибка запроса списка техники (статус ${res.status})`);
+  }
+
+  const data = await res.json();
+  const items = data?.result?.items ?? data?.items ?? [];
+  const total = data?.result?.count ?? data?.result?.total ?? data?.total ?? null;
+
+  const mapped: RavapiVehicle[] = items.map((raw: Record<string, unknown>) => ({
+    id: Number(raw.id ?? 0),
+    brand: (raw.brand as string | null) ?? null,
+    model: (raw.model as string | null) ?? null,
+    registrationNumber: (raw.registrationNumber as string | null) ?? null,
+    vin: (raw.vin as string | null) ?? null,
+    drivers: Array.isArray(raw.drivers) ? (raw.drivers as string[]) : [],
+    vehicleStatus: Number(raw.vehicleStatus ?? 0),
+    isDeleted: !!raw.isDeleted,
+  }));
+
+  return { items: mapped, total: typeof total === "number" ? total : null };
+}
+
+// Забирает всю технику, которая сейчас передана водителю (постранично, как
+// и остальные списки), пропуская удалённые записи.
+export async function fetchActiveRentedVehicles(): Promise<RavapiVehicle[]> {
+  const jar = await login();
+  const take = 100;
+  const maxPages = 20;
+  const all: RavapiVehicle[] = [];
+
+  for (let page = 0; page < maxPages; page++) {
+    const { items, total } = await fetchVehiclesPage(jar, page * take, take);
+    all.push(...items);
+    if (items.length < take) break;
+    if (total !== null && all.length >= total) break;
+  }
+
+  return all.filter((v) => !v.isDeleted);
+}
+
+// ---------------------------------------------------------------------------
 // Расшифровка задолженности конкретного клиента (списания/начисления).
 //
 // Использует внутренний эндпойнт ravapi.eu POST /api/Payoff/GetPaged —

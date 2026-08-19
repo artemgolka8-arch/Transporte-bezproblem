@@ -3,21 +3,48 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { canEdit } from "@/lib/roles";
-import { fetchActiveRentals, RavapiDebtor } from "@/lib/ravapi";
+import { fetchActiveRentedVehicles, fetchActiveRentals, RavapiVehicle, RavapiDebtor } from "@/lib/ravapi";
 import { normalizePhone } from "@/lib/phone";
 
 function normalizeKey(value: string | null | undefined): string {
   return (value ?? "").trim().toLowerCase().replace(/\s+/g, " ");
 }
 
+// VIN сравниваем без пробелов/дефисов и регистра — так надёжнее (в ravapi и
+// у нас его иногда вписывают чуть по-разному).
+function normalizeVin(value: string | null | undefined): string {
+  return (value ?? "").trim().toUpperCase().replace(/[\s-]+/g, "");
+}
+
+// Имя водителя из ravapi приходит одной строкой ("Ivan Shanin"), а нам нужны
+// firstName/lastName по отдельности для карточки клиента, если не получится
+// найти точное совпадение в списке должников (там имя и фамилия разделены).
+// Последнее слово считаем фамилией — не идеально для сложных ФИО, но это
+// только запасной вариант на случай, если имя не нашлось в GetDebtors.
+function splitDriverName(fullName: string): { firstName: string; lastName: string } {
+  const parts = fullName.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return { firstName: "", lastName: "" };
+  if (parts.length === 1) return { firstName: parts[0], lastName: "" };
+  return { firstName: parts.slice(0, -1).join(" "), lastName: parts[parts.length - 1] };
+}
+
 // Синхронизация статусов техники с ravapi.eu (кнопка "Обновить" на вкладке
-// "Транспорт", видна ADMIN/MANAGER). Сопоставляет vehicleName из ravapi с
-// техникой в базе — сначала по коду (гос. номеру), затем по названию:
-//   1. Нашёлся активный арендатор → техника переходит в "В аренде", в неё
+// "Транспорт", видна ADMIN/MANAGER).
+//
+// Источник активной аренды — POST /api/Vehicles/GetAll (vehicleStatus:2 —
+// "передана водителю"): для каждой единицы техники там есть VIN и
+// "Регистрационный номер" по отдельности, поэтому технику из ravapi
+// сопоставляем с нашей базой по VIN (если он указан у обеих сторон), а если
+// нет — по "Коду" (полю "Регистрационный номер" в нашей карточке техники).
+// Имя текущего водителя приходит вместе с этой же техникой; телефон клиента
+// подтягиваем отдельно из GetDebtors (там же, где раздел "Должники"),
+// сопоставляя по ФИО — это только обогащение, на сам факт аренды не влияет.
+//
+//   1. Нашлось совпадение по VIN/коду → техника переходит в "В аренде", в неё
 //      подставляются данные клиента (заводится/обновляется карточка в
 //      справочнике "Клиенты" по телефону, если телефон известен).
 //   2. Техника раньше была синхронизирована из ravapi (стоит renterExternalId),
-//      но её текущий арендатор больше не встретился среди активных — аренда
+//      но сейчас не встретилась среди переданной водителям техники — аренда
 //      завершена, техника переходит в "Доступен".
 // Технику, которую сотрудники ставят "В аренде" вручную (без привязки к
 // ravapi, renterExternalId = null), синхронизация не трогает вообще.
@@ -28,31 +55,41 @@ export async function POST() {
     return NextResponse.json({ error: "Недостаточно прав" }, { status: 403 });
   }
 
-  let remote: RavapiDebtor[];
+  let remoteVehicles: RavapiVehicle[];
+  let remoteDrivers: RavapiDebtor[];
   try {
-    remote = await fetchActiveRentals();
+    [remoteVehicles, remoteDrivers] = await Promise.all([
+      fetchActiveRentedVehicles(),
+      fetchActiveRentals(),
+    ]);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Не удалось получить данные с ravapi.eu";
     return NextResponse.json({ error: message }, { status: 502 });
   }
 
-  // Оставляем только записи, где реально указана арендуемая техника
-  const active = remote.filter((d) => d.vehicleName && d.vehicleName.trim());
+  // Только техника, у которой реально указан текущий водитель.
+  const active = remoteVehicles.filter((rv) => rv.drivers.length > 0 && rv.drivers[0]?.trim());
 
-  // Один ключ (нормализованное название техники) → одна запись ravapi.
-  // Если несколько записей случайно указывают на одно название — побеждает
-  // первая; в норме такого быть не должно (один транспорт = один арендатор).
-  const byVehicleName = new Map<string, RavapiDebtor>();
-  for (const d of active) {
-    const key = normalizeKey(d.vehicleName);
-    if (!byVehicleName.has(key)) byVehicleName.set(key, d);
+  // Индексы для сопоставления с нашей техникой: по VIN и по "Коду" (рег. номеру).
+  const byVin = new Map<string, RavapiVehicle>();
+  const byRegNumber = new Map<string, RavapiVehicle>();
+  for (const rv of active) {
+    const vinKey = normalizeVin(rv.vin);
+    if (vinKey && !byVin.has(vinKey)) byVin.set(vinKey, rv);
+    const regKey = normalizeKey(rv.registrationNumber);
+    if (regKey && !byRegNumber.has(regKey)) byRegNumber.set(regKey, rv);
+  }
+
+  // Имя водителя (нормализованное "имя фамилия") → карточка из GetDebtors,
+  // чтобы подтянуть телефон и точные firstName/lastName.
+  const debtorsByName = new Map<string, RavapiDebtor>();
+  for (const d of remoteDrivers) {
+    const key = normalizeKey(`${d.firstName} ${d.lastName}`);
+    if (key && !debtorsByName.has(key)) debtorsByName.set(key, d);
   }
 
   const vehicles = await prisma.vehicle.findMany();
 
-  // Предзагружаем клиентов, чтобы не бить базу по разу на каждую единицу
-  // техники, и сопоставляем по последним 9 цифрам телефона (см. lib/phone.ts) —
-  // формат номера в ravapi может отличаться от того, что вводили вручную.
   const existingClients = await prisma.client.findMany();
   const clientsByPhone = new Map<string, (typeof existingClients)[number]>();
   for (const c of existingClients) {
@@ -68,12 +105,20 @@ export async function POST() {
   const matchedRemoteIds = new Set<number>();
 
   for (const v of vehicles) {
-    const matched =
-      byVehicleName.get(normalizeKey(v.code)) ?? byVehicleName.get(normalizeKey(v.name));
+    const matched = byVin.get(normalizeVin(v.vin)) ?? byRegNumber.get(normalizeKey(v.code));
 
     if (matched) {
       matchedRemoteIds.add(matched.id);
-      const isNewRenter = v.renterExternalId !== matched.id;
+
+      const driverFullName = matched.drivers[0]?.trim() ?? "";
+      const debtor = debtorsByName.get(normalizeKey(driverFullName));
+      const fallback = splitDriverName(driverFullName);
+      const firstName = debtor?.firstName || fallback.firstName;
+      const lastName = debtor?.lastName || fallback.lastName;
+      const phone = debtor?.phoneNumber?.trim() || null;
+
+      const renterName = [firstName, lastName].filter(Boolean).join(" ") || driverFullName;
+      const isNewRenter = v.renterExternalId !== matched.id || v.renter !== renterName;
       const needsStatusChange = v.status !== "RENTED";
 
       if (!isNewRenter && !needsStatusChange) {
@@ -83,7 +128,6 @@ export async function POST() {
       }
 
       let clientId: string | null = null;
-      const phone = matched.phoneNumber?.trim() || null;
       if (phone) {
         const key = normalizePhone(phone);
         let client = key ? clientsByPhone.get(key) : undefined;
@@ -91,36 +135,30 @@ export async function POST() {
           client = await prisma.client.update({
             where: { id: client.id },
             data: {
-              firstName: matched.firstName || client.firstName,
-              lastName: matched.lastName || client.lastName,
+              firstName: firstName || client.firstName,
+              lastName: lastName || client.lastName,
             },
           });
         } else {
           client = await prisma.client.create({
-            data: {
-              firstName: matched.firstName || "",
-              lastName: matched.lastName || "",
-              phone,
-            },
+            data: { firstName: firstName || "", lastName: lastName || "", phone },
           });
         }
         if (key) clientsByPhone.set(key, client);
         clientId = client.id;
       }
 
-      const renterName = [matched.firstName, matched.lastName].filter(Boolean).join(" ");
-
       await prisma.vehicle.update({
         where: { id: v.id },
         data: {
           status: "RENTED",
           renter: renterName || null,
-          renterFirstName: matched.firstName || null,
-          renterLastName: matched.lastName || null,
+          renterFirstName: firstName || null,
+          renterLastName: lastName || null,
           renterPhone: phone,
           // Email при смене арендатора обнуляем — он относился к предыдущему
           // клиенту, ravapi email не передаёт.
-          renterEmail: isNewRenter ? null : v.renterEmail,
+          renterEmail: v.renterExternalId === matched.id ? v.renterEmail : null,
           renterExternalId: matched.id,
           ravapiSyncedAt: now,
           clientId,
@@ -135,7 +173,7 @@ export async function POST() {
       });
       rented++;
     } else if (v.renterExternalId !== null) {
-      // Раньше была синхронизирована из ravapi, сейчас арендатор не найден среди активных
+      // Раньше была синхронизирована из ravapi, сейчас техника не числится переданной водителю
       await prisma.vehicle.update({
         where: { id: v.id },
         data: {

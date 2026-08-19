@@ -131,9 +131,9 @@ model Vehicle {
   clientId           String?
   client             Client?       @relation(fields: [clientId], references: [id])
   // Заполняются автоматической синхронизацией с ravapi.eu (см. src/app/api/vehicles/ravapi-sync).
-  // renterExternalId — id арендатора в ravapi.eu; по нему при следующей синхронизации понимаем,
-  // что аренда была оформлена автоматически (а не вручную сотрудником), и можно её закрыть,
-  // когда клиент пропадёт из списка активных арендаторов ravapi.
+  // renterExternalId — id этой техники в ravapi.eu (Vehicles/GetAll); по нему при следующей
+  // синхронизации понимаем, что аренда была оформлена автоматически (а не вручную сотрудником),
+  // и можно её закрыть, когда техника пропадёт из списка переданной водителям (vehicleStatus:2).
   renterExternalId   Int?
   ravapiSyncedAt     DateTime?
   workshopDate       DateTime?
