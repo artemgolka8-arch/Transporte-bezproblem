@@ -11,7 +11,10 @@ enum Role {
   ADMIN
   MANAGER
   VIEWER
-  // Внешний партнёр: видит только раздел «Приглашённые клиенты» (см. middleware.ts)
+  // Директор: видит только раздел «Приглашённые клиенты», но всех амбассадоров
+  // (выбирает нужного в списке). См. middleware.ts
+  DIRECTOR
+  // Амбассадор: видит только раздел «Приглашённые клиенты» и только своих клиентов
   AMBASSADOR
 }
 
@@ -71,6 +74,8 @@ model User {
   createdTasks   Task[]   @relation("TaskCreator")
   assignedTasks  Task[]   @relation("TaskAssignee")
   visibleTasks   Task[]   @relation("TaskParticipants")
+  // Приглашённые клиенты, закреплённые за этим пользователем (для роли AMBASSADOR)
+  referredClients ReferredClient[] @relation("AmbassadorReferred")
 }
 
 enum TaskStatus {
@@ -169,9 +174,14 @@ model ReferredClient {
   invitationType InvitationType
   city           String
   link           String?
+  // Амбассадор, который привёл клиента. null — клиент пока ни за кем не закреплён
+  ambassadorId   String?
+  ambassador     User?                  @relation("AmbassadorReferred", fields: [ambassadorId], references: [id], onDelete: SetNull)
   payouts        ReferredClientPayout[]
   createdAt      DateTime               @default(now())
   updatedAt      DateTime               @updatedAt
+
+  @@index([ambassadorId])
 }
 
 model ReferredClientPayout {

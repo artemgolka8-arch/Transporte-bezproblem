@@ -23,6 +23,7 @@ const ROLE_ACCENT: Record<Role, ProfileAccent> = {
   ADMIN: "violet",
   MANAGER: "cyan",
   VIEWER: "faint",
+  DIRECTOR: "violet",
   AMBASSADOR: "mint",
 };
 
@@ -30,6 +31,7 @@ const ROLE_CLEARANCE: Record<Role, number> = {
   ADMIN: 3,
   MANAGER: 2,
   VIEWER: 1,
+  DIRECTOR: 2,
   AMBASSADOR: 1,
 };
 

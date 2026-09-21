@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { canEdit, isAdmin, Role } from "@/lib/roles";
+import { canEdit, isAdmin, isAmbassador, Role } from "@/lib/roles";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
 import { TranslationKey } from "@/lib/i18n/translations";
 
@@ -15,6 +15,8 @@ type Payout = {
   createdByName: string | null;
   createdAt: string;
 };
+
+type AmbassadorOption = { id: string; name: string };
 
 type InvitationType = "FLEET_PARTNER" | "RENT" | "FLEET_PARTNER_RENT";
 
@@ -35,6 +37,8 @@ type ReferredRow = {
   invitationType: InvitationType;
   city: string;
   link: string | null;
+  ambassadorId: string | null;
+  ambassadorName: string | null;
   vehicles: ReferredVehicle[];
   payouts: Payout[];
   payoutTotal: number;
@@ -213,13 +217,84 @@ function LinkCell({
   );
 }
 
+function AmbassadorCell({
+  row,
+  ambassadors,
+  editable,
+  onSaved,
+}: {
+  row: ReferredRow;
+  ambassadors: AmbassadorOption[];
+  editable: boolean;
+  onSaved: (ambassadorId: string | null, ambassadorName: string | null) => void;
+}) {
+  const { t } = useTranslation();
+  const [saving, setSaving] = useState(false);
+
+  if (!editable) {
+    return row.ambassadorName ? (
+      <span className="text-ink">{row.ambassadorName}</span>
+    ) : (
+      <span className="text-xs text-faint">{t("ambassador_unassigned")}</span>
+    );
+  }
+
+  async function change(id: string) {
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/referred-clients/${row.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ambassadorId: id || null }),
+      });
+      if (res.ok) {
+        const name = ambassadors.find((a) => a.id === id)?.name ?? null;
+        onSaved(id || null, name);
+      }
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  // Если закреплённого пользователя уже нет среди амбассадоров (например, сменили роль) —
+  // всё равно показываем его имя, чтобы значение не «пропадало»
+  const orphan = row.ambassadorId && !ambassadors.some((a) => a.id === row.ambassadorId);
+
+  return (
+    <select
+      value={row.ambassadorId ?? ""}
+      disabled={saving}
+      onChange={(e) => change(e.target.value)}
+      className="w-40 rounded-lg border border-line bg-bg2 px-2.5 py-1.5 text-xs text-ink outline-none transition-colors focus:border-violet/50 disabled:opacity-50"
+    >
+      <option value="">{t("ambassador_none_option")}</option>
+      {orphan && <option value={row.ambassadorId!}>{row.ambassadorName ?? row.ambassadorId}</option>}
+      {ambassadors.map((a) => (
+        <option key={a.id} value={a.id}>
+          {a.name}
+        </option>
+      ))}
+    </select>
+  );
+}
+
 const PAGE_SIZE_OPTIONS = [10, 25, 50];
 
-export function ReferredClientsList({ referred, role }: { referred: ReferredRow[]; role: Role }) {
+export function ReferredClientsList({
+  referred,
+  role,
+  ambassadors,
+}: {
+  referred: ReferredRow[];
+  role: Role;
+  ambassadors: AmbassadorOption[];
+}) {
   const router = useRouter();
   const { t } = useTranslation();
   const [rows, setRows] = useState<ReferredRow[]>(referred);
   const [query, setQuery] = useState("");
+  // "all" — все, "none" — без амбассадора, иначе id выбранного амбассадора
+  const [ambassadorFilter, setAmbassadorFilter] = useState("all");
   const [formOpen, setFormOpen] = useState(false);
   const [payoutRowId, setPayoutRowId] = useState<string | null>(null);
   const [menuRowId, setMenuRowId] = useState<string | null>(null);
@@ -227,6 +302,8 @@ export function ReferredClientsList({ referred, role }: { referred: ReferredRow[
   const [pageSize, setPageSize] = useState(10);
   const editable = canEdit(role);
   const canDelete = isAdmin(role);
+  // Амбассадор видит только своих клиентов — ему ни фильтр, ни колонка «Амбассадор» не нужны
+  const showAmbassadors = !isAmbassador(role);
   const payoutRow = rows.find((r) => r.id === payoutRowId) || null;
 
   function updateRowPayouts(id: string, payouts: Payout[]) {
@@ -241,14 +318,23 @@ export function ReferredClientsList({ referred, role }: { referred: ReferredRow[
     setRows((prev) => prev.map((r) => (r.id === id ? { ...r, link } : r)));
   }
 
+  function updateRowAmbassador(id: string, ambassadorId: string | null, ambassadorName: string | null) {
+    setRows((prev) => prev.map((r) => (r.id === id ? { ...r, ambassadorId, ambassadorName } : r)));
+  }
+
+  const hasUnassigned = rows.some((r) => !r.ambassadorId);
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return rows;
     return rows.filter((r) => {
-      const haystack = `${r.firstName} ${r.lastName} ${r.phone} ${r.city}`.toLowerCase();
+      if (showAmbassadors && ambassadorFilter !== "all") {
+        if (ambassadorFilter === "none" ? r.ambassadorId : r.ambassadorId !== ambassadorFilter) return false;
+      }
+      if (!q) return true;
+      const haystack = `${r.firstName} ${r.lastName} ${r.phone} ${r.city} ${r.ambassadorName ?? ""}`.toLowerCase();
       return haystack.includes(q);
     });
-  }, [rows, query]);
+  }, [rows, query, ambassadorFilter, showAmbassadors]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const currentPage = Math.min(page, totalPages);
@@ -282,19 +368,41 @@ export function ReferredClientsList({ referred, role }: { referred: ReferredRow[
         )}
       </div>
 
-      <div className="relative mb-5">
-        <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-faint">
-          <SearchIcon />
-        </span>
-        <input
-          value={query}
-          onChange={(e) => {
-            setQuery(e.target.value);
-            setPage(1);
-          }}
-          placeholder={t("referred_search_placeholder")}
-          className="w-full rounded-xl border border-line bg-bg2 py-3 pl-11 pr-4 text-sm text-ink outline-none transition-colors focus:border-violet/50"
-        />
+      <div className="mb-5 flex flex-wrap items-center gap-3">
+        <div className="relative min-w-[240px] flex-1">
+          <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-faint">
+            <SearchIcon />
+          </span>
+          <input
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setPage(1);
+            }}
+            placeholder={t("referred_search_placeholder")}
+            className="w-full rounded-xl border border-line bg-bg2 py-3 pl-11 pr-4 text-sm text-ink outline-none transition-colors focus:border-violet/50"
+          />
+        </div>
+
+        {showAmbassadors && (
+          <select
+            value={ambassadorFilter}
+            onChange={(e) => {
+              setAmbassadorFilter(e.target.value);
+              setPage(1);
+            }}
+            aria-label={t("ambassador_filter_label")}
+            className="w-full rounded-xl border border-line bg-bg2 px-4 py-3 text-sm text-ink outline-none transition-colors focus:border-violet/50 sm:w-64"
+          >
+            <option value="all">{t("ambassador_filter_all")}</option>
+            {ambassadors.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.name}
+              </option>
+            ))}
+            {hasUnassigned && <option value="none">{t("ambassador_filter_none")}</option>}
+          </select>
+        )}
       </div>
 
       {filtered.length === 0 ? (
@@ -305,7 +413,7 @@ export function ReferredClientsList({ referred, role }: { referred: ReferredRow[
       ) : (
         <div className="panel overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[980px] text-left text-sm">
+            <table className="w-full min-w-[1120px] text-left text-sm">
               <thead>
                 <tr className="border-b border-line text-muted">
                   <th className="px-5 py-3.5 text-xs font-medium text-muted">
@@ -320,6 +428,11 @@ export function ReferredClientsList({ referred, role }: { referred: ReferredRow[
                   <th className="px-5 py-3.5 text-xs font-medium text-muted">
                     <span className="inline-flex items-center gap-1">{t("col_city")}<SortIcon /></span>
                   </th>
+                  {showAmbassadors && (
+                    <th className="px-5 py-3.5 text-xs font-medium text-muted">
+                      <span className="inline-flex items-center gap-1">{t("col_ambassador")}<SortIcon /></span>
+                    </th>
+                  )}
                   <th className="px-5 py-3.5 text-xs font-medium text-muted">
                     <span className="inline-flex items-center gap-1">{t("col_client_vehicle")}<SortIcon /></span>
                   </th>
@@ -360,6 +473,16 @@ export function ReferredClientsList({ referred, role }: { referred: ReferredRow[
                         </span>
                       </td>
                       <td className="px-5 py-3.5 text-muted">{r.city}</td>
+                      {showAmbassadors && (
+                        <td className="px-5 py-3.5">
+                          <AmbassadorCell
+                            row={r}
+                            ambassadors={ambassadors}
+                            editable={editable}
+                            onSaved={(id, name) => updateRowAmbassador(r.id, id, name)}
+                          />
+                        </td>
+                      )}
                       <td className="px-5 py-3.5">
                         {r.vehicles.length === 0 ? (
                           <span className="text-xs text-faint">{t("clients_not_renting")}</span>
@@ -478,6 +601,7 @@ export function ReferredClientsList({ referred, role }: { referred: ReferredRow[
 
       {formOpen && (
         <NewReferredModal
+          ambassadors={ambassadors}
           onClose={() => setFormOpen(false)}
           onCreated={(row) => {
             setFormOpen(false);
@@ -643,9 +767,11 @@ function PayoutModal({
 }
 
 function NewReferredModal({
+  ambassadors,
   onClose,
   onCreated,
 }: {
+  ambassadors: AmbassadorOption[];
   onClose: () => void;
   onCreated: (row: ReferredRow) => void;
 }) {
@@ -655,6 +781,7 @@ function NewReferredModal({
   const [phone, setPhone] = useState("");
   const [invitationType, setInvitationType] = useState<InvitationType>("FLEET_PARTNER");
   const [city, setCity] = useState(CITIES[0]);
+  const [ambassadorId, setAmbassadorId] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -669,7 +796,7 @@ function NewReferredModal({
     const res = await fetch("/api/referred-clients", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ firstName, lastName, phone, invitationType, city }),
+      body: JSON.stringify({ firstName, lastName, phone, invitationType, city, ambassadorId: ambassadorId || null }),
     });
     setLoading(false);
     if (!res.ok) {
@@ -747,6 +874,22 @@ function NewReferredModal({
           {CITIES.map((c) => (
             <option key={c} value={c}>
               {c}
+            </option>
+          ))}
+        </select>
+
+        <label className="mb-1 block label-eyebrow">
+          {t("field_ambassador")} <span className="text-faint">({t("optional")})</span>
+        </label>
+        <select
+          value={ambassadorId}
+          onChange={(e) => setAmbassadorId(e.target.value)}
+          className="mb-4 w-full rounded-lg border border-line bg-bg2 px-3 py-2 text-sm text-ink outline-none focus:border-violet/50"
+        >
+          <option value="">{t("ambassador_none_option")}</option>
+          {ambassadors.map((a) => (
+            <option key={a.id} value={a.id}>
+              {a.name}
             </option>
           ))}
         </select>

@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { AMBASSADOR_BRAND, isAmbassador } from "@/lib/roles";
+import { AMBASSADOR_BRAND, isAmbassador, isRestrictedRole } from "@/lib/roles";
 import { AppShell } from "@/components/AppShell";
 import { ReferredClientsList } from "@/components/ReferredClientsList";
 
@@ -17,10 +17,26 @@ export default async function ReferredClientsPage() {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/login");
 
+  const ambassadorOnly = isAmbassador(session.user.role);
+
+  // Амбассадор получает с сервера только своих клиентов (чужие в браузер не попадают).
+  // Остальные роли получают всех — директор/админ/менеджер выбирают амбассадора в списке.
   const referred = await prisma.referredClient.findMany({
+    where: ambassadorOnly ? { ambassadorId: session.user.id } : undefined,
     orderBy: { createdAt: "desc" },
-    include: { payouts: { orderBy: { createdAt: "desc" } } },
+    include: {
+      payouts: { orderBy: { createdAt: "desc" } },
+      ambassador: { select: { id: true, name: true } },
+    },
   });
+
+  const ambassadors = ambassadorOnly
+    ? []
+    : await prisma.user.findMany({
+        where: { role: "AMBASSADOR" },
+        select: { id: true, name: true },
+        orderBy: { name: "asc" },
+      });
 
   const phones = referred.map((r) => r.phone);
   const rentedVehicles = phones.length
@@ -38,6 +54,8 @@ export default async function ReferredClientsPage() {
     invitationType: r.invitationType,
     city: r.city,
     link: r.link,
+    ambassadorId: r.ambassadorId,
+    ambassadorName: r.ambassador?.name ?? null,
     vehicles: rentedVehicles
       .filter((v) => v.renterPhone === r.phone)
       .map((v) => ({ id: v.id, code: v.code, name: v.name })),
@@ -51,8 +69,8 @@ export default async function ReferredClientsPage() {
     payoutTotal: r.payouts.reduce((sum, p) => sum + p.amount, 0),
   }));
 
-  // Амбассадору статистику автопарка не показываем (и не отдаём в браузер)
-  const vehicles = isAmbassador(session.user.role)
+  // Амбассадору и директору статистику автопарка не показываем (и не отдаём в браузер)
+  const vehicles = isRestrictedRole(session.user.role)
     ? []
     : await prisma.vehicle.findMany({ select: { status: true } });
   const counts = {
@@ -67,7 +85,7 @@ export default async function ReferredClientsPage() {
       userName={session.user.name || session.user.email || ""}
       role={session.user.role}
     >
-      <ReferredClientsList referred={rows} role={session.user.role} />
+      <ReferredClientsList referred={rows} role={session.user.role} ambassadors={ambassadors} />
     </AppShell>
   );
 }

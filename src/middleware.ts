@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
 import { withAuth } from "next-auth/middleware";
-import { AMBASSADOR_HOME, isAmbassador, isAmbassadorPathAllowed } from "@/lib/roles";
+import { AMBASSADOR_HOME, isRestrictedPathAllowed, isRestrictedRole } from "@/lib/roles";
 
 export default withAuth(
   function middleware(req) {
     // Сюда попадаем только с валидной сессией (см. authorized ниже).
-    // Амбассадора пускаем только в «Приглашённые клиенты».
-    if (isAmbassador(req.nextauth.token?.role)) {
+    // Амбассадора и директора пускаем только в «Приглашённые клиенты».
+    if (isRestrictedRole(req.nextauth.token?.role)) {
       const { pathname } = req.nextUrl;
-      if (!isAmbassadorPathAllowed(pathname)) {
+      if (!isRestrictedPathAllowed(pathname)) {
         if (pathname.startsWith("/api/")) {
           return NextResponse.json({ error: "Недостаточно прав" }, { status: 403 });
         }

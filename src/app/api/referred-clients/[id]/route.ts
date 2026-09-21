@@ -27,7 +27,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (!current) return NextResponse.json({ error: "Не найдено" }, { status: 404 });
 
   const body = await req.json();
-  const { firstName, lastName, phone, invitationType, city, link } = body;
+  const { firstName, lastName, phone, invitationType, city, link, ambassadorId } = body;
 
   if (phone !== undefined && phone.trim() !== current.phone) {
     const clash = await prisma.referredClient.findUnique({ where: { phone: phone.trim() } });
@@ -42,6 +42,16 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     return NextResponse.json({ error: "Укажите город" }, { status: 400 });
   }
 
+  if (ambassadorId !== undefined && ambassadorId !== null && ambassadorId !== "") {
+    const amb =
+      typeof ambassadorId === "string"
+        ? await prisma.user.findUnique({ where: { id: ambassadorId }, select: { role: true } })
+        : null;
+    if (!amb || amb.role !== "AMBASSADOR") {
+      return NextResponse.json({ error: "Укажите амбассадора из списка" }, { status: 400 });
+    }
+  }
+
   const data: Record<string, unknown> = {};
   if (firstName !== undefined) data.firstName = firstName.trim();
   if (lastName !== undefined) data.lastName = lastName.trim();
@@ -49,8 +59,14 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (invitationType !== undefined) data.invitationType = invitationType;
   if (city !== undefined) data.city = city;
   if (link !== undefined) data.link = link?.trim() || null;
+  // null / "" — снять закрепление за амбассадором
+  if (ambassadorId !== undefined) data.ambassadorId = ambassadorId || null;
 
-  const referred = await prisma.referredClient.update({ where: { id: params.id }, data });
+  const referred = await prisma.referredClient.update({
+    where: { id: params.id },
+    data,
+    include: { ambassador: { select: { id: true, name: true } } },
+  });
   return NextResponse.json(referred);
 }
 

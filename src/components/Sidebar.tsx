@@ -5,8 +5,8 @@ import { usePathname } from "next/navigation";
 import {
   AMBASSADOR_BRAND,
   AMBASSADOR_HOME,
-  isAmbassador,
-  isAmbassadorPathAllowed,
+  isRestrictedPathAllowed,
+  isRestrictedRole,
   ROLE_LABEL_KEYS,
   type Role,
 } from "@/lib/roles";
@@ -138,12 +138,12 @@ export function Sidebar({
   const pathname = usePathname();
   const { t } = useTranslation();
 
-  const ambassador = isAmbassador(role);
+  const ambassador = isRestrictedRole(role); // амбассадор или директор
   // На странице «Приглашённые клиенты» вместо «Transport Control» пишем «BezProblem Ambassador»
   const onReferredPage = pathname === AMBASSADOR_HOME || !!pathname?.startsWith(AMBASSADOR_HOME + "/");
   const tagline = onReferredPage ? AMBASSADOR_BRAND : t("tagline");
   const visibleItems = NAV_ITEMS.filter((item) =>
-    ambassador ? isAmbassadorPathAllowed(item.href) : !item.adminOnly || role === "ADMIN"
+    ambassador ? isRestrictedPathAllowed(item.href) : !item.adminOnly || role === "ADMIN"
   );
 
   function isActive(item: NavItem) {

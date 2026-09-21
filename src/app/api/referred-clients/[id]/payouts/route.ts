@@ -2,11 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { canEdit } from "@/lib/roles";
+import { canEdit, isAmbassador } from "@/lib/roles";
 
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
+
+  // Амбассадор может смотреть выплаты только по своим клиентам
+  if (isAmbassador(session.user.role)) {
+    const own = await prisma.referredClient.findFirst({
+      where: { id: params.id, ambassadorId: session.user.id },
+      select: { id: true },
+    });
+    if (!own) return NextResponse.json({ error: "Не найдено" }, { status: 404 });
+  }
 
   const payouts = await prisma.referredClientPayout.findMany({
     where: { referredClientId: params.id },

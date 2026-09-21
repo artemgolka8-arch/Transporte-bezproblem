@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { canEdit } from "@/lib/roles";
+import { canEdit, isAmbassador } from "@/lib/roles";
 
 const INVITATION_TYPES = ["FLEET_PARTNER", "RENT", "FLEET_PARTNER_RENT"];
 const CITIES = [
@@ -16,13 +16,27 @@ const CITIES = [
   "Praha",
 ];
 
+// Проверяем, что ambassadorId — это реальный пользователь с ролью AMBASSADOR.
+// Возвращает null, если ambassadorId не указан / пустой; false — если указан неверно.
+async function resolveAmbassadorId(raw: unknown): Promise<string | null | false> {
+  if (raw === undefined || raw === null || raw === "") return null;
+  if (typeof raw !== "string") return false;
+  const user = await prisma.user.findUnique({ where: { id: raw }, select: { role: true } });
+  return user && user.role === "AMBASSADOR" ? raw : false;
+}
+
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
 
+  // Амбассадор видит только своих клиентов; остальные роли — всех
   const referred = await prisma.referredClient.findMany({
+    where: isAmbassador(session.user.role) ? { ambassadorId: session.user.id } : undefined,
     orderBy: { createdAt: "desc" },
-    include: { payouts: { orderBy: { createdAt: "desc" } } },
+    include: {
+      payouts: { orderBy: { createdAt: "desc" } },
+      ambassador: { select: { id: true, name: true } },
+    },
   });
 
   // Подтягиваем технику, которую сейчас арендует каждый приглашённый (совпадение по телефону
@@ -53,7 +67,7 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { firstName, lastName, phone, invitationType, city, link } = body;
+  const { firstName, lastName, phone, invitationType, city, link, ambassadorId } = body;
 
   if (!firstName?.trim() || !lastName?.trim() || !phone?.trim()) {
     return NextResponse.json({ error: "Заполните имя, фамилию и телефон" }, { status: 400 });
@@ -63,6 +77,11 @@ export async function POST(req: NextRequest) {
   }
   if (!CITIES.includes(city)) {
     return NextResponse.json({ error: "Укажите город" }, { status: 400 });
+  }
+
+  const resolvedAmbassadorId = await resolveAmbassadorId(ambassadorId);
+  if (resolvedAmbassadorId === false) {
+    return NextResponse.json({ error: "Укажите амбассадора из списка" }, { status: 400 });
   }
 
   const existing = await prisma.referredClient.findUnique({ where: { phone: phone.trim() } });
@@ -78,7 +97,9 @@ export async function POST(req: NextRequest) {
       invitationType,
       city,
       link: link?.trim() || null,
+      ambassadorId: resolvedAmbassadorId,
     },
+    include: { ambassador: { select: { id: true, name: true } } },
   });
 
   return NextResponse.json({ ...referred, vehicles: [], payouts: [], payoutTotal: 0 }, { status: 201 });
