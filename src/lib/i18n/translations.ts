@@ -53,6 +53,7 @@ const ru = {
   role_admin: "Администратор",
   role_manager: "Менеджер",
   role_viewer: "Наблюдатель",
+  role_ambassador: "Амбассадор",
 
   // дашборд
   dashboard_eyebrow: "панель управления",
@@ -620,6 +621,7 @@ const pl: Dict = {
   role_admin: "Administrator",
   role_manager: "Menedżer",
   role_viewer: "Obserwator",
+  role_ambassador: "Ambasador",
 
   dashboard_eyebrow: "panel sterowania",
   dashboard_title: "Transport",
@@ -1163,6 +1165,7 @@ const uk: Dict = {
   role_admin: "Адміністратор",
   role_manager: "Менеджер",
   role_viewer: "Спостерігач",
+  role_ambassador: "Амбасадор",
 
   dashboard_eyebrow: "панель керування",
   dashboard_title: "Транспорт",

@@ -1,5 +1,6 @@
 "use client";
 
+import type { Role } from "@/lib/roles";
 import { useState } from "react";
 import { KeyIcon } from "./VehicleIcons";
 import { canEdit } from "@/lib/roles";
@@ -33,7 +34,7 @@ export function KeyPeg({
   onDelete,
 }: {
   keyData: KeyData;
-  role: "ADMIN" | "MANAGER" | "VIEWER";
+  role: Role;
   onUpdate: (id: string, data: Partial<KeyData>) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
 }) {

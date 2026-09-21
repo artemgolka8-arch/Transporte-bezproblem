@@ -11,6 +11,8 @@ enum Role {
   ADMIN
   MANAGER
   VIEWER
+  // Внешний партнёр: видит только раздел «Приглашённые клиенты» (см. middleware.ts)
+  AMBASSADOR
 }
 
 enum VehicleType {

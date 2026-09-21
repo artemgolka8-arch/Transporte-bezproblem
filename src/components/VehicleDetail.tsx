@@ -1,5 +1,6 @@
 "use client";
 
+import type { Role } from "@/lib/roles";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { StatusRing } from "./StatusRing";
@@ -100,7 +101,7 @@ export function VehicleDetail({
   vehicle: VehicleFull;
   client: VehicleClientInfo | null;
   debtor: VehicleDebtorInfo | null;
-  role: "ADMIN" | "MANAGER" | "VIEWER";
+  role: Role;
 }) {
   const router = useRouter();
   const { t, lang } = useTranslation();

@@ -1,4 +1,28 @@
-export { default } from "next-auth/middleware";
+import { NextResponse } from "next/server";
+import { withAuth } from "next-auth/middleware";
+import { AMBASSADOR_HOME, isAmbassador, isAmbassadorPathAllowed } from "@/lib/roles";
+
+export default withAuth(
+  function middleware(req) {
+    // Сюда попадаем только с валидной сессией (см. authorized ниже).
+    // Амбассадора пускаем только в «Приглашённые клиенты».
+    if (isAmbassador(req.nextauth.token?.role)) {
+      const { pathname } = req.nextUrl;
+      if (!isAmbassadorPathAllowed(pathname)) {
+        if (pathname.startsWith("/api/")) {
+          return NextResponse.json({ error: "Недостаточно прав" }, { status: 403 });
+        }
+        return NextResponse.redirect(new URL(AMBASSADOR_HOME, req.url));
+      }
+    }
+    return NextResponse.next();
+  },
+  {
+    callbacks: {
+      authorized: ({ token }) => !!token,
+    },
+  }
+);
 
 export const config = {
   matcher: [

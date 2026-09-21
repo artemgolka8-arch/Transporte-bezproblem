@@ -2,7 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ROLE_LABEL_KEYS, type Role } from "@/lib/roles";
+import {
+  AMBASSADOR_BRAND,
+  AMBASSADOR_HOME,
+  isAmbassador,
+  isAmbassadorPathAllowed,
+  ROLE_LABEL_KEYS,
+  type Role,
+} from "@/lib/roles";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
 import type { TranslationKey } from "@/lib/i18n/translations";
 import { StatsPanel } from "./StatsPanel";
@@ -131,6 +138,14 @@ export function Sidebar({
   const pathname = usePathname();
   const { t } = useTranslation();
 
+  const ambassador = isAmbassador(role);
+  // На странице «Приглашённые клиенты» вместо «Transport Control» пишем «BezProblem Ambassador»
+  const onReferredPage = pathname === AMBASSADOR_HOME || !!pathname?.startsWith(AMBASSADOR_HOME + "/");
+  const tagline = onReferredPage ? AMBASSADOR_BRAND : t("tagline");
+  const visibleItems = NAV_ITEMS.filter((item) =>
+    ambassador ? isAmbassadorPathAllowed(item.href) : !item.adminOnly || role === "ADMIN"
+  );
+
   function isActive(item: NavItem) {
     if (item.exact) return pathname === item.href;
     return pathname === item.href || pathname?.startsWith(item.href + "/");
@@ -138,7 +153,7 @@ export function Sidebar({
 
   return (
     <div className="flex h-full w-[276px] shrink-0 flex-col border-r border-line/70 bg-bg2">
-      <Link href="/" onClick={onNavigate} className="flex items-center px-5 py-6">
+      <Link href={ambassador ? AMBASSADOR_HOME : "/"} onClick={onNavigate} className="flex items-center px-5 py-6">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/logo-wordmark.png"
@@ -147,11 +162,11 @@ export function Sidebar({
         />
       </Link>
       <div className="-mt-3 mb-2 px-5 text-[11px] font-medium uppercase tracking-[0.14em] text-faint">
-        {t("tagline")}
+        {tagline}
       </div>
 
       <nav className="flex-1 space-y-1 overflow-y-auto scrollbar-thin px-3 pb-4">
-        {NAV_ITEMS.filter((item) => !item.adminOnly || role === "ADMIN").map((item) => {
+        {visibleItems.map((item) => {
           const active = isActive(item);
           const Icon = item.icon;
           return (
@@ -180,7 +195,7 @@ export function Sidebar({
           );
         })}
 
-        <StatsPanel counts={counts} variant="sidebar" />
+        {!ambassador && <StatsPanel counts={counts} variant="sidebar" />}
       </nav>
 
       <div className="relative mx-3 mb-3 overflow-hidden rounded-2xl p-4" style={{ backgroundImage: "linear-gradient(135deg, rgb(var(--color-cyan) / 0.14), rgb(var(--color-violet) / 0.10))" }}>
@@ -197,20 +212,32 @@ export function Sidebar({
         </Link>
       </div>
 
-      <Link
-        href="/profile"
-        onClick={onNavigate}
-        className="flex items-center gap-3 border-t border-line/70 px-4 py-3.5 transition-colors hover:bg-panel2/60"
-      >
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brandGradient text-xs font-semibold text-white shadow-brand">
-          {initials(userName)}
-        </span>
-        <div className="min-w-0 flex-1 leading-tight">
-          <div className="truncate text-sm font-medium text-ink">{userName}</div>
-          <div className="truncate text-xs text-muted">{t(ROLE_LABEL_KEYS[role])}</div>
-        </div>
-        <ChevronRightIcon />
-      </Link>
+      {(() => {
+        const inner = (
+          <>
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brandGradient text-xs font-semibold text-white shadow-brand">
+              {initials(userName)}
+            </span>
+            <div className="min-w-0 flex-1 leading-tight">
+              <div className="truncate text-sm font-medium text-ink">{userName}</div>
+              <div className="truncate text-xs text-muted">{t(ROLE_LABEL_KEYS[role])}</div>
+            </div>
+            {!ambassador && <ChevronRightIcon />}
+          </>
+        );
+        // У амбассадора нет доступа к профилю — просто показываем, кто вошёл
+        return ambassador ? (
+          <div className="flex items-center gap-3 border-t border-line/70 px-4 py-3.5">{inner}</div>
+        ) : (
+          <Link
+            href="/profile"
+            onClick={onNavigate}
+            className="flex items-center gap-3 border-t border-line/70 px-4 py-3.5 transition-colors hover:bg-panel2/60"
+          >
+            {inner}
+          </Link>
+        );
+      })()}
     </div>
   );
 }

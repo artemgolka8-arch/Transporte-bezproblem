@@ -1,5 +1,6 @@
 "use client";
 
+import type { Role } from "@/lib/roles";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { canEdit } from "@/lib/roles";
@@ -150,7 +151,7 @@ export function ClientsList({
   role,
 }: {
   clients: ClientRow[];
-  role: "ADMIN" | "MANAGER" | "VIEWER";
+  role: Role;
 }) {
   const router = useRouter();
   const { t, lang } = useTranslation();

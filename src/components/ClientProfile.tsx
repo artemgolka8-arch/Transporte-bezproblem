@@ -1,5 +1,6 @@
 "use client";
 
+import type { Role } from "@/lib/roles";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { StatusBadge, VehicleStatus } from "./status";
@@ -51,7 +52,7 @@ export function ClientProfile({
   role,
 }: {
   client: ClientData;
-  role: "ADMIN" | "MANAGER" | "VIEWER";
+  role: Role;
 }) {
   const router = useRouter();
   const { t, lang } = useTranslation();

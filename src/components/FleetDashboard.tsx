@@ -1,5 +1,6 @@
 "use client";
 
+import type { Role } from "@/lib/roles";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { VehicleCard, VehicleCardData } from "./VehicleCard";
@@ -18,7 +19,7 @@ export function FleetDashboard({
   lastRavapiSync = null,
 }: {
   vehicles: VehicleCardData[];
-  role: "ADMIN" | "MANAGER" | "VIEWER";
+  role: Role;
   knownCities?: string[];
   lastRavapiSync?: string | null;
 }) {

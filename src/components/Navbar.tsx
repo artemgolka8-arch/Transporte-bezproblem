@@ -1,5 +1,6 @@
 "use client";
 
+import type { Role } from "@/lib/roles";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
@@ -15,7 +16,7 @@ export function Navbar({
 }: {
   counts: { AVAILABLE: number; WORKSHOP: number; RENTED: number };
   userName: string;
-  role: "ADMIN" | "MANAGER" | "VIEWER";
+  role: Role;
 }) {
   const pathname = usePathname();
   const { t } = useTranslation();

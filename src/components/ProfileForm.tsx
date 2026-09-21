@@ -23,12 +23,14 @@ const ROLE_ACCENT: Record<Role, ProfileAccent> = {
   ADMIN: "violet",
   MANAGER: "cyan",
   VIEWER: "faint",
+  AMBASSADOR: "mint",
 };
 
 const ROLE_CLEARANCE: Record<Role, number> = {
   ADMIN: 3,
   MANAGER: 2,
   VIEWER: 1,
+  AMBASSADOR: 1,
 };
 
 const FIELD_CLASS =

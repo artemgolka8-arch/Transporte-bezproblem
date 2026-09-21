@@ -89,7 +89,7 @@ export function UsersAdmin({ users, currentUserId }: { users: UserRow[]; current
                     onChange={(e) => updateRole(u.id, e.target.value as Role)}
                     className="rounded-md border border-line bg-bg2 px-2 py-1 text-xs text-ink outline-none disabled:opacity-50"
                   >
-                    {(["ADMIN", "MANAGER", "VIEWER"] as const).map((r) => (
+                    {(["ADMIN", "MANAGER", "VIEWER", "AMBASSADOR"] as const).map((r) => (
                       <option key={r} value={r}>
                         {t(ROLE_LABEL_KEYS[r])}
                       </option>
@@ -228,7 +228,7 @@ function NewUserModal({
           onChange={(e) => setRole(e.target.value as Role)}
           className="mb-4 w-full rounded-lg border border-line bg-bg2 px-3 py-2 text-sm text-ink outline-none focus:border-cyan/50"
         >
-          {(["ADMIN", "MANAGER", "VIEWER"] as const).map((r) => (
+          {(["ADMIN", "MANAGER", "VIEWER", "AMBASSADOR"] as const).map((r) => (
             <option key={r} value={r}>
               {t(ROLE_LABEL_KEYS[r])}
             </option>
@@ -376,7 +376,7 @@ function EditUserModal({
           onChange={(e) => setRole(e.target.value as Role)}
           className="mb-4 w-full rounded-lg border border-line bg-bg2 px-3 py-2 text-sm text-ink outline-none focus:border-cyan/50"
         >
-          {(["ADMIN", "MANAGER", "VIEWER"] as const).map((r) => (
+          {(["ADMIN", "MANAGER", "VIEWER", "AMBASSADOR"] as const).map((r) => (
             <option key={r} value={r}>
               {t(ROLE_LABEL_KEYS[r])}
             </option>
