@@ -62,7 +62,9 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
-  if (!canEdit(session.user.role)) {
+  // Добавлять клиентов могут админ/менеджер и амбассадор (только за себя)
+  const ambassadorSelf = isAmbassador(session.user.role);
+  if (!canEdit(session.user.role) && !ambassadorSelf) {
     return NextResponse.json({ error: "Недостаточно прав" }, { status: 403 });
   }
 
@@ -79,7 +81,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Укажите город" }, { status: 400 });
   }
 
-  const resolvedAmbassadorId = await resolveAmbassadorId(ambassadorId);
+  // Амбассадор всегда добавляет клиента на себя — что бы ни пришло в запросе
+  const resolvedAmbassadorId = ambassadorSelf ? session.user.id : await resolveAmbassadorId(ambassadorId);
   if (resolvedAmbassadorId === false) {
     return NextResponse.json({ error: "Укажите амбассадора из списка" }, { status: 400 });
   }
@@ -96,11 +99,21 @@ export async function POST(req: NextRequest) {
       phone: phone.trim(),
       invitationType,
       city,
-      link: link?.trim() || null,
+      // Ссылку заполняют сотрудники, поэтому у амбассадора при создании её нет
+      link: ambassadorSelf ? null : link?.trim() || null,
       ambassadorId: resolvedAmbassadorId,
     },
     include: { ambassador: { select: { id: true, name: true } } },
   });
 
-  return NextResponse.json({ ...referred, vehicles: [], payouts: [], payoutTotal: 0 }, { status: 201 });
+  return NextResponse.json(
+    {
+      ...referred,
+      ambassadorName: referred.ambassador?.name ?? null,
+      vehicles: [],
+      payouts: [],
+      payoutTotal: 0,
+    },
+    { status: 201 }
+  );
 }

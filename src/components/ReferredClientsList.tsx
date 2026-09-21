@@ -302,6 +302,8 @@ export function ReferredClientsList({
   const [pageSize, setPageSize] = useState(10);
   const editable = canEdit(role);
   const canDelete = isAdmin(role);
+  // Добавлять клиентов может и амбассадор (они автоматически закрепляются за ним)
+  const canAdd = editable || isAmbassador(role);
   // Амбассадор видит только своих клиентов — ему ни фильтр, ни колонка «Амбассадор» не нужны
   const showAmbassadors = !isAmbassador(role);
   const payoutRow = rows.find((r) => r.id === payoutRowId) || null;
@@ -357,7 +359,7 @@ export function ReferredClientsList({
           <h1 className="font-display text-[26px] font-semibold text-ink">{t("referred_title")}</h1>
           <p className="mt-1 text-sm text-muted">{t("referred_empty_subtitle")}</p>
         </div>
-        {editable && (
+        {canAdd && (
           <button
             onClick={() => setFormOpen(true)}
             className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl bg-violet px-4 py-2.5 text-sm font-medium text-white shadow-glowViolet transition-opacity hover:opacity-90"
@@ -601,7 +603,7 @@ export function ReferredClientsList({
 
       {formOpen && (
         <NewReferredModal
-          ambassadors={ambassadors}
+          ambassadors={showAmbassadors ? ambassadors : null}
           onClose={() => setFormOpen(false)}
           onCreated={(row) => {
             setFormOpen(false);
@@ -771,7 +773,8 @@ function NewReferredModal({
   onClose,
   onCreated,
 }: {
-  ambassadors: AmbassadorOption[];
+  // null — выбор амбассадора не показываем (когда клиента добавляет сам амбассадор)
+  ambassadors: AmbassadorOption[] | null;
   onClose: () => void;
   onCreated: (row: ReferredRow) => void;
 }) {
@@ -796,7 +799,7 @@ function NewReferredModal({
     const res = await fetch("/api/referred-clients", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ firstName, lastName, phone, invitationType, city, ambassadorId: ambassadorId || null }),
+      body: JSON.stringify({ firstName, lastName, phone, invitationType, city, ambassadorId: ambassadors ? ambassadorId || null : undefined }),
     });
     setLoading(false);
     if (!res.ok) {
@@ -878,21 +881,25 @@ function NewReferredModal({
           ))}
         </select>
 
-        <label className="mb-1 block label-eyebrow">
-          {t("field_ambassador")} <span className="text-faint">({t("optional")})</span>
-        </label>
-        <select
-          value={ambassadorId}
-          onChange={(e) => setAmbassadorId(e.target.value)}
-          className="mb-4 w-full rounded-lg border border-line bg-bg2 px-3 py-2 text-sm text-ink outline-none focus:border-violet/50"
-        >
-          <option value="">{t("ambassador_none_option")}</option>
-          {ambassadors.map((a) => (
-            <option key={a.id} value={a.id}>
-              {a.name}
-            </option>
-          ))}
-        </select>
+        {ambassadors && (
+          <>
+            <label className="mb-1 block label-eyebrow">
+              {t("field_ambassador")} <span className="text-faint">({t("optional")})</span>
+            </label>
+            <select
+              value={ambassadorId}
+              onChange={(e) => setAmbassadorId(e.target.value)}
+              className="mb-4 w-full rounded-lg border border-line bg-bg2 px-3 py-2 text-sm text-ink outline-none focus:border-violet/50"
+            >
+              <option value="">{t("ambassador_none_option")}</option>
+              {ambassadors.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.name}
+                </option>
+              ))}
+            </select>
+          </>
+        )}
 
         {error && (
           <div className="mb-4 rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-xs text-danger">
