@@ -73,6 +73,7 @@ function breadcrumbFor(pathname: string | null) {
   if (pathname === "/") return "nav_fleet" as const;
   if (pathname.startsWith("/clients")) return "nav_clients" as const;
   if (pathname.startsWith("/referred-clients")) return "referred_eyebrow" as const;
+  if (pathname.startsWith("/reports")) return "nav_reports" as const;
   if (pathname.startsWith("/team")) return "nav_team" as const;
   if (pathname.startsWith("/debtors")) return "nav_debtors" as const;
   if (pathname.startsWith("/tasks")) return "nav_tasks" as const;

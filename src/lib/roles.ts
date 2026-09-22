@@ -50,6 +50,9 @@ const STATIC_FILE = /\.(png|jpe?g|gif|svg|webp|ico|woff2?)$/i;
 export function isRestrictedPathAllowed(pathname: string) {
   if (pathname === AMBASSADOR_HOME || pathname.startsWith(AMBASSADOR_HOME + "/")) return true;
   if (pathname === "/api/referred-clients" || pathname.startsWith("/api/referred-clients/")) return true;
+  // «Отчёты» — амбассадор пишет туда ежедневный отчёт о проделанной работе
+  if (pathname === "/reports" || pathname.startsWith("/reports/")) return true;
+  if (pathname === "/api/reports" || pathname.startsWith("/api/reports/")) return true;
   // «Моя команда» — список менеджеров с аккаунтами, доступен и амбассадору/директору
   if (pathname === "/team" || pathname.startsWith("/team/")) return true;
   if (pathname === "/api/team" || pathname.startsWith("/api/team/")) return true;

@@ -48,6 +48,16 @@ function UserPlusIcon() {
   );
 }
 
+function ReportsIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="5" y="3.5" width="14" height="17" rx="2" />
+      <path d="M9 2.5h6v3H9z" />
+      <path d="M8.5 11h7M8.5 14.5h7M8.5 18h4" />
+    </svg>
+  );
+}
+
 function DebtorsIcon() {
   return (
     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -116,6 +126,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/", labelKey: "nav_fleet", icon: TruckIcon, exact: true },
   { href: "/clients", labelKey: "nav_clients", icon: UsersIcon },
   { href: "/referred-clients", labelKey: "nav_referred_clients", icon: UserPlusIcon },
+  { href: "/reports", labelKey: "nav_reports", icon: ReportsIcon },
   { href: "/team", labelKey: "nav_team", icon: TeamIcon },
   { href: "/debtors", labelKey: "nav_debtors", icon: DebtorsIcon },
   { href: "/tasks", labelKey: "nav_tasks", icon: TasksIcon },

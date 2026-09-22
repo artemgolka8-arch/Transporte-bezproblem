@@ -84,6 +84,36 @@ model User {
   visibleTasks   Task[]   @relation("TaskParticipants")
   // Приглашённые клиенты, закреплённые за этим пользователем (для роли AMBASSADOR)
   referredClients ReferredClient[] @relation("AmbassadorReferred")
+  // Ежедневные отчёты амбассадора о проделанной работе
+  reports         Report[]         @relation("ReportAuthor")
+}
+
+// Самооценка амбассадора за день, указывается в конце отчёта
+enum ReportRating {
+  BAD
+  NORMAL
+  GREAT
+  EXCELLENT
+}
+
+// Ежедневный отчёт амбассадора о проделанной работе (вкладка «Отчёты»)
+model Report {
+  id             String       @id @default(cuid())
+  authorId       String
+  author         User         @relation("ReportAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  date           DateTime
+  description    String
+  hoursWorked    Float
+  partnerVisits  Int          @default(0)
+  rentVisits     Int          @default(0)
+  partnerLeads   Int          @default(0)
+  rentLeads      Int          @default(0)
+  tiktokVideos   Int          @default(0)
+  stories        Int          @default(0)
+  selfRating     ReportRating
+  createdAt      DateTime     @default(now())
+
+  @@index([authorId])
 }
 
 enum TaskStatus {
