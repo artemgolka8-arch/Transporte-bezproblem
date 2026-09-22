@@ -78,8 +78,8 @@ const config: Config = {
           "linear-gradient(90deg, transparent, rgba(20,166,153,0.55), transparent)",
         brandRadial:
           "radial-gradient(circle at 15% -10%, rgba(3,157,143,0.22), transparent 45%), radial-gradient(circle at 85% 0%, rgba(91,79,224,0.16), transparent 42%), radial-gradient(circle at 50% 120%, rgba(3,157,143,0.14), transparent 50%)",
-        brandGradient: "linear-gradient(135deg, #059488 0%, #17d6c4 45%, #6a5ff0 130%)",
-        brandText: "linear-gradient(120deg, #059488 0%, #17d6c4 55%, #6a5ff0 130%)",
+        brandGradient: "linear-gradient(135deg, #2dd6eb 0%, #35e3aa 100%)",
+        brandText: "linear-gradient(120deg, #2dd6eb 0%, #35e3aa 100%)",
       },
       backgroundSize: {
         gridcell: "36px 36px",

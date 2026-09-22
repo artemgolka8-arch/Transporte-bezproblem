@@ -27,25 +27,25 @@
   }
 
   .dark {
-    /* Тёмная тема — премиальный тил на глубоком графите, ярче акценты */
-    --color-bg: 7 15 19;
-    --color-bg2: 11 22 27;
-    --color-panel: 14 27 33;
-    --color-panel2: 19 37 44;
-    --color-line: 28 51 58;
-    --color-ink: 236 250 248;
-    --color-muted: 152 185 185;
-    --color-faint: 90 120 122;
-    --color-mint: 60 235 168;
-    --color-mint-dim: 13 48 38;
-    --color-amber: 255 184 66;
-    --color-amber-dim: 58 42 14;
-    --color-violet: 168 158 255;
-    --color-violet-dim: 37 35 74;
-    --color-cyan: 40 227 205;
-    --color-cyan-dim: 10 46 44;
-    --color-coral: 255 122 138;
-    --color-coral-dim: 48 20 26;
+    /* Тёмная тема — глубокий синий космос BezProblem Sharks, бирюзовые акценты */
+    --color-bg: 6 12 24;
+    --color-bg2: 10 19 36;
+    --color-panel: 13 24 44;
+    --color-panel2: 18 32 56;
+    --color-line: 32 50 82;
+    --color-ink: 236 244 250;
+    --color-muted: 148 168 196;
+    --color-faint: 92 112 144;
+    --color-mint: 52 227 170;
+    --color-mint-dim: 12 45 42;
+    --color-amber: 255 186 64;
+    --color-amber-dim: 54 40 14;
+    --color-violet: 138 150 255;
+    --color-violet-dim: 30 34 68;
+    --color-cyan: 45 214 235;
+    --color-cyan-dim: 10 42 56;
+    --color-coral: 255 126 160;
+    --color-coral-dim: 46 20 34;
     --color-danger: 255 107 129;
   }
 
@@ -66,6 +66,19 @@
       radial-gradient(circle at 50% 110%, rgb(var(--color-cyan) / 0.07), transparent 55%);
     background-attachment: fixed;
     transition: background-color 0.2s ease, color 0.2s ease;
+  }
+  /* Тёмная тема — фирменный «космический» фон BezProblem Sharks: глубокий тёмно-синий
+     холст с крупными переливающимися бирюзово-синими пятнами света, как на референсе. */
+  html.dark body {
+    background-color: rgb(var(--color-bg));
+    background-image:
+      radial-gradient(circle at 82% -6%, rgba(56, 214, 235, 0.32), transparent 42%),
+      radial-gradient(circle at 100% 10%, rgba(64, 130, 246, 0.22), transparent 38%),
+      radial-gradient(ellipse 90% 60% at 0% 115%, rgba(37, 99, 210, 0.30), transparent 60%),
+      radial-gradient(circle at 8% 55%, rgba(45, 214, 235, 0.10), transparent 45%),
+      linear-gradient(200deg, rgba(26, 58, 120, 0.16) 0%, transparent 35%),
+      linear-gradient(180deg, rgb(6, 12, 24) 0%, rgb(6, 12, 24) 100%);
+    background-attachment: fixed, fixed, fixed, fixed, fixed, fixed;
   }
   ::selection {
     background: rgb(var(--color-cyan) / 0.28);
@@ -91,11 +104,15 @@
   }
 
   .panel {
-    @apply bg-panel border border-line rounded-2xl shadow-panel;
+    @apply bg-panel border border-line rounded-2xl shadow-panel dark:bg-panel/80 dark:backdrop-blur-xl dark:border-cyan/10;
   }
 
   .panel-elevated {
-    @apply bg-panel border border-line rounded-2xl shadow-panelLg;
+    @apply bg-panel border border-line rounded-2xl shadow-panelLg dark:bg-panel/85 dark:backdrop-blur-xl dark:border-cyan/10;
+  }
+
+  .glass-surface {
+    @apply dark:bg-panel/70 dark:backdrop-blur-xl dark:border-cyan/10;
   }
 
   .card-hover {

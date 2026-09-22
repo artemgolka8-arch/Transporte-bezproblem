@@ -30,9 +30,9 @@ const STATUS_LABEL_KEYS: Record<ReferredStatus, TranslationKey> = {
 };
 // Цвет пилюли статуса: заливка для «активных» состояний, контурный вариант — для нейтральных
 const STATUS_STYLE: Record<ReferredStatus, string> = {
-  ACTIVE: "border border-mint/30 bg-mint text-white",
-  PENDING: "border border-violet/30 bg-violetDim/60 text-violet",
-  IN_PROGRESS: "border border-amber/30 bg-amber text-white",
+  ACTIVE: "border border-mint/35 bg-mintDim/60 text-mint",
+  PENDING: "border border-violet/35 bg-violetDim/60 text-violet",
+  IN_PROGRESS: "border border-amber/35 bg-amberDim/60 text-amber",
   INACTIVE: "border border-line bg-panel2/70 text-muted",
 };
 
@@ -799,7 +799,7 @@ export function ReferredClientsList({
               >
                 <ChevronLeftIcon />
               </button>
-              <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-lg border border-violet/40 px-2 text-xs font-medium text-violet">
+              <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-lg bg-cyan px-2 text-xs font-semibold text-white shadow-glowCyan">
                 {currentPage}
               </span>
               <button

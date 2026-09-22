@@ -51,6 +51,15 @@ function SunIcon() {
   );
 }
 
+function BellIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6 10a6 6 0 0 1 12 0c0 3.4 1 5 1.6 5.8H4.4C5 15 6 13.4 6 10Z" />
+      <path d="M9.5 18.5a2.5 2.5 0 0 0 5 0" />
+    </svg>
+  );
+}
+
 function LogoutIcon() {
   return (
     <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -116,7 +125,7 @@ export function AppShell({
       )}
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 border-b border-line/70 bg-bg2/85 backdrop-blur-md">
+        <header className="sticky top-0 z-30 border-b border-line/70 bg-bg2/85 backdrop-blur-md dark:border-transparent dark:bg-transparent dark:backdrop-blur-sm">
           <div className="flex items-center gap-3 px-5 py-4">
             <button
               type="button"
@@ -173,6 +182,11 @@ export function AppShell({
               >
                 {isDark ? <SunIcon /> : <MoonIcon />}
               </button>
+
+              <span className="relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-line/70 text-muted transition-colors hover:border-cyan/40 hover:text-cyan">
+                <BellIcon />
+                <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full border border-bg2 bg-coral" />
+              </span>
 
               <button
                 onClick={() => signOut({ callbackUrl: "/login" })}

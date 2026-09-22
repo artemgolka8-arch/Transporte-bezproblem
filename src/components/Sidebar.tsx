@@ -201,7 +201,7 @@ export function Sidebar({
   }
 
   return (
-    <div className="flex h-full w-[276px] shrink-0 flex-col border-r border-line/70 bg-bg2">
+    <div className="glass-surface flex h-full w-[276px] shrink-0 flex-col border-r border-line/70 bg-bg2 dark:m-3 dark:h-[calc(100%-1.5rem)] dark:rounded-[28px] dark:border dark:shadow-panelLg">
       <Link href={ambassador ? AMBASSADOR_HOME : "/"} onClick={onNavigate} className="flex items-center px-5 py-6">
         <Logo markSize={26} textClassName="text-[15px]" />
       </Link>
@@ -220,15 +220,15 @@ export function Sidebar({
               key={item.href}
               href={item.href}
               onClick={onNavigate}
-              className={`group flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm transition-all duration-150 ${
+              className={`group flex items-center gap-3 rounded-2xl border px-3 py-2.5 text-sm transition-all duration-150 ${
                 active
-                  ? "bg-cyanDim/70 font-semibold text-cyan shadow-card"
-                  : "text-muted hover:bg-panel2/70 hover:text-ink"
+                  ? "border-cyan/30 bg-cyanDim/50 font-semibold text-cyan shadow-glowCyan"
+                  : "border-transparent text-muted hover:border-line hover:bg-panel2/70 hover:text-ink"
               }`}
             >
               <span
                 className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors ${
-                  active ? "bg-cyan text-white shadow-glowCyan" : "bg-panel2/60 text-faint group-hover:text-ink"
+                  active ? "bg-brandGradient text-white shadow-glowCyan" : "bg-panel2/60 text-faint group-hover:text-ink"
                 }`}
               >
                 <Icon />
