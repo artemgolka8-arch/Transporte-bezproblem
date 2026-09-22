@@ -52,6 +52,17 @@ export function isRestrictedRole(role?: string | null) {
   return role === "AMBASSADOR" || role === "DIRECTOR";
 }
 
+// PR_MANAGER видит (и вообще имеет доступ) только к четырём разделам:
+// «Задачи», «Моя команда», «Приглашённые клиенты», «Отчёты» + свой профиль.
+// Все остальные разделы (Флот, Клиенты, Техника, Должники, Управление
+// пользователями) для него закрыты полностью — даже на просмотр: и в меню
+// не показываются, и напрямую по ссылке недоступны (см. middleware.ts).
+// Список разрешённых путей тот же, что и для AMBASSADOR/DIRECTOR —
+// isRestrictedPathAllowed ниже.
+export function isViewRestrictedRole(role?: string | null) {
+  return isRestrictedRole(role) || isPrManager(role);
+}
+
 // Ключ перевода для каждой роли — используйте t(ROLE_LABEL_KEYS[role])
 export const ROLE_LABEL_KEYS: Record<Role, TranslationKey> = {
   ADMIN: "role_admin",
@@ -73,10 +84,12 @@ export const AMBASSADOR_BRAND = "BezProblem Ambassador";
 
 const STATIC_FILE = /\.(png|jpe?g|gif|svg|webp|ico|woff2?)$/i;
 
-// Какие пути разрешены ограниченным ролям (AMBASSADOR, DIRECTOR). Всё остальное middleware отрезает:
-// страницы → редирект на «Приглашённые клиенты», API → 403.
+// Какие пути разрешены ограниченным ролям (AMBASSADOR, DIRECTOR, PR_MANAGER).
+// Всё остальное middleware отрезает: страницы → редирект на «Приглашённые
+// клиенты», API → 403.
 // Опасные действия (создать/изменить/удалить) внутри разрешённых API
-// по-прежнему закрыты проверками canEdit / isAdmin в самих обработчиках.
+// по-прежнему закрыты проверками canEdit / isAdmin / canManageReferredClients и т.д.
+// в самих обработчиках.
 export function isRestrictedPathAllowed(pathname: string) {
   if (pathname === AMBASSADOR_HOME || pathname.startsWith(AMBASSADOR_HOME + "/")) return true;
   if (pathname === "/api/referred-clients" || pathname.startsWith("/api/referred-clients/")) return true;

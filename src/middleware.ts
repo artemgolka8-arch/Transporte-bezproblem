@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import { withAuth } from "next-auth/middleware";
-import { AMBASSADOR_HOME, isRestrictedPathAllowed, isRestrictedRole } from "@/lib/roles";
+import { AMBASSADOR_HOME, isRestrictedPathAllowed, isViewRestrictedRole } from "@/lib/roles";
 
 export default withAuth(
   function middleware(req) {
     // Сюда попадаем только с валидной сессией (см. authorized ниже).
-    // Амбассадора и директора пускаем только в «Приглашённые клиенты».
-    if (isRestrictedRole(req.nextauth.token?.role)) {
+    // Амбассадора, директора и PR-менеджера пускаем только в разрешённые им разделы
+    // (см. isRestrictedPathAllowed).
+    if (isViewRestrictedRole(req.nextauth.token?.role)) {
       const { pathname } = req.nextUrl;
       if (!isRestrictedPathAllowed(pathname)) {
         if (pathname.startsWith("/api/")) {

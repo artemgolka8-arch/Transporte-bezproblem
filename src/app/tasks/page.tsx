@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { isViewRestrictedRole } from "@/lib/roles";
 import { AppShell } from "@/components/AppShell";
 import { TasksBoard } from "@/components/TasksBoard";
 
@@ -29,7 +30,9 @@ export default async function TasksPage() {
     orderBy: { name: "asc" },
   });
 
-  const vehicles = await prisma.vehicle.findMany({ select: { status: true } });
+  const vehicles = isViewRestrictedRole(session.user.role)
+    ? []
+    : await prisma.vehicle.findMany({ select: { status: true } });
   const counts = {
     AVAILABLE: vehicles.filter((v) => v.status === "AVAILABLE").length,
     WORKSHOP: vehicles.filter((v) => v.status === "WORKSHOP").length,

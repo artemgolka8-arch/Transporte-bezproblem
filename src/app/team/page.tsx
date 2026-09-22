@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { isRestrictedRole } from "@/lib/roles";
+import { isViewRestrictedRole } from "@/lib/roles";
 import { AppShell } from "@/components/AppShell";
 import { TeamList } from "@/components/TeamList";
 
@@ -31,8 +31,9 @@ export default async function TeamPage() {
     orderBy: { name: "asc" },
   });
 
-  // Амбассадору и директору статистику автопарка не показываем (и не отдаём в браузер)
-  const vehicles = isRestrictedRole(session.user.role)
+  // Амбассадору, директору и PR-менеджеру статистику автопарка не показываем
+  // (и не отдаём в браузер)
+  const vehicles = isViewRestrictedRole(session.user.role)
     ? []
     : await prisma.vehicle.findMany({ select: { status: true } });
   const counts = {

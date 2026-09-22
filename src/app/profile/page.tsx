@@ -2,7 +2,7 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { isRestrictedRole } from "@/lib/roles";
+import { isViewRestrictedRole } from "@/lib/roles";
 import { AppShell } from "@/components/AppShell";
 import { ProfileForm } from "@/components/ProfileForm";
 
@@ -29,7 +29,7 @@ export default async function ProfilePage() {
   });
   if (!user) redirect("/login");
 
-  const restricted = isRestrictedRole(session.user.role);
+  const restricted = isViewRestrictedRole(session.user.role);
   const vehicles = restricted ? [] : await prisma.vehicle.findMany({ select: { status: true } });
   const counts = {
     AVAILABLE: vehicles.filter((v) => v.status === "AVAILABLE").length,

@@ -8,6 +8,7 @@ import {
   AMBASSADOR_HOME,
   isRestrictedPathAllowed,
   isRestrictedRole,
+  isViewRestrictedRole,
   ROLE_LABEL_KEYS,
   type Role,
 } from "@/lib/roles";
@@ -156,6 +157,9 @@ export function Sidebar({
   const { t } = useTranslation();
 
   const ambassador = isRestrictedRole(role); // амбассадор или директор
+  // PR-менеджер тоже видит только ограниченный набор разделов, но это не тот же
+  // «амбассадорский» UX (другой тагслайн, свой пункт «Профиль» в меню остаётся)
+  const restrictedView = isViewRestrictedRole(role); // амбассадор, директор или PR-менеджер
 
   // Счётчик на пункте «Приглашённые клиенты»: подтягиваем отдельным лёгким запросом,
   // чтобы бейдж был на всех страницах, а не только на самой странице списка.
@@ -191,10 +195,8 @@ export function Sidebar({
   const onReferredPage = pathname === AMBASSADOR_HOME || !!pathname?.startsWith(AMBASSADOR_HOME + "/");
   const tagline = onReferredPage ? AMBASSADOR_BRAND : t("tagline");
   const visibleItems = NAV_ITEMS.filter((item) =>
-    ambassador
-      // Профиль у амбассадора/директора открывается только через виджет с именем внизу,
-      // отдельным пунктом в меню его не дублируем — как на референсном макете.
-      ? item.href !== "/profile" && isRestrictedPathAllowed(item.href)
+    restrictedView
+      ? (!ambassador || item.href !== "/profile") && isRestrictedPathAllowed(item.href)
       : !item.adminOnly || role === "ADMIN"
   );
 
@@ -205,7 +207,7 @@ export function Sidebar({
 
   return (
     <div className="glass-surface flex h-full w-[276px] shrink-0 flex-col border-r border-line/70 bg-bg2 dark:m-3 dark:h-[calc(100%-1.5rem)] dark:rounded-[28px] dark:border dark:shadow-panelLg">
-      <Link href={ambassador ? AMBASSADOR_HOME : "/"} onClick={onNavigate} className="flex items-center px-5 py-6">
+      <Link href={restrictedView ? AMBASSADOR_HOME : "/"} onClick={onNavigate} className="flex items-center px-5 py-6">
         <Logo markSize={26} textClassName="text-[15px]" />
       </Link>
       <div className="-mt-3 mb-2 px-5 text-[11px] font-medium uppercase tracking-[0.14em] text-faint">
@@ -250,7 +252,7 @@ export function Sidebar({
           );
         })}
 
-        {!ambassador && <StatsPanel counts={counts} variant="sidebar" />}
+        {!restrictedView && <StatsPanel counts={counts} variant="sidebar" />}
       </nav>
 
       {(() => {
