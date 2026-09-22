@@ -29,6 +29,14 @@ enum InvitationType {
   FLEET_PARTNER_RENT
 }
 
+// Стадия работы с приглашённым клиентом (для колонки/фильтра «Статус»)
+enum ReferredClientStatus {
+  ACTIVE
+  PENDING
+  IN_PROGRESS
+  INACTIVE
+}
+
 enum VehicleStatus {
   AVAILABLE
   WORKSHOP
@@ -174,6 +182,7 @@ model ReferredClient {
   invitationType InvitationType
   city           String
   link           String?
+  status         ReferredClientStatus   @default(PENDING)
   // Амбассадор, который привёл клиента. null — клиент пока ни за кем не закреплён
   ambassadorId   String?
   ambassador     User?                  @relation("AmbassadorReferred", fields: [ambassadorId], references: [id], onDelete: SetNull)

@@ -52,6 +52,7 @@ export default async function ReferredClientsPage() {
     lastName: r.lastName,
     phone: r.phone,
     invitationType: r.invitationType,
+    status: r.status,
     city: r.city,
     link: r.link,
     ambassadorId: r.ambassadorId,

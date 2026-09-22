@@ -19,12 +19,34 @@ type Payout = {
 type AmbassadorOption = { id: string; name: string };
 
 type InvitationType = "FLEET_PARTNER" | "RENT" | "FLEET_PARTNER_RENT";
+type ReferredStatus = "ACTIVE" | "PENDING" | "IN_PROGRESS" | "INACTIVE";
+
+const STATUSES: ReferredStatus[] = ["ACTIVE", "PENDING", "IN_PROGRESS", "INACTIVE"];
+const STATUS_LABEL_KEYS: Record<ReferredStatus, TranslationKey> = {
+  ACTIVE: "status_active",
+  PENDING: "status_pending",
+  IN_PROGRESS: "status_in_progress",
+  INACTIVE: "status_inactive",
+};
+// Цвет пилюли статуса: заливка для «активных» состояний, контурный вариант — для нейтральных
+const STATUS_STYLE: Record<ReferredStatus, string> = {
+  ACTIVE: "border border-mint/30 bg-mint text-white",
+  PENDING: "border border-violet/30 bg-violetDim/60 text-violet",
+  IN_PROGRESS: "border border-amber/30 bg-amber text-white",
+  INACTIVE: "border border-line bg-panel2/70 text-muted",
+};
 
 const INVITATION_TYPES: InvitationType[] = ["FLEET_PARTNER", "RENT", "FLEET_PARTNER_RENT"];
 const INVITATION_LABEL_KEYS: Record<InvitationType, TranslationKey> = {
   FLEET_PARTNER: "invitation_fleet_partner",
   RENT: "invitation_rent",
   FLEET_PARTNER_RENT: "invitation_fleet_partner_rent",
+};
+// Цвет и иконка пилюли типа приглашения — разные для каждого типа
+const INVITATION_STYLE: Record<InvitationType, string> = {
+  FLEET_PARTNER: "border border-amber/40 bg-amberDim/50 text-amber",
+  RENT: "border border-cyan/40 bg-cyanDim/50 text-cyan",
+  FLEET_PARTNER_RENT: "border border-mint/40 bg-mintDim/50 text-mint",
 };
 
 const CITIES = ["Wrocław", "Warszawa", "Kraków", "Gdańsk", "Poznań", "Katowice", "Łódź", "Praha"];
@@ -35,6 +57,7 @@ type ReferredRow = {
   lastName: string;
   phone: string;
   invitationType: InvitationType;
+  status: ReferredStatus;
   city: string;
   link: string | null;
   ambassadorId: string | null;
@@ -57,6 +80,7 @@ const AVATAR_PALETTE = [
   { bg: "bg-cyanDim/70", text: "text-cyan" },
   { bg: "bg-violetDim/70", text: "text-violet" },
   { bg: "bg-amberDim/70", text: "text-amber" },
+  { bg: "bg-coralDim/70", text: "text-coral" },
 ];
 
 function avatarStyle(seed: string) {
@@ -73,10 +97,48 @@ function SearchIcon() {
   );
 }
 
+function BoltIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor">
+      <path d="M13 2 3 14h6l-1 8 11-14h-7l1-6Z" />
+    </svg>
+  );
+}
+
+function BikeIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="6" cy="17" r="3.2" />
+      <circle cx="18" cy="17" r="3.2" />
+      <path d="M6 17 10 8h4l4 9M10 8 8.5 5H6M13 12h4" />
+    </svg>
+  );
+}
+
+function UsersDuoIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="9" cy="8" r="3.2" />
+      <path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6" />
+      <circle cx="17.5" cy="8.5" r="2.4" />
+      <path d="M15.5 14.3c2.6.4 4.5 2.6 4.5 5.7" />
+    </svg>
+  );
+}
+
 function PhoneIcon() {
   return (
     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <path d="M4.5 4.5c.3 3.9 1.9 7.5 4.7 10.3 2.8 2.8 6.4 4.4 10.3 4.7l.6-3.4-4-1.6-1.6 1.8a13 13 0 0 1-6.4-6.4l1.8-1.6-1.6-4Z" />
+    </svg>
+  );
+}
+
+function ResetIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 12a9 9 0 1 0 3-6.7" />
+      <path d="M3 4v5h5" />
     </svg>
   );
 }
@@ -278,6 +340,63 @@ function AmbassadorCell({
   );
 }
 
+function StatusCell({
+  row,
+  editable,
+  onSaved,
+}: {
+  row: ReferredRow;
+  editable: boolean;
+  onSaved: (status: ReferredStatus) => void;
+}) {
+  const { t } = useTranslation();
+  const [saving, setSaving] = useState(false);
+
+  const pill = (
+    <span className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1 text-[11px] font-medium ${STATUS_STYLE[row.status]}`}>
+      <span className="h-1.5 w-1.5 rounded-full bg-current" />
+      {t(STATUS_LABEL_KEYS[row.status])}
+    </span>
+  );
+
+  if (!editable) return pill;
+
+  async function change(status: ReferredStatus) {
+    if (status === row.status) return;
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/referred-clients/${row.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      if (res.ok) onSaved(status);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  // <select> поверх пилюли: выглядит как обычный статус, но кликабелен для тех, кому можно менять
+  return (
+    <div className="relative inline-flex">
+      <select
+        value={row.status}
+        disabled={saving}
+        onChange={(e) => change(e.target.value as ReferredStatus)}
+        aria-label={t("col_status")}
+        className="absolute inset-0 h-full w-full cursor-pointer appearance-none opacity-0 disabled:cursor-wait"
+      >
+        {STATUSES.map((s) => (
+          <option key={s} value={s}>
+            {t(STATUS_LABEL_KEYS[s])}
+          </option>
+        ))}
+      </select>
+      {pill}
+    </div>
+  );
+}
+
 const PAGE_SIZE_OPTIONS = [10, 25, 50];
 
 export function ReferredClientsList({
@@ -295,6 +414,9 @@ export function ReferredClientsList({
   const [query, setQuery] = useState("");
   // "all" — все, "none" — без амбассадора, иначе id выбранного амбассадора
   const [ambassadorFilter, setAmbassadorFilter] = useState("all");
+  const [cityFilter, setCityFilter] = useState("all");
+  const [invitationFilter, setInvitationFilter] = useState<"all" | InvitationType>("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | ReferredStatus>("all");
   const [formOpen, setFormOpen] = useState(false);
   const [payoutRowId, setPayoutRowId] = useState<string | null>(null);
   const [menuRowId, setMenuRowId] = useState<string | null>(null);
@@ -306,6 +428,8 @@ export function ReferredClientsList({
   const canAdd = editable || isAmbassador(role);
   // Амбассадор видит только своих клиентов — ему ни фильтр, ни колонка «Амбассадор» не нужны
   const showAmbassadors = !isAmbassador(role);
+  // Ссылку заполняют сотрудники — амбассадору она не нужна, ему вместо неё показываем статус
+  const showLink = !isAmbassador(role);
   const payoutRow = rows.find((r) => r.id === payoutRowId) || null;
 
   function updateRowPayouts(id: string, payouts: Payout[]) {
@@ -324,7 +448,28 @@ export function ReferredClientsList({
     setRows((prev) => prev.map((r) => (r.id === id ? { ...r, ambassadorId, ambassadorName } : r)));
   }
 
+  function updateRowStatus(id: string, status: ReferredStatus) {
+    setRows((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
+  }
+
   const hasUnassigned = rows.some((r) => !r.ambassadorId);
+  const cities = useMemo(() => Array.from(new Set(rows.map((r) => r.city))).sort(), [rows]);
+
+  const filtersActive =
+    query.trim() !== "" ||
+    ambassadorFilter !== "all" ||
+    cityFilter !== "all" ||
+    invitationFilter !== "all" ||
+    statusFilter !== "all";
+
+  function resetFilters() {
+    setQuery("");
+    setAmbassadorFilter("all");
+    setCityFilter("all");
+    setInvitationFilter("all");
+    setStatusFilter("all");
+    setPage(1);
+  }
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -332,11 +477,14 @@ export function ReferredClientsList({
       if (showAmbassadors && ambassadorFilter !== "all") {
         if (ambassadorFilter === "none" ? r.ambassadorId : r.ambassadorId !== ambassadorFilter) return false;
       }
+      if (cityFilter !== "all" && r.city !== cityFilter) return false;
+      if (invitationFilter !== "all" && r.invitationType !== invitationFilter) return false;
+      if (statusFilter !== "all" && r.status !== statusFilter) return false;
       if (!q) return true;
       const haystack = `${r.firstName} ${r.lastName} ${r.phone} ${r.city} ${r.ambassadorName ?? ""}`.toLowerCase();
       return haystack.includes(q);
     });
-  }, [rows, query, ambassadorFilter, showAmbassadors]);
+  }, [rows, query, ambassadorFilter, cityFilter, invitationFilter, statusFilter, showAmbassadors]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const currentPage = Math.min(page, totalPages);
@@ -355,14 +503,19 @@ export function ReferredClientsList({
   return (
     <div className="mx-auto max-w-6xl px-5 py-8 sm:px-8">
       <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="font-display text-[26px] font-semibold text-ink">{t("referred_title")}</h1>
-          <p className="mt-1 text-sm text-muted">{t("referred_empty_subtitle")}</p>
+        <div className="flex items-start gap-3.5">
+          <span className="icon-tile mt-0.5 h-12 w-12 text-lg">
+            <UsersDuoIcon />
+          </span>
+          <div>
+            <h1 className="font-display text-[26px] font-semibold text-ink">{t("referred_title")}</h1>
+            <p className="mt-1 text-sm text-muted">{t("referred_page_subtitle")}</p>
+          </div>
         </div>
         {canAdd && (
           <button
             onClick={() => setFormOpen(true)}
-            className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl bg-violet px-4 py-2.5 text-sm font-medium text-white shadow-glowViolet transition-opacity hover:opacity-90"
+            className="btn-primary whitespace-nowrap rounded-full px-5 py-3 text-sm"
           >
             <span className="text-base leading-none">+</span>
             {t("new_referred_btn")}
@@ -386,6 +539,57 @@ export function ReferredClientsList({
           />
         </div>
 
+        <select
+          value={cityFilter}
+          onChange={(e) => {
+            setCityFilter(e.target.value);
+            setPage(1);
+          }}
+          aria-label={t("city_filter_label")}
+          className="rounded-xl border border-line bg-bg2 px-4 py-3 text-sm text-ink outline-none transition-colors focus:border-violet/50"
+        >
+          <option value="all">{t("city_filter_label")}</option>
+          {cities.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={invitationFilter}
+          onChange={(e) => {
+            setInvitationFilter(e.target.value as "all" | InvitationType);
+            setPage(1);
+          }}
+          aria-label={t("invitation_filter_label")}
+          className="rounded-xl border border-line bg-bg2 px-4 py-3 text-sm text-ink outline-none transition-colors focus:border-violet/50"
+        >
+          <option value="all">{t("invitation_filter_label")}</option>
+          {INVITATION_TYPES.map((it) => (
+            <option key={it} value={it}>
+              {t(INVITATION_LABEL_KEYS[it])}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={statusFilter}
+          onChange={(e) => {
+            setStatusFilter(e.target.value as "all" | ReferredStatus);
+            setPage(1);
+          }}
+          aria-label={t("status_filter_label")}
+          className="rounded-xl border border-line bg-bg2 px-4 py-3 text-sm text-ink outline-none transition-colors focus:border-violet/50"
+        >
+          <option value="all">{t("status_filter_label")}</option>
+          {STATUSES.map((s) => (
+            <option key={s} value={s}>
+              {t(STATUS_LABEL_KEYS[s])}
+            </option>
+          ))}
+        </select>
+
         {showAmbassadors && (
           <select
             value={ambassadorFilter}
@@ -394,7 +598,7 @@ export function ReferredClientsList({
               setPage(1);
             }}
             aria-label={t("ambassador_filter_label")}
-            className="w-full rounded-xl border border-line bg-bg2 px-4 py-3 text-sm text-ink outline-none transition-colors focus:border-violet/50 sm:w-64"
+            className="rounded-xl border border-line bg-bg2 px-4 py-3 text-sm text-ink outline-none transition-colors focus:border-violet/50"
           >
             <option value="all">{t("ambassador_filter_all")}</option>
             {ambassadors.map((a) => (
@@ -404,6 +608,16 @@ export function ReferredClientsList({
             ))}
             {hasUnassigned && <option value="none">{t("ambassador_filter_none")}</option>}
           </select>
+        )}
+
+        {filtersActive && (
+          <button
+            onClick={resetFilters}
+            className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl border border-line bg-bg2 px-4 py-3 text-sm text-muted transition-colors hover:border-violet/40 hover:text-violet"
+          >
+            <ResetIcon />
+            {t("filters_reset")}
+          </button>
         )}
       </div>
 
@@ -415,7 +629,7 @@ export function ReferredClientsList({
       ) : (
         <div className="panel overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1120px] text-left text-sm">
+            <table className="w-full min-w-[1220px] text-left text-sm">
               <thead>
                 <tr className="border-b border-line text-muted">
                   <th className="px-5 py-3.5 text-xs font-medium text-muted">
@@ -441,7 +655,10 @@ export function ReferredClientsList({
                   <th className="px-5 py-3.5 text-xs font-medium text-muted">
                     <span className="inline-flex items-center gap-1">{t("col_payout")}<SortIcon /></span>
                   </th>
-                  <th className="px-5 py-3.5 text-xs font-medium text-muted">{t("col_link")}</th>
+                  {showLink && <th className="px-5 py-3.5 text-xs font-medium text-muted">{t("col_link")}</th>}
+                  <th className="px-5 py-3.5 text-xs font-medium text-muted">
+                    <span className="inline-flex items-center gap-1">{t("col_status")}<SortIcon /></span>
+                  </th>
                   <th className="px-5 py-3.5 text-xs font-medium text-muted">{t("actions_label")}</th>
                 </tr>
               </thead>
@@ -470,7 +687,8 @@ export function ReferredClientsList({
                         </a>
                       </td>
                       <td className="px-5 py-3.5">
-                        <span className="rounded-full border border-amber/30 bg-amberDim/50 px-2.5 py-1 text-[11px] font-medium text-amber">
+                        <span className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-medium ${INVITATION_STYLE[r.invitationType]}`}>
+                          {r.invitationType === "FLEET_PARTNER" ? <BoltIcon /> : <BikeIcon />}
                           {t(INVITATION_LABEL_KEYS[r.invitationType])}
                         </span>
                       </td>
@@ -487,17 +705,26 @@ export function ReferredClientsList({
                       )}
                       <td className="px-5 py-3.5">
                         {r.vehicles.length === 0 ? (
-                          <span className="text-xs text-faint">{t("clients_not_renting")}</span>
+                          <span className="inline-flex items-center gap-1.5 text-xs text-faint">
+                            <BikeIcon />
+                            {t("clients_not_renting")}
+                          </span>
                         ) : (
-                          <div className="flex flex-wrap gap-1.5">
-                            {r.vehicles.map((v) => (
-                              <span
-                                key={v.id}
-                                className="rounded-lg bg-violetDim/60 px-2.5 py-1 text-[12px] font-medium text-violet"
-                              >
-                                {v.name}
-                              </span>
-                            ))}
+                          <div className="flex flex-col gap-1">
+                            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-cyan">
+                              <BikeIcon />
+                              {t("clients_renting")}
+                            </span>
+                            <div className="flex flex-wrap gap-1.5">
+                              {r.vehicles.map((v) => (
+                                <span
+                                  key={v.id}
+                                  className="rounded-lg bg-violetDim/60 px-2.5 py-1 text-[12px] font-medium text-violet"
+                                >
+                                  {v.name}
+                                </span>
+                              ))}
+                            </div>
                           </div>
                         )}
                       </td>
@@ -513,8 +740,13 @@ export function ReferredClientsList({
                           {r.payoutTotal > 0 ? formatMoney(r.payoutTotal) : `+ ${t("payout_label")}`}
                         </button>
                       </td>
+                      {showLink && (
+                        <td className="px-5 py-3.5">
+                          <LinkCell row={r} editable={editable} onSaved={(link) => updateRowLink(r.id, link)} />
+                        </td>
+                      )}
                       <td className="px-5 py-3.5">
-                        <LinkCell row={r} editable={editable} onSaved={(link) => updateRowLink(r.id, link)} />
+                        <StatusCell row={r} editable={editable} onSaved={(status) => updateRowStatus(r.id, status)} />
                       </td>
                       <td className="px-5 py-3.5">
                         <div className="relative">

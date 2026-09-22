@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -140,6 +141,22 @@ export function Sidebar({
   const { t } = useTranslation();
 
   const ambassador = isRestrictedRole(role); // амбассадор или директор
+
+  // Счётчик на пункте «Приглашённые клиенты»: подтягиваем отдельным лёгким запросом,
+  // чтобы бейдж был на всех страницах, а не только на самой странице списка.
+  const [referredCount, setReferredCount] = useState<number | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/referred-clients")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!cancelled && Array.isArray(data)) setReferredCount(data.length);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   // На странице «Приглашённые клиенты» вместо «Transport Control» пишем «BezProblem Ambassador»
   const onReferredPage = pathname === AMBASSADOR_HOME || !!pathname?.startsWith(AMBASSADOR_HOME + "/");
   const tagline = onReferredPage ? AMBASSADOR_BRAND : t("tagline");
@@ -165,28 +182,35 @@ export function Sidebar({
         {visibleItems.map((item) => {
           const active = isActive(item);
           const Icon = item.icon;
+          const count = item.href === "/referred-clients" ? referredCount : null;
           return (
             <Link
               key={item.href}
               href={item.href}
               onClick={onNavigate}
-              className={`group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-150 ${
+              className={`group flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm transition-all duration-150 ${
                 active
-                  ? "bg-cyanDim/60 font-semibold text-cyan"
+                  ? "bg-cyanDim/70 font-semibold text-cyan shadow-card"
                   : "text-muted hover:bg-panel2/70 hover:text-ink"
               }`}
             >
-              {active && (
-                <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-cyan" />
-              )}
               <span
-                className={`flex h-7 w-7 shrink-0 items-center justify-center transition-colors ${
-                  active ? "text-cyan" : "text-faint group-hover:text-ink"
+                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors ${
+                  active ? "bg-cyan text-white shadow-glowCyan" : "bg-panel2/60 text-faint group-hover:text-ink"
                 }`}
               >
                 <Icon />
               </span>
-              {t(item.labelKey)}
+              <span className="min-w-0 flex-1 truncate">{t(item.labelKey)}</span>
+              {count !== null && (
+                <span
+                  className={`inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[10px] font-semibold ${
+                    active ? "bg-cyan text-white" : "bg-panel2/80 text-faint"
+                  }`}
+                >
+                  {count}
+                </span>
+              )}
             </Link>
           );
         })}

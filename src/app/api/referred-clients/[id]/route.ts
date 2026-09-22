@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { canEdit, isAdmin } from "@/lib/roles";
 
 const INVITATION_TYPES = ["FLEET_PARTNER", "RENT", "FLEET_PARTNER_RENT"];
+const STATUSES = ["ACTIVE", "PENDING", "IN_PROGRESS", "INACTIVE"];
 const CITIES = [
   "Wrocław",
   "Warszawa",
@@ -27,7 +28,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (!current) return NextResponse.json({ error: "Не найдено" }, { status: 404 });
 
   const body = await req.json();
-  const { firstName, lastName, phone, invitationType, city, link, ambassadorId } = body;
+  const { firstName, lastName, phone, invitationType, city, link, ambassadorId, status } = body;
 
   if (phone !== undefined && phone.trim() !== current.phone) {
     const clash = await prisma.referredClient.findUnique({ where: { phone: phone.trim() } });
@@ -40,6 +41,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   }
   if (city !== undefined && !CITIES.includes(city)) {
     return NextResponse.json({ error: "Укажите город" }, { status: 400 });
+  }
+  if (status !== undefined && !STATUSES.includes(status)) {
+    return NextResponse.json({ error: "Некорректный статус" }, { status: 400 });
   }
 
   if (ambassadorId !== undefined && ambassadorId !== null && ambassadorId !== "") {
@@ -59,6 +63,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (invitationType !== undefined) data.invitationType = invitationType;
   if (city !== undefined) data.city = city;
   if (link !== undefined) data.link = link?.trim() || null;
+  if (status !== undefined) data.status = status;
   // null / "" — снять закрепление за амбассадором
   if (ambassadorId !== undefined) data.ambassadorId = ambassadorId || null;
 
