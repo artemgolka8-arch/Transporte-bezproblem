@@ -18,7 +18,7 @@ export default async function TeamPage() {
   if (!session) redirect("/login");
 
   const users = await prisma.user.findMany({
-    where: { role: { in: ["ADMIN", "MANAGER", "DIRECTOR"] } },
+    where: { role: { in: ["ADMIN", "MANAGER", "PR_MANAGER", "DIRECTOR"] } },
     select: {
       id: true,
       name: true,

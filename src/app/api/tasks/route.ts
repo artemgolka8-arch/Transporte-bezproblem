@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { canEdit } from "@/lib/roles";
+import { canCreateTasks } from "@/lib/roles";
 
 const TASK_INCLUDE = {
   creator: { select: { id: true, name: true } },
@@ -28,7 +28,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
-  if (!canEdit(session.user.role)) {
+  if (!canCreateTasks(session.user.role)) {
     return NextResponse.json({ error: "Недостаточно прав" }, { status: 403 });
   }
 

@@ -16,6 +16,9 @@ enum Role {
   DIRECTOR
   // Амбассадор: видит только раздел «Приглашённые клиенты» и только своих клиентов
   AMBASSADOR
+  // PR Manager: как MANAGER, но дополнительно может ставить задачи
+  // амбассадорам, другим PR-менеджерам, администраторам и директору (см. src/lib/roles.ts)
+  PR_MANAGER
 }
 
 enum VehicleType {
@@ -119,6 +122,9 @@ model Report {
 enum TaskStatus {
   OPEN
   DONE
+  // Отмечена как невыполненная (с обязательной причиной в notDoneReason) —
+  // используется, например, амбассадором при отметке по задаче от PR Manager
+  NOT_DONE
 }
 
 model Task {
@@ -137,6 +143,8 @@ model Task {
   // именно они видят задачу в списке. Пополняется при передаче.
   participants   User[]     @relation("TaskParticipants")
   completedAt    DateTime?
+  // Причина, по которой задача отмечена невыполненной (обязательна при status = NOT_DONE)
+  notDoneReason  String?
   history        TaskLog[]
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt

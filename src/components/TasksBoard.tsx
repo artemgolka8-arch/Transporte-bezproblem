@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { canEdit, ROLE_LABEL_KEYS, Role } from "@/lib/roles";
+import { canCreateTasks, ROLE_LABEL_KEYS, Role } from "@/lib/roles";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
 import { Lang } from "@/lib/i18n/translations";
 
@@ -23,10 +23,11 @@ type TaskRow = {
   id: string;
   title: string;
   description: string | null;
-  status: "OPEN" | "DONE";
+  status: "OPEN" | "DONE" | "NOT_DONE";
   dueDate: string | null;
   reminderAt: string | null;
   reminderSentAt: string | null;
+  notDoneReason: string | null;
   creator: TaskUser;
   assignee: TaskUser;
   history: TaskLog[];
@@ -52,14 +53,15 @@ export function TasksBoard({
   const [tasks, setTasks] = useState<TaskRow[]>(initialTasks);
   const [filter, setFilter] = useState<Filter>("all");
   const [formOpen, setFormOpen] = useState(false);
-  const editable = canEdit(role);
+  const editable = canCreateTasks(role);
 
   const filtered = useMemo(() => {
     switch (filter) {
       case "mine":
         return tasks.filter((task) => task.assignee.id === currentUserId);
       case "open":
-        return tasks.filter((task) => task.status === "OPEN");
+        // «В работе» — всё, что ещё не завершено успешно (включая отмеченные невыполненными)
+        return tasks.filter((task) => task.status !== "DONE");
       case "done":
         return tasks.filter((task) => task.status === "DONE");
       default:
@@ -190,12 +192,18 @@ function TaskCard({
   const [busy, setBusy] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [transferOpen, setTransferOpen] = useState(false);
+  const [notDoneOpen, setNotDoneOpen] = useState(false);
 
   const isAssignee = task.assignee.id === currentUserId;
   const isCreator = task.creator.id === currentUserId;
   const canAct = isAssignee || isCreator;
-  const canDelete = isCreator;
+  // Амбассадору доступны только просмотр задачи и отметка выполнено / не выполнено —
+  // ни передавать, ни удалять задачу он не может (см. также серверные проверки в API)
+  const isAmbassador = role === "AMBASSADOR";
+  const canDelete = isCreator && !isAmbassador;
+  const canTransfer = canAct && !isAmbassador;
   const done = task.status === "DONE";
+  const notDone = task.status === "NOT_DONE";
 
   async function wrap(fn: () => Promise<void>) {
     setBusy(true);
@@ -215,11 +223,15 @@ function TaskCard({
               className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-[11px] uppercase tracking-wide ${
                 done
                   ? "border-mint/40 bg-mintDim/40 text-mint"
+                  : notDone
+                  ? "border-danger/40 bg-danger/10 text-danger"
                   : "border-amber/40 bg-amberDim/40 text-amber"
               }`}
             >
-              <span className={`h-1.5 w-1.5 rounded-full ${done ? "bg-mint" : "bg-amber"}`} />
-              {t(done ? "task_status_done" : "task_status_open")}
+              <span
+                className={`h-1.5 w-1.5 rounded-full ${done ? "bg-mint" : notDone ? "bg-danger" : "bg-amber"}`}
+              />
+              {t(done ? "task_status_done" : notDone ? "task_status_not_done" : "task_status_open")}
             </span>
             {task.dueDate && (
               <span className="text-xs text-muted">
@@ -241,6 +253,11 @@ function TaskCard({
           </div>
           <div className="font-display text-base font-semibold text-ink">{task.title}</div>
           {task.description && <p className="mt-1 text-sm text-muted">{task.description}</p>}
+          {notDone && task.notDoneReason && (
+            <p className="mt-1.5 rounded-lg border border-danger/30 bg-danger/10 px-2.5 py-1.5 text-xs text-danger">
+              {t("task_not_done_reason_label", { reason: task.notDoneReason })}
+            </p>
+          )}
           <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-faint">
             <span>{t("task_assignee_label", { name: task.assignee.name })}</span>
             <span>{t("task_creator_label", { name: task.creator.name })}</span>
@@ -248,20 +265,34 @@ function TaskCard({
         </div>
 
         <div className="flex shrink-0 flex-wrap items-center gap-2">
-          {canAct && (
+          {canAct && !done && (
             <button
               disabled={busy}
-              onClick={() => wrap(() => onAction({ action: done ? "reopen" : "complete" }))}
-              className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-opacity hover:opacity-90 disabled:opacity-50 ${
-                done
-                  ? "border-line text-muted hover:text-ink"
-                  : "border-mint/40 bg-mintDim/40 text-mint"
-              }`}
+              onClick={() => wrap(() => onAction({ action: "complete" }))}
+              className="rounded-lg border border-mint/40 bg-mintDim/40 px-3 py-1.5 text-xs font-medium text-mint transition-opacity hover:opacity-90 disabled:opacity-50"
             >
-              {t(done ? "reopen_btn" : "mark_done_btn")}
+              {t("mark_done_btn")}
             </button>
           )}
-          {canAct && (
+          {canAct && !done && (
+            <button
+              disabled={busy}
+              onClick={() => setNotDoneOpen(true)}
+              className="rounded-lg border border-danger/40 bg-danger/10 px-3 py-1.5 text-xs font-medium text-danger transition-opacity hover:opacity-90 disabled:opacity-50"
+            >
+              {t("mark_not_done_btn")}
+            </button>
+          )}
+          {canAct && done && (
+            <button
+              disabled={busy}
+              onClick={() => wrap(() => onAction({ action: "reopen" }))}
+              className="rounded-lg border border-line px-3 py-1.5 text-xs font-medium text-muted transition-opacity hover:text-ink hover:opacity-90 disabled:opacity-50"
+            >
+              {t("reopen_btn")}
+            </button>
+          )}
+          {canTransfer && (
             <button
               disabled={busy}
               onClick={() => setTransferOpen(true)}
@@ -320,6 +351,16 @@ function TaskCard({
           }}
         />
       )}
+
+      {notDoneOpen && (
+        <NotDoneModal
+          onClose={() => setNotDoneOpen(false)}
+          onSubmit={async (reason) => {
+            await wrap(() => onAction({ action: "not_done", note: reason }));
+            setNotDoneOpen(false);
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -330,6 +371,8 @@ function describeLog(h: TaskLog, t: (key: any, vars?: Record<string, string | nu
       return t("task_log_created", { name: h.toUserName || "" });
     case "completed":
       return h.note ? `${t("task_log_completed")} — ${h.note}` : t("task_log_completed");
+    case "not_done":
+      return h.note ? `${t("task_log_not_done")} — ${h.note}` : t("task_log_not_done");
     case "reopened":
       return h.note ? `${t("task_log_reopened")} — ${h.note}` : t("task_log_reopened");
     case "transferred": {
@@ -537,6 +580,69 @@ function TransferModal({
           className="w-full rounded-lg border border-violet/40 bg-violetDim/40 py-2.5 text-sm font-medium text-violet transition-opacity hover:opacity-90 disabled:opacity-50"
         >
           {loading ? t("saving") : t("transfer_confirm_btn")}
+        </button>
+      </form>
+    </div>
+  );
+}
+
+function NotDoneModal({
+  onClose,
+  onSubmit,
+}: {
+  onClose: () => void;
+  onSubmit: (reason: string) => Promise<void>;
+}) {
+  const { t } = useTranslation();
+  const [reason, setReason] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!reason.trim()) {
+      setError(t("not_done_reason_required"));
+      return;
+    }
+    setError(null);
+    setLoading(true);
+    await onSubmit(reason.trim());
+    setLoading(false);
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/60 backdrop-blur-sm px-4 py-8">
+      <form onSubmit={submit} className="panel w-full max-w-sm p-6 animate-rise">
+        <div className="mb-5 flex items-center justify-between">
+          <h2 className="font-display text-lg font-semibold text-ink">{t("not_done_reason_title")}</h2>
+          <button type="button" onClick={onClose} className="text-muted hover:text-ink">
+            ✕
+          </button>
+        </div>
+
+        <label className="mb-1 block label-eyebrow">{t("not_done_reason_label")}</label>
+        <textarea
+          required
+          autoFocus
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          rows={3}
+          placeholder={t("not_done_reason_placeholder")}
+          className="mb-4 w-full resize-none rounded-lg border border-line bg-bg2 px-3 py-2 text-sm text-ink outline-none focus:border-danger/50"
+        />
+
+        {error && (
+          <div className="mb-4 rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-xs text-danger">
+            {error}
+          </div>
+        )}
+
+        <button
+          type="submit"
+          disabled={loading || !reason.trim()}
+          className="w-full rounded-lg border border-danger/40 bg-danger/10 py-2.5 text-sm font-medium text-danger transition-opacity hover:opacity-90 disabled:opacity-50"
+        >
+          {loading ? t("saving") : t("not_done_confirm_btn")}
         </button>
       </form>
     </div>

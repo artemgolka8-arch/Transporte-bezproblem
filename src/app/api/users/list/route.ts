@@ -10,7 +10,7 @@ export async function GET() {
   if (!session) return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
 
   const users = await prisma.user.findMany({
-    where: { role: { in: ["ADMIN", "MANAGER"] } },
+    where: { role: { in: ["ADMIN", "MANAGER", "PR_MANAGER", "DIRECTOR", "AMBASSADOR"] } },
     select: { id: true, name: true, role: true },
     orderBy: { name: "asc" },
   });

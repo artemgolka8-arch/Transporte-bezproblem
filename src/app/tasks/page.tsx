@@ -21,8 +21,10 @@ export default async function TasksPage() {
     orderBy: [{ status: "asc" }, { createdAt: "desc" }],
   });
 
+  // Кому можно ставить задачи: раньше только ADMIN/MANAGER, теперь PR Manager
+  // может давать задачи ещё и амбассадорам, другим PR-менеджерам и директору.
   const users = await prisma.user.findMany({
-    where: { role: { in: ["ADMIN", "MANAGER"] } },
+    where: { role: { in: ["ADMIN", "MANAGER", "PR_MANAGER", "DIRECTOR", "AMBASSADOR"] } },
     select: { id: true, name: true, role: true },
     orderBy: { name: "asc" },
   });

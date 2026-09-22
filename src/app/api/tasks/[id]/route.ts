@@ -30,7 +30,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   }
 
   const body = await req.json();
-  const action = body.action as "complete" | "reopen" | "transfer" | "edit" | undefined;
+  const action = body.action as "complete" | "reopen" | "not_done" | "transfer" | "edit" | undefined;
+  const isAmbassador = session.user.role === "AMBASSADOR";
 
   // Отмечать выполненной/возвращать в работу может исполнитель либо автор задачи
   if (action === "complete" || action === "reopen") {
@@ -43,6 +44,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       data: {
         status: done ? "DONE" : "OPEN",
         completedAt: done ? new Date() : null,
+        // Возврат в работу или повторное выполнение снимает прежнюю причину невыполнения
+        notDoneReason: null,
         history: {
           create: {
             action: done ? "completed" : "reopened",
@@ -54,6 +57,42 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       include: TASK_INCLUDE,
     });
     return NextResponse.json(updated);
+  }
+
+  // Отметить невыполненной может исполнитель либо автор задачи; причина обязательна
+  // (в первую очередь это действие для амбассадора: только просмотр + отметка
+  // выполнено / не выполнено, с обязательным объяснением при "не выполнено")
+  if (action === "not_done") {
+    if (!isAssignee && !isCreator) {
+      return NextResponse.json({ error: "Недостаточно прав" }, { status: 403 });
+    }
+    const reason = body.note?.trim();
+    if (!reason) {
+      return NextResponse.json({ error: "Укажите причину невыполнения" }, { status: 400 });
+    }
+    const updated = await prisma.task.update({
+      where: { id: task.id },
+      data: {
+        status: "NOT_DONE",
+        completedAt: null,
+        notDoneReason: reason,
+        history: {
+          create: {
+            action: "not_done",
+            note: reason,
+            userName: session.user.name,
+          },
+        },
+      },
+      include: TASK_INCLUDE,
+    });
+    return NextResponse.json(updated);
+  }
+
+  // Амбассадору доступны только просмотр задачи и отметка выполнено / не выполнено —
+  // передавать другому исполнителю или редактировать текст задачи он не может
+  if (isAmbassador) {
+    return NextResponse.json({ error: "Недостаточно прав" }, { status: 403 });
   }
 
   // Передать задачу другому менеджеру может текущий исполнитель либо автор задачи
@@ -140,9 +179,9 @@ export async function DELETE(_req: NextRequest, { params }: { params: { id: stri
     return NextResponse.json({ error: "Не найдено" }, { status: 404 });
   }
 
-  // Удалить задачу может только её автор
+  // Удалить задачу может только её автор (амбассадору удаление недоступно в принципе)
   const isCreator = task.creatorId === session.user.id;
-  if (!isCreator) {
+  if (!isCreator || session.user.role === "AMBASSADOR") {
     return NextResponse.json({ error: "Недостаточно прав" }, { status: 403 });
   }
 
