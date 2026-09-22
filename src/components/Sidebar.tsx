@@ -161,6 +161,29 @@ export function Sidebar({
   // «амбассадорский» UX (другой тагслайн, свой пункт «Профиль» в меню остаётся)
   const restrictedView = isViewRestrictedRole(role); // амбассадор, директор или PR-менеджер
 
+  // Фото профиля для аватара внизу сайдбара: подтягиваем лёгким запросом,
+  // т.к. в сессию NextAuth такую (потенциально тяжёлую) картинку не кладём.
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/profile")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!cancelled && data) setAvatarUrl(data.avatarUrl || null);
+      })
+      .catch(() => {});
+    // Обновляем сразу после сохранения фото на странице профиля, не дожидаясь
+    // перехода на другую страницу (см. dispatchEvent в ProfileForm).
+    function onAvatarUpdated(e: Event) {
+      setAvatarUrl((e as CustomEvent<string | null>).detail ?? null);
+    }
+    window.addEventListener("profile:avatar-updated", onAvatarUpdated);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("profile:avatar-updated", onAvatarUpdated);
+    };
+  }, []);
+
   // Счётчик на пункте «Приглашённые клиенты»: подтягиваем отдельным лёгким запросом,
   // чтобы бейдж был на всех страницах, а не только на самой странице списка.
   const [referredCount, setReferredCount] = useState<number | null>(null);
@@ -258,8 +281,13 @@ export function Sidebar({
       {(() => {
         const inner = (
           <>
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brandGradient text-xs font-semibold text-white shadow-brand">
-              {initials(userName)}
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brandGradient text-xs font-semibold text-white shadow-brand">
+              {avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+              ) : (
+                initials(userName)
+              )}
             </span>
             <div className="min-w-0 flex-1 leading-tight">
               <div className="truncate text-sm font-medium text-ink">{userName}</div>

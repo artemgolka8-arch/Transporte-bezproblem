@@ -124,6 +124,7 @@ export function ProfileForm({
       return;
     }
     setSaved(true);
+    window.dispatchEvent(new CustomEvent("profile:avatar-updated", { detail: avatarUrl }));
     router.refresh();
   }
 
