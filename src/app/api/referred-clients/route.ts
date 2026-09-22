@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { canEdit, isAmbassador } from "@/lib/roles";
+import { canManageReferredClients, isAmbassador } from "@/lib/roles";
 
 const INVITATION_TYPES = ["FLEET_PARTNER", "RENT", "FLEET_PARTNER_RENT"];
 const CITIES = [
@@ -62,9 +62,9 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
-  // Добавлять клиентов могут админ/менеджер и амбассадор (только за себя)
+  // Добавлять клиентов могут админ/менеджер/PR-менеджер и амбассадор (только за себя)
   const ambassadorSelf = isAmbassador(session.user.role);
-  if (!canEdit(session.user.role) && !ambassadorSelf) {
+  if (!canManageReferredClients(session.user.role) && !ambassadorSelf) {
     return NextResponse.json({ error: "Недостаточно прав" }, { status: 403 });
   }
 

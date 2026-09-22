@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { canEdit, isAdmin, isAmbassador, Role } from "@/lib/roles";
+import { canManageReferredClients, canDeleteReferredClient, isAmbassador, Role } from "@/lib/roles";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
 import { TranslationKey } from "@/lib/i18n/translations";
 
@@ -422,8 +422,8 @@ export function ReferredClientsList({
   const [menuRowId, setMenuRowId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const editable = canEdit(role);
-  const canDelete = isAdmin(role);
+  const editable = canManageReferredClients(role);
+  const canDelete = canDeleteReferredClient(role);
   // Добавлять клиентов может и амбассадор (они автоматически закрепляются за ним)
   const canAdd = editable || isAmbassador(role);
   // Амбассадор видит только своих клиентов — ему ни фильтр, ни колонка «Амбассадор» не нужны

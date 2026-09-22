@@ -22,6 +22,22 @@ export function isPrManager(role?: string | null) {
   return role === "PR_MANAGER";
 }
 
+// PR_MANAGER получает полный доступ (просмотр + управление + удаление) только
+// к четырём разделам: «Задачи», «Моя команда», «Приглашённые клиенты», «Отчёты».
+// На остальные разделы (Флот, Клиенты, Должники и т.д.) это не распространяется —
+// там по-прежнему используется canEdit / isAdmin как раньше.
+export function canManageReferredClients(role?: string | null) {
+  return canEdit(role) || isPrManager(role);
+}
+
+export function canDeleteReferredClient(role?: string | null) {
+  return isAdmin(role) || isPrManager(role);
+}
+
+export function canDeleteAnyReport(role?: string | null) {
+  return isAdmin(role) || isPrManager(role);
+}
+
 // Кто может создавать задачи и назначать их другим (вкладка «Задачи»):
 // ADMIN и MANAGER — как раньше, плюс PR_MANAGER, который умеет ставить
 // задачи амбассадорам, другим PR-менеджерам, администраторам и директору.

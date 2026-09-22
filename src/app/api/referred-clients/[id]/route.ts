@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { canEdit, isAdmin } from "@/lib/roles";
+import { canManageReferredClients, canDeleteReferredClient } from "@/lib/roles";
 
 const INVITATION_TYPES = ["FLEET_PARTNER", "RENT", "FLEET_PARTNER_RENT"];
 const STATUSES = ["ACTIVE", "PENDING", "IN_PROGRESS", "INACTIVE"];
@@ -20,7 +20,7 @@ const CITIES = [
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
-  if (!canEdit(session.user.role)) {
+  if (!canManageReferredClients(session.user.role)) {
     return NextResponse.json({ error: "Недостаточно прав" }, { status: 403 });
   }
 
@@ -78,7 +78,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
-  if (!isAdmin(session.user.role)) {
+  if (!canDeleteReferredClient(session.user.role)) {
     return NextResponse.json({ error: "Недостаточно прав" }, { status: 403 });
   }
   await prisma.referredClient.delete({ where: { id: params.id } });

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { isAdmin, isAmbassador, Role } from "@/lib/roles";
+import { canDeleteAnyReport, isAmbassador, Role } from "@/lib/roles";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
 import { TranslationKey } from "@/lib/i18n/translations";
 
@@ -130,7 +130,7 @@ export function ReportsList({
   const [menuRowId, setMenuRowId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const ambassadorOnly = isAmbassador(role);
-  const admin = isAdmin(role);
+  const admin = canDeleteAnyReport(role);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
