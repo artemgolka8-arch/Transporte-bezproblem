@@ -131,8 +131,26 @@
   }
 
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-brand transition-all duration-200 hover:brightness-110 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:pointer-events-none;
+    @apply relative isolate inline-flex items-center justify-center gap-2 overflow-hidden rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-brand transition-all duration-200 hover:brightness-110 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:pointer-events-none;
     background-image: theme("backgroundImage.brandGradient");
+  }
+  /* Тонкие волнистые линии поверх градиента кнопки — фирменный штрих BezProblem Sharks */
+  .btn-primary::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.55;
+    mix-blend-mode: overlay;
+    background-repeat: repeat-x;
+    background-size: 120px 100%;
+    background-position: 0 center;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='48' viewBox='0 0 120 48'%3E%3Cpath d='M-10 34 Q 20 20 50 34 T 110 34 T 170 34' stroke='white' stroke-width='2.4' fill='none' opacity='0.55'/%3E%3Cpath d='M-10 14 Q 20 0 50 14 T 110 14 T 170 14' stroke='white' stroke-width='1.6' fill='none' opacity='0.35'/%3E%3C/svg%3E");
+  }
+  .btn-primary > * {
+    position: relative;
+    z-index: 1;
   }
 
   .icon-tile {

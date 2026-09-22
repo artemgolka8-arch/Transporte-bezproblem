@@ -104,14 +104,6 @@ function ChevronRightIcon() {
   );
 }
 
-function SparkleIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18" />
-    </svg>
-  );
-}
-
 type NavItem = {
   href: string;
   labelKey: TranslationKey;
@@ -249,20 +241,6 @@ export function Sidebar({
 
         {!ambassador && <StatsPanel counts={counts} variant="sidebar" />}
       </nav>
-
-      <div className="relative mx-3 mb-3 overflow-hidden rounded-2xl p-4" style={{ backgroundImage: "linear-gradient(135deg, rgb(var(--color-cyan) / 0.14), rgb(var(--color-violet) / 0.10))" }}>
-        <div className="pointer-events-none absolute -right-6 -top-6 h-20 w-20 rounded-full bg-cyan/10 blur-2xl" />
-        <span className="mb-2 flex h-7 w-7 items-center justify-center rounded-lg bg-bg2/80 text-cyan">
-          <SparkleIcon />
-        </span>
-        <div className="mb-1.5 text-[13px] font-medium leading-snug text-ink">
-          {t("sidebar_promo_title")}
-        </div>
-        <Link href="/referred-clients" className="inline-flex items-center gap-1 text-[13px] font-medium text-cyan hover:opacity-80">
-          {t("sidebar_promo_link")}
-          <ChevronRightIcon />
-        </Link>
-      </div>
 
       {(() => {
         const inner = (
