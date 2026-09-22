@@ -467,6 +467,10 @@ const ru = {
   telegram_setup_step3: "Вставьте этот номер в поле ниже и сохраните",
   field_telegram_chat_id: "Telegram Chat ID",
   telegram_chat_id_placeholder: "например, 123456789",
+  change_photo: "Изменить фото",
+  remove_photo: "Удалить фото",
+  photo_too_large: "Файл слишком большой (макс. 5 МБ)",
+  photo_invalid_type: "Выберите файл изображения",
 
   // приглашённые клиенты
   nav_referred_clients: "Приглашённые клиенты",
@@ -1098,6 +1102,10 @@ const pl: Dict = {
   telegram_setup_step3: "Wklej ten numer w pole poniżej i zapisz",
   field_telegram_chat_id: "Telegram Chat ID",
   telegram_chat_id_placeholder: "np. 123456789",
+  change_photo: "Zmień zdjęcie",
+  remove_photo: "Usuń zdjęcie",
+  photo_too_large: "Plik jest za duży (maks. 5 MB)",
+  photo_invalid_type: "Wybierz plik obrazu",
 
   nav_referred_clients: "Polecone kontakty",
 
@@ -1722,6 +1730,10 @@ const uk: Dict = {
   telegram_setup_step3: "Вставте цей номер у поле нижче і збережіть",
   field_telegram_chat_id: "Telegram Chat ID",
   telegram_chat_id_placeholder: "наприклад, 123456789",
+  change_photo: "Змінити фото",
+  remove_photo: "Видалити фото",
+  photo_too_large: "Файл завеликий (макс. 5 МБ)",
+  photo_invalid_type: "Виберіть файл зображення",
 
   nav_referred_clients: "Запрошені клієнти",
 

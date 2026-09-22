@@ -14,6 +14,7 @@ const PROFILE_SELECT = {
   position: true,
   city: true,
   telegramChatId: true,
+  avatarUrl: true,
   createdAt: true,
 };
 
@@ -40,7 +41,13 @@ export async function PATCH(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { name, firstName, lastName, phone, position, city, telegramChatId } = body;
+  const { name, firstName, lastName, phone, position, city, telegramChatId, avatarUrl } = body;
+
+  // avatarUrl приходит как data:image/...;base64,... строка (или null для удаления фото).
+  // Ограничиваем размер на сервере на случай обхода клиентской проверки.
+  if (typeof avatarUrl === "string" && avatarUrl.length > 7 * 1024 * 1024) {
+    return NextResponse.json({ error: "Файл слишком большой" }, { status: 413 });
+  }
 
   const user = await prisma.user.update({
     where: { id: session.user.id },
@@ -52,6 +59,7 @@ export async function PATCH(req: NextRequest) {
       ...(position !== undefined ? { position } : {}),
       ...(city !== undefined ? { city } : {}),
       ...(telegramChatId !== undefined ? { telegramChatId: telegramChatId?.trim() || null } : {}),
+      ...(avatarUrl !== undefined ? { avatarUrl: avatarUrl || null } : {}),
     },
     select: PROFILE_SELECT,
   });

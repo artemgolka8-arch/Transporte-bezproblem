@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
 import { ROLE_LABEL_KEYS, Role } from "@/lib/roles";
@@ -16,7 +16,42 @@ type ProfileData = {
   position: string | null;
   city: string | null;
   telegramChatId: string | null;
+  avatarUrl: string | null;
 };
+
+const MAX_PHOTO_BYTES = 5 * 1024 * 1024; // 5 МБ — проверка на клиенте до сжатия
+const AVATAR_MAX_DIMENSION = 512; // сжимаем фото до этого размера перед отправкой на сервер
+
+// Сжимает выбранное изображение до квадрата AVATAR_MAX_DIMENSION×AVATAR_MAX_DIMENSION
+// и возвращает data URL (JPEG), чтобы не хранить в базе тяжёлые оригиналы.
+function resizeImageToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onload = () => {
+      img.onload = () => {
+        const size = AVATAR_MAX_DIMENSION;
+        const canvas = document.createElement("canvas");
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          reject(new Error("canvas unavailable"));
+          return;
+        }
+        const scale = Math.max(size / img.width, size / img.height);
+        const w = img.width * scale;
+        const h = img.height * scale;
+        ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
+        resolve(canvas.toDataURL("image/jpeg", 0.85));
+      };
+      img.onerror = () => reject(new Error("image load failed"));
+      img.src = reader.result as string;
+    };
+    reader.onerror = () => reject(new Error("file read failed"));
+    reader.readAsDataURL(file);
+  });
+}
 
 const FIELD_CLASS =
   "w-full border-b border-line bg-transparent px-0 py-2.5 text-sm text-ink outline-none transition-colors placeholder:text-faint focus:border-cyan";
@@ -37,9 +72,32 @@ export function ProfileForm({
   const [position, setPosition] = useState(user.position || "");
   const [city, setCity] = useState(user.city || "");
   const [telegramChatId, setTelegramChatId] = useState(user.telegramChatId || "");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(user.avatarUrl || null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  async function onPhotoSelected(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setError(null);
+    if (!file.type.startsWith("image/")) {
+      setError(t("photo_invalid_type"));
+      return;
+    }
+    if (file.size > MAX_PHOTO_BYTES) {
+      setError(t("photo_too_large"));
+      return;
+    }
+    try {
+      const dataUrl = await resizeImageToDataUrl(file);
+      setAvatarUrl(dataUrl);
+    } catch {
+      setError(t("photo_invalid_type"));
+    }
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -49,7 +107,15 @@ export function ProfileForm({
     const res = await fetch("/api/profile", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ firstName, lastName, phone, position, city, telegramChatId }),
+      body: JSON.stringify({
+        firstName,
+        lastName,
+        phone,
+        position,
+        city,
+        telegramChatId,
+        avatarUrl,
+      }),
     });
     setSaving(false);
     if (!res.ok) {
@@ -85,9 +151,31 @@ export function ProfileForm({
       <div className="overflow-hidden rounded-2xl border border-line bg-panel shadow-card">
         <div className="flex flex-col gap-5 p-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-center gap-4">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-ink font-display text-lg font-semibold text-white">
-              {initials.toUpperCase()}
-            </div>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="group relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-ink"
+              title={t("change_photo")}
+            >
+              {avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <span className="flex h-full w-full items-center justify-center font-display text-lg font-semibold text-white">
+                  {initials.toUpperCase()}
+                </span>
+              )}
+              <span className="absolute inset-0 flex items-center justify-center bg-black/50 text-[10px] font-medium text-white opacity-0 transition-opacity group-hover:opacity-100">
+                {t("change_photo")}
+              </span>
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={onPhotoSelected}
+              className="hidden"
+            />
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <h2 className="truncate font-display text-lg font-semibold text-ink">
@@ -98,6 +186,24 @@ export function ProfileForm({
                 </span>
               </div>
               <p className="mt-0.5 truncate text-sm text-muted">{user.email}</p>
+              <div className="mt-1.5 flex items-center gap-3 text-xs">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="text-cyan hover:underline"
+                >
+                  {t("change_photo")}
+                </button>
+                {avatarUrl && (
+                  <button
+                    type="button"
+                    onClick={() => setAvatarUrl(null)}
+                    className="text-muted hover:underline"
+                  >
+                    {t("remove_photo")}
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -175,14 +281,6 @@ export function ProfileForm({
         </div>
 
         <div className="mt-9 rounded-xl border border-line/70 p-5">
-          <div className="mb-1 flex items-center gap-2">
-            <span className="label-eyebrow">{t("telegram_setup_title")}</span>
-          </div>
-          <ol className="mb-4 list-decimal space-y-1 pl-4 text-xs text-muted">
-            <li>{t("telegram_setup_step1")}</li>
-            <li>{t("telegram_setup_step2")}</li>
-            <li>{t("telegram_setup_step3")}</li>
-          </ol>
           <label className="mb-1.5 block label-eyebrow">{t("field_telegram_chat_id")}</label>
           <input
             value={telegramChatId}

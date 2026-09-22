@@ -81,6 +81,7 @@ model User {
   position       String?
   city           String?
   telegramChatId String?
+  avatarUrl      String?  @db.Text
   createdAt      DateTime @default(now())
   createdTasks   Task[]   @relation("TaskCreator")
   assignedTasks  Task[]   @relation("TaskAssignee")

@@ -25,6 +25,7 @@ export default async function ProfilePage() {
       position: true,
       city: true,
       telegramChatId: true,
+      avatarUrl: true,
     },
   });
   if (!user) redirect("/login");
