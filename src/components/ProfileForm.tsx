@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
 import { ROLE_LABEL_KEYS, Role } from "@/lib/roles";
-import { ProfileHeader, ProfileAccent } from "@/components/ProfileHeader";
 
 type ProfileData = {
   id: string;
@@ -17,24 +16,6 @@ type ProfileData = {
   position: string | null;
   city: string | null;
   telegramChatId: string | null;
-};
-
-const ROLE_ACCENT: Record<Role, ProfileAccent> = {
-  ADMIN: "violet",
-  MANAGER: "cyan",
-  VIEWER: "faint",
-  DIRECTOR: "violet",
-  AMBASSADOR: "mint",
-  PR_MANAGER: "mint",
-};
-
-const ROLE_CLEARANCE: Record<Role, number> = {
-  ADMIN: 3,
-  MANAGER: 2,
-  VIEWER: 1,
-  DIRECTOR: 2,
-  AMBASSADOR: 1,
-  PR_MANAGER: 2,
 };
 
 const FIELD_CLASS =
@@ -80,15 +61,14 @@ export function ProfileForm({
     router.refresh();
   }
 
-  const accent = ROLE_ACCENT[user.role];
   const displayName = [user.firstName, user.lastName].filter(Boolean).join(" ") || user.name;
   const initials =
     (user.firstName?.[0] || user.name?.[0] || "?") + (user.lastName?.[0] || user.name?.[1] || "");
 
   const statCells = [
-    { key: "AVAILABLE" as const, labelKey: "status_available" as const, color: "text-mint" },
-    { key: "WORKSHOP" as const, labelKey: "status_workshop" as const, color: "text-amber" },
-    { key: "RENTED" as const, labelKey: "status_rented" as const, color: "text-violet" },
+    { key: "AVAILABLE" as const, labelKey: "status_available" as const },
+    { key: "WORKSHOP" as const, labelKey: "status_workshop" as const },
+    { key: "RENTED" as const, labelKey: "status_rented" as const },
   ];
 
   return (
@@ -99,36 +79,47 @@ export function ProfileForm({
         <p className="mt-1.5 text-sm text-muted">{t("profile_subtitle")}</p>
       </div>
 
-      <ProfileHeader
-        eyebrow={t("badge_eyebrow_staff")}
-        initials={initials.toUpperCase()}
-        name={displayName}
-        subtitle={user.email}
-        accent={accent}
-        statusLabel={t("badge_access_active")}
-        meta={[
-          { label: t("field_position"), value: position || "—" },
-          { label: t("field_city"), value: city || "—" },
-        ]}
-        clearance={{
-          level: ROLE_CLEARANCE[user.role],
-          max: 3,
-          label: `${t("clearance_level")} · ${t(ROLE_LABEL_KEYS[user.role])}`,
-        }}
-      />
-
-      {fleetCounts && (
-        <div className="grid grid-cols-3 divide-x divide-line border-b border-line py-7">
-          {statCells.map((s) => (
-            <div key={s.key} className="px-6 text-center first:pl-0 last:pr-0">
-              <div className={`font-display text-2xl font-semibold ${s.color}`}>
-                {fleetCounts[s.key]}
-              </div>
-              <div className="mt-1 label-eyebrow">{t(s.labelKey)}</div>
+      {/* Карточка профиля — единый, спокойный по цвету блок: имя, роль, контакты
+          и (если есть) сводка по автопарку. Без ярких акцентов и «уровней доступа» —
+          строгий, деловой вид вместо игровой стилистики. */}
+      <div className="overflow-hidden rounded-2xl border border-line bg-panel shadow-card">
+        <div className="flex flex-col gap-5 p-6 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-center gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-ink font-display text-lg font-semibold text-white">
+              {initials.toUpperCase()}
             </div>
-          ))}
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="truncate font-display text-lg font-semibold text-ink">
+                  {displayName}
+                </h2>
+                <span className="inline-flex shrink-0 items-center rounded-full border border-line px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-wide text-muted">
+                  {t(ROLE_LABEL_KEYS[user.role])}
+                </span>
+              </div>
+              <p className="mt-0.5 truncate text-sm text-muted">{user.email}</p>
+            </div>
+          </div>
         </div>
-      )}
+
+        <div className="grid grid-cols-2 gap-x-6 gap-y-5 border-t border-line/70 p-6 sm:grid-cols-4">
+          <div>
+            <div className="label-eyebrow mb-1">{t("field_position")}</div>
+            <div className="truncate text-sm text-ink">{position || "—"}</div>
+          </div>
+          <div>
+            <div className="label-eyebrow mb-1">{t("field_city")}</div>
+            <div className="truncate text-sm text-ink">{city || "—"}</div>
+          </div>
+          {fleetCounts &&
+            statCells.map((s) => (
+              <div key={s.key}>
+                <div className="label-eyebrow mb-1">{t(s.labelKey)}</div>
+                <div className="text-sm font-semibold text-ink">{fleetCounts[s.key]}</div>
+              </div>
+            ))}
+        </div>
+      </div>
 
       <form onSubmit={submit} className="pt-10">
         <div className="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2">
