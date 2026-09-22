@@ -28,6 +28,8 @@ const config: Config = {
         violetDim: withOpacity("--color-violet-dim"),
         cyan: withOpacity("--color-cyan"),
         cyanDim: withOpacity("--color-cyan-dim"),
+        coral: withOpacity("--color-coral"),
+        coralDim: withOpacity("--color-coral-dim"),
         danger: withOpacity("--color-danger"),
       },
       fontFamily: {
@@ -36,14 +38,15 @@ const config: Config = {
         mono: ["var(--font-mono)"],
       },
       boxShadow: {
-        glowCyan: "0 0 24px rgba(15,148,137,0.22)",
-        glowMint: "0 0 20px rgba(16,168,110,0.18)",
-        glowAmber: "0 0 20px rgba(202,122,15,0.18)",
-        glowViolet: "0 0 20px rgba(99,91,214,0.18)",
+        glowCyan: "0 0 26px rgba(3,157,143,0.32)",
+        glowMint: "0 0 22px rgba(5,173,107,0.26)",
+        glowAmber: "0 0 22px rgba(217,126,4,0.26)",
+        glowViolet: "0 0 22px rgba(91,79,224,0.26)",
+        glowCoral: "0 0 22px rgba(224,69,90,0.26)",
         panel: "0 1px 0 rgba(255,255,255,0.7) inset, 0 16px 36px -20px rgba(9,32,38,0.20)",
         panelLg: "0 1px 0 rgba(255,255,255,0.7) inset, 0 28px 60px -24px rgba(9,32,38,0.28)",
         card: "0 1px 0 rgba(255,255,255,0.6) inset, 0 10px 24px -16px rgba(9,32,38,0.16)",
-        brand: "0 18px 40px -18px rgba(15,148,137,0.45)",
+        brand: "0 18px 40px -18px rgba(3,157,143,0.55)",
       },
       keyframes: {
         pulseBeacon: {
@@ -74,9 +77,9 @@ const config: Config = {
         scanline:
           "linear-gradient(90deg, transparent, rgba(20,166,153,0.55), transparent)",
         brandRadial:
-          "radial-gradient(circle at 15% -10%, rgba(20,166,153,0.16), transparent 45%), radial-gradient(circle at 85% 0%, rgba(99,91,214,0.10), transparent 42%), radial-gradient(circle at 50% 120%, rgba(20,166,153,0.10), transparent 50%)",
-        brandGradient: "linear-gradient(135deg, #0F9489 0%, #14b8a6 45%, #635BD6 130%)",
-        brandText: "linear-gradient(120deg, #0F9489 0%, #17BFB2 55%, #635BD6 130%)",
+          "radial-gradient(circle at 15% -10%, rgba(3,157,143,0.22), transparent 45%), radial-gradient(circle at 85% 0%, rgba(91,79,224,0.16), transparent 42%), radial-gradient(circle at 50% 120%, rgba(3,157,143,0.14), transparent 50%)",
+        brandGradient: "linear-gradient(135deg, #059488 0%, #17d6c4 45%, #6a5ff0 130%)",
+        brandText: "linear-gradient(120deg, #059488 0%, #17d6c4 55%, #6a5ff0 130%)",
       },
       backgroundSize: {
         gridcell: "36px 36px",

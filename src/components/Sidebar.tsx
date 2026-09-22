@@ -13,6 +13,7 @@ import {
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
 import type { TranslationKey } from "@/lib/i18n/translations";
 import { StatsPanel } from "./StatsPanel";
+import { Logo } from "./Logo";
 
 function TruckIcon() {
   return (
@@ -154,12 +155,7 @@ export function Sidebar({
   return (
     <div className="flex h-full w-[276px] shrink-0 flex-col border-r border-line/70 bg-bg2">
       <Link href={ambassador ? AMBASSADOR_HOME : "/"} onClick={onNavigate} className="flex items-center px-5 py-6">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/logo-wordmark.png"
-          alt="BezProblem"
-          className="h-8 w-auto drop-shadow-sm"
-        />
+        <Logo markSize={26} textClassName="text-[15px]" />
       </Link>
       <div className="-mt-3 mb-2 px-5 text-[11px] font-medium uppercase tracking-[0.14em] text-faint">
         {tagline}

@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    /* Светлая тема — фирменная бирюза + глубокий графит-навy (по логотипу BezProblem) */
+    /* Светлая тема — фирменная бирюза + глубокий графит-навy (BezProblem Sharks) */
     --color-bg: 246 250 249;
     --color-bg2: 255 255 255;
     --color-panel: 255 255 255;
@@ -13,35 +13,39 @@
     --color-ink: 11 32 42;
     --color-muted: 90 121 126;
     --color-faint: 145 171 174;
-    --color-mint: 15 158 105;
-    --color-mint-dim: 217 245 233;
-    --color-amber: 199 122 17;
-    --color-amber-dim: 250 235 211;
-    --color-violet: 99 91 214;
-    --color-violet-dim: 232 230 250;
-    --color-cyan: 15 148 137;
-    --color-cyan-dim: 213 241 237;
+    --color-mint: 5 173 107;
+    --color-mint-dim: 210 249 231;
+    --color-amber: 217 126 4;
+    --color-amber-dim: 253 233 199;
+    --color-violet: 91 79 224;
+    --color-violet-dim: 227 224 253;
+    --color-cyan: 3 157 143;
+    --color-cyan-dim: 202 244 238;
+    --color-coral: 224 69 90;
+    --color-coral-dim: 253 222 227;
     --color-danger: 214 58 78;
   }
 
   .dark {
-    /* Тёмная тема — премиальный тил на глубоком графите */
+    /* Тёмная тема — премиальный тил на глубоком графите, ярче акценты */
     --color-bg: 7 15 19;
     --color-bg2: 11 22 27;
     --color-panel: 14 27 33;
     --color-panel2: 19 37 44;
     --color-line: 28 51 58;
-    --color-ink: 231 245 243;
-    --color-muted: 145 176 176;
+    --color-ink: 236 250 248;
+    --color-muted: 152 185 185;
     --color-faint: 90 120 122;
-    --color-mint: 52 211 153;
-    --color-mint-dim: 13 45 35;
-    --color-amber: 242 169 60;
-    --color-amber-dim: 53 39 14;
-    --color-violet: 150 142 255;
-    --color-violet-dim: 33 32 66;
-    --color-cyan: 45 212 191;
-    --color-cyan-dim: 11 42 40;
+    --color-mint: 60 235 168;
+    --color-mint-dim: 13 48 38;
+    --color-amber: 255 184 66;
+    --color-amber-dim: 58 42 14;
+    --color-violet: 168 158 255;
+    --color-violet-dim: 37 35 74;
+    --color-cyan: 40 227 205;
+    --color-cyan-dim: 10 46 44;
+    --color-coral: 255 122 138;
+    --color-coral-dim: 48 20 26;
     --color-danger: 255 107 129;
   }
 
@@ -57,14 +61,14 @@
   body {
     @apply bg-bg text-ink font-body antialiased;
     background-image:
-      radial-gradient(circle at 12% -10%, rgb(var(--color-cyan) / 0.07), transparent 45%),
-      radial-gradient(circle at 88% 0%, rgb(var(--color-violet) / 0.05), transparent 40%),
-      radial-gradient(circle at 50% 110%, rgb(var(--color-cyan) / 0.04), transparent 55%);
+      radial-gradient(circle at 12% -10%, rgb(var(--color-cyan) / 0.12), transparent 45%),
+      radial-gradient(circle at 88% 0%, rgb(var(--color-violet) / 0.09), transparent 40%),
+      radial-gradient(circle at 50% 110%, rgb(var(--color-cyan) / 0.07), transparent 55%);
     background-attachment: fixed;
     transition: background-color 0.2s ease, color 0.2s ease;
   }
   ::selection {
-    background: rgb(var(--color-cyan) / 0.2);
+    background: rgb(var(--color-cyan) / 0.28);
     color: rgb(var(--color-ink));
   }
   *:focus-visible {

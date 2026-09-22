@@ -24,7 +24,7 @@ const mono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "BezProblem — Transport Control",
+  title: "BezProblem Sharks — Transport Control",
   description: "Панель учёта велосипедов и самокатов: статусы, ремонт, ключи",
 };
 

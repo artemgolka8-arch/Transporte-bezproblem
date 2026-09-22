@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { LogoStacked } from "@/components/Logo";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
@@ -52,12 +53,7 @@ export function LoginForm() {
         <div className="pointer-events-none absolute -right-10 -top-16 h-40 w-40 rounded-full bg-brandGradient opacity-10 blur-2xl" />
 
         <div className="mb-7 flex flex-col items-center text-center">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/logo-wordmark.png"
-            alt="BezProblem"
-            className="mb-4 h-11 w-auto drop-shadow-md"
-          />
+          <LogoStacked className="mb-4" />
           <div className="label-eyebrow">{t("login_tagline")}</div>
         </div>
 

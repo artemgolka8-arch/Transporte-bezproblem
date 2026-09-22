@@ -8,6 +8,7 @@ import { ROLE_LABEL_KEYS } from "@/lib/roles";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
 import { HeaderControls } from "./HeaderControls";
 import { StatsPanel } from "./StatsPanel";
+import { Logo } from "./Logo";
 
 export function Navbar({
   counts,
@@ -25,18 +26,7 @@ export function Navbar({
     <header className="sticky top-0 z-30 border-b border-line/70 bg-bg/85 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center gap-5 px-5 py-3">
         <Link href="/" className="flex items-center gap-2.5 shrink-0">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/logo.png"
-            alt="BezProblem"
-            className="h-9 w-9 rounded-full border border-cyan/40 shadow-glowCyan object-cover"
-          />
-          <div className="leading-tight">
-            <div className="font-display text-base font-semibold tracking-wide text-ink">
-              Bez<span className="text-cyan">Problem</span>
-            </div>
-            <div className="font-display text-[11px] tracking-wide text-muted -mt-0.5">{t("tagline")}</div>
-          </div>
+          <Logo markSize={30} textClassName="text-[15px]" />
         </Link>
 
         <nav className="ml-auto flex items-center gap-1">
