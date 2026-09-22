@@ -460,6 +460,18 @@ const ru = {
 
   // приглашённые клиенты
   nav_referred_clients: "Приглашённые клиенты",
+
+  // моя команда
+  nav_team: "Моя команда",
+  team_eyebrow: "команда",
+  team_title: "Моя команда",
+  team_page_subtitle: "Здесь отображаются все менеджеры, у которых есть аккаунт.",
+  team_search_placeholder: "Поиск по имени, почте или городу",
+  col_team_name: "Сотрудник",
+  total_team_label: "Всего в команде",
+  team_empty_title: "В команде пока никого нет",
+  team_empty_subtitle: "Менеджеры появятся здесь, как только для них создадут аккаунт",
+
   nav_debtors: "Должники",
   debtors_title: "Должники",
   debtors_search_placeholder: "Поиск по имени, телефону, технике…",
@@ -1031,6 +1043,17 @@ const pl: Dict = {
   telegram_chat_id_placeholder: "np. 123456789",
 
   nav_referred_clients: "Polecone kontakty",
+
+  // mój zespół
+  nav_team: "Mój zespół",
+  team_eyebrow: "zespół",
+  team_title: "Mój zespół",
+  team_page_subtitle: "Tutaj wyświetlani są wszyscy menedżerowie, którzy mają konto.",
+  team_search_placeholder: "Szukaj po imieniu, e-mailu lub mieście",
+  col_team_name: "Pracownik",
+  total_team_label: "Łącznie w zespole",
+  team_empty_title: "W zespole nikogo jeszcze nie ma",
+  team_empty_subtitle: "Menedżerowie pojawią się tutaj, gdy tylko zostanie dla nich utworzone konto",
   nav_debtors: "Dłużnicy",
   debtors_title: "Dłużnicy",
   debtors_search_placeholder: "Szukaj po imieniu, telefonie, pojeździe…",
@@ -1597,6 +1620,17 @@ const uk: Dict = {
   telegram_chat_id_placeholder: "наприклад, 123456789",
 
   nav_referred_clients: "Запрошені клієнти",
+
+  // моя команда
+  nav_team: "Моя команда",
+  team_eyebrow: "команда",
+  team_title: "Моя команда",
+  team_page_subtitle: "Тут відображаються всі менеджери, у яких є акаунт.",
+  team_search_placeholder: "Пошук за іменем, поштою або містом",
+  col_team_name: "Співробітник",
+  total_team_label: "Всього в команді",
+  team_empty_title: "У команді поки що нікого немає",
+  team_empty_subtitle: "Менеджери з'являться тут, щойно для них створять акаунт",
   nav_debtors: "Боржники",
   debtors_title: "Боржники",
   debtors_search_placeholder: "Пошук за іменем, телефоном, технікою…",

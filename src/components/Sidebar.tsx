@@ -76,6 +76,17 @@ function ManagersIcon() {
   );
 }
 
+function TeamIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="9" cy="8" r="3.2" />
+      <path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6" />
+      <circle cx="17.5" cy="8.5" r="2.4" />
+      <path d="M15.5 14.3c2.6.4 4.5 2.6 4.5 5.7" />
+    </svg>
+  );
+}
+
 function UserIcon() {
   return (
     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -113,6 +124,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/", labelKey: "nav_fleet", icon: TruckIcon, exact: true },
   { href: "/clients", labelKey: "nav_clients", icon: UsersIcon },
   { href: "/referred-clients", labelKey: "nav_referred_clients", icon: UserPlusIcon },
+  { href: "/team", labelKey: "nav_team", icon: TeamIcon },
   { href: "/debtors", labelKey: "nav_debtors", icon: DebtorsIcon },
   { href: "/tasks", labelKey: "nav_tasks", icon: TasksIcon },
   { href: "/admin/users", labelKey: "nav_users", icon: ManagersIcon, adminOnly: true },
@@ -157,11 +169,30 @@ export function Sidebar({
       cancelled = true;
     };
   }, []);
+
+  // Счётчик на пункте «Моя команда» — количество менеджеров с аккаунтами
+  const [teamCount, setTeamCount] = useState<number | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/team")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!cancelled && Array.isArray(data)) setTeamCount(data.length);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   // На странице «Приглашённые клиенты» вместо «Transport Control» пишем «BezProblem Ambassador»
   const onReferredPage = pathname === AMBASSADOR_HOME || !!pathname?.startsWith(AMBASSADOR_HOME + "/");
   const tagline = onReferredPage ? AMBASSADOR_BRAND : t("tagline");
   const visibleItems = NAV_ITEMS.filter((item) =>
-    ambassador ? isRestrictedPathAllowed(item.href) : !item.adminOnly || role === "ADMIN"
+    ambassador
+      // Профиль у амбассадора/директора открывается только через виджет с именем внизу,
+      // отдельным пунктом в меню его не дублируем — как на референсном макете.
+      ? item.href !== "/profile" && isRestrictedPathAllowed(item.href)
+      : !item.adminOnly || role === "ADMIN"
   );
 
   function isActive(item: NavItem) {
@@ -182,7 +213,8 @@ export function Sidebar({
         {visibleItems.map((item) => {
           const active = isActive(item);
           const Icon = item.icon;
-          const count = item.href === "/referred-clients" ? referredCount : null;
+          const count =
+            item.href === "/referred-clients" ? referredCount : item.href === "/team" ? teamCount : null;
           return (
             <Link
               key={item.href}
@@ -242,13 +274,12 @@ export function Sidebar({
               <div className="truncate text-sm font-medium text-ink">{userName}</div>
               <div className="truncate text-xs text-muted">{t(ROLE_LABEL_KEYS[role])}</div>
             </div>
-            {!ambassador && <ChevronRightIcon />}
+            <ChevronRightIcon />
           </>
         );
-        // У амбассадора нет доступа к профилю — просто показываем, кто вошёл
-        return ambassador ? (
-          <div className="flex items-center gap-3 border-t border-line/70 px-4 py-3.5">{inner}</div>
-        ) : (
+        // Клик по имени в самом низу сайдбара всегда ведёт в свой профиль —
+        // и у обычных сотрудников, и у амбассадора/директора.
+        return (
           <Link
             href="/profile"
             onClick={onNavigate}

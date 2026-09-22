@@ -1,36 +1,40 @@
+import type { Metadata } from "next";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { isRestrictedRole } from "@/lib/roles";
 import { AppShell } from "@/components/AppShell";
-import { ProfileForm } from "@/components/ProfileForm";
+import { TeamList } from "@/components/TeamList";
 
 export const dynamic = "force-dynamic";
 
-export default async function ProfilePage() {
+export const metadata: Metadata = {
+  title: "Моя команда",
+};
+
+export default async function TeamPage() {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/login");
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
+  const users = await prisma.user.findMany({
+    where: { role: { in: ["ADMIN", "MANAGER", "DIRECTOR"] } },
     select: {
       id: true,
-      email: true,
       name: true,
+      email: true,
       role: true,
-      firstName: true,
-      lastName: true,
       phone: true,
       position: true,
       city: true,
-      telegramChatId: true,
     },
+    orderBy: { name: "asc" },
   });
-  if (!user) redirect("/login");
 
-  const restricted = isRestrictedRole(session.user.role);
-  const vehicles = restricted ? [] : await prisma.vehicle.findMany({ select: { status: true } });
+  // Амбассадору и директору статистику автопарка не показываем (и не отдаём в браузер)
+  const vehicles = isRestrictedRole(session.user.role)
+    ? []
+    : await prisma.vehicle.findMany({ select: { status: true } });
   const counts = {
     AVAILABLE: vehicles.filter((v) => v.status === "AVAILABLE").length,
     WORKSHOP: vehicles.filter((v) => v.status === "WORKSHOP").length,
@@ -43,7 +47,7 @@ export default async function ProfilePage() {
       userName={session.user.name || session.user.email || ""}
       role={session.user.role}
     >
-      <ProfileForm user={user} fleetCounts={restricted ? undefined : counts} />
+      <TeamList members={users} currentUserId={session.user.id} />
     </AppShell>
   );
 }

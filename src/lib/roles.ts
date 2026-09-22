@@ -50,6 +50,12 @@ const STATIC_FILE = /\.(png|jpe?g|gif|svg|webp|ico|woff2?)$/i;
 export function isRestrictedPathAllowed(pathname: string) {
   if (pathname === AMBASSADOR_HOME || pathname.startsWith(AMBASSADOR_HOME + "/")) return true;
   if (pathname === "/api/referred-clients" || pathname.startsWith("/api/referred-clients/")) return true;
+  // «Моя команда» — список менеджеров с аккаунтами, доступен и амбассадору/директору
+  if (pathname === "/team" || pathname.startsWith("/team/")) return true;
+  if (pathname === "/api/team" || pathname.startsWith("/api/team/")) return true;
+  // Свой профиль — доступен всем ролям, включая амбассадора/директора
+  if (pathname === "/profile" || pathname.startsWith("/profile/")) return true;
+  if (pathname === "/api/profile" || pathname.startsWith("/api/profile/")) return true;
   if (pathname.startsWith("/api/auth")) return true;
   if (STATIC_FILE.test(pathname)) return true;
   if (pathname === "/icon" || pathname === "/apple-icon") return true;
