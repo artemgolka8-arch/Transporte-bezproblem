@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   AMBASSADOR_BRAND,
   AMBASSADOR_HOME,
+  canAccessPayroll,
   isRestrictedPathAllowed,
   isRestrictedRole,
   isViewRestrictedRole,
@@ -55,6 +56,16 @@ function ReportsIcon() {
       <rect x="5" y="3.5" width="14" height="17" rx="2" />
       <path d="M9 2.5h6v3H9z" />
       <path d="M8.5 11h7M8.5 14.5h7M8.5 18h4" />
+    </svg>
+  );
+}
+
+function PayrollIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="6.5" width="18" height="11" rx="2" />
+      <circle cx="12" cy="12" r="2.6" />
+      <path d="M6.5 9.5v.01M17.5 14.5v.01" />
     </svg>
   );
 }
@@ -131,6 +142,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/team", labelKey: "nav_team", icon: TeamIcon },
   { href: "/debtors", labelKey: "nav_debtors", icon: DebtorsIcon },
   { href: "/tasks", labelKey: "nav_tasks", icon: TasksIcon },
+  { href: "/payroll", labelKey: "nav_payroll", icon: PayrollIcon },
   { href: "/admin/users", labelKey: "nav_users", icon: ManagersIcon, adminOnly: true },
   { href: "/profile", labelKey: "nav_profile", icon: UserIcon },
 ];
@@ -217,7 +229,7 @@ export function Sidebar({
   // На странице «Приглашённые клиенты» вместо «Transport Control» пишем «BezProblem Ambassador»
   const onReferredPage = pathname === AMBASSADOR_HOME || !!pathname?.startsWith(AMBASSADOR_HOME + "/");
   const tagline = onReferredPage ? AMBASSADOR_BRAND : t("tagline");
-  const visibleItems = NAV_ITEMS.filter((item) =>
+  const visibleItems = NAV_ITEMS.filter((item) => item.href !== "/payroll" || canAccessPayroll(role)).filter((item) =>
     restrictedView
       ? (!ambassador || item.href !== "/profile") && isRestrictedPathAllowed(item.href)
       : !item.adminOnly || role === "ADMIN"

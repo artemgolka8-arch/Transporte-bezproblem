@@ -90,6 +90,47 @@ model User {
   referredClients ReferredClient[] @relation("AmbassadorReferred")
   // Ежедневные отчёты амбассадора о проделанной работе
   reports         Report[]         @relation("ReportAuthor")
+  // Выплаты (зарплаты и бонусы), полученные этим сотрудником (вкладка «Зарплаты и бонусы»)
+  payrollEntries  PayrollEntry[]   @relation("PayrollRecipient")
+}
+
+// Тип выплаты во вкладке «Зарплаты и бонусы»
+enum PayrollKind {
+  SALARY
+  BONUS
+  ADVANCE
+  OTHER
+}
+
+// Как деньги были выданы
+enum PayrollMethod {
+  BANK_ACCOUNT
+  CARD
+  CASH
+}
+
+// Выплата сотруднику: кому, сколько, каким способом и за что.
+// Вкладка доступна только ADMIN и DIRECTOR (см. canAccessPayroll в src/lib/roles.ts).
+model PayrollEntry {
+  id            String        @id @default(cuid())
+  // Получатель из списка сотрудников; null — получатель указан вручную или аккаунт удалён.
+  recipientId   String?
+  recipient     User?         @relation("PayrollRecipient", fields: [recipientId], references: [id], onDelete: SetNull)
+  // Имя получателя на момент выплаты — остаётся в истории, даже если аккаунт удалят
+  recipientName String
+  kind          PayrollKind
+  amount        Float
+  method        PayrollMethod
+  // Номер счёта (для BANK_ACCOUNT) или карты (для CARD)
+  accountNumber String?
+  description   String
+  paidAt        DateTime
+  createdByName String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([recipientId])
+  @@index([paidAt])
 }
 
 // Самооценка амбассадора за день, указывается в конце отчёта

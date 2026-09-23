@@ -1,14 +1,34 @@
 import { NextResponse } from "next/server";
 import { withAuth } from "next-auth/middleware";
-import { AMBASSADOR_HOME, isRestrictedPathAllowed, isViewRestrictedRole } from "@/lib/roles";
+import {
+  AMBASSADOR_HOME,
+  canAccessPayroll,
+  isRestrictedPathAllowed,
+  isViewRestrictedRole,
+} from "@/lib/roles";
 
 export default withAuth(
   function middleware(req) {
     // Сюда попадаем только с валидной сессией (см. authorized ниже).
     // Амбассадора, директора и PR-менеджера пускаем только в разрешённые им разделы
     // (см. isRestrictedPathAllowed).
-    if (isViewRestrictedRole(req.nextauth.token?.role)) {
-      const { pathname } = req.nextUrl;
+    const role = req.nextauth.token?.role;
+    const { pathname } = req.nextUrl;
+
+    // «Зарплаты и бонусы» — только ADMIN и DIRECTOR (для всех остальных ролей закрыто)
+    const isPayrollPath =
+      pathname === "/payroll" ||
+      pathname.startsWith("/payroll/") ||
+      pathname === "/api/payroll" ||
+      pathname.startsWith("/api/payroll/");
+    if (isPayrollPath && !canAccessPayroll(role)) {
+      if (pathname.startsWith("/api/")) {
+        return NextResponse.json({ error: "Недостаточно прав" }, { status: 403 });
+      }
+      return NextResponse.redirect(new URL(isViewRestrictedRole(role) ? AMBASSADOR_HOME : "/", req.url));
+    }
+
+    if (isViewRestrictedRole(role)) {
       if (!isRestrictedPathAllowed(pathname)) {
         if (pathname.startsWith("/api/")) {
           return NextResponse.json({ error: "Недостаточно прав" }, { status: 403 });

@@ -74,6 +74,13 @@ export function canEditPosition(role?: string | null) {
   return role === "ADMIN" || role === "DIRECTOR";
 }
 
+// «Зарплаты и бонусы» — только директор и администратор. Для всех остальных
+// ролей (включая менеджера и PR-менеджера) раздел закрыт полностью: нет в меню,
+// страница и API отдают редирект / 403 (см. middleware.ts и сами обработчики).
+export function canAccessPayroll(role?: string | null) {
+  return role === "ADMIN" || role === "DIRECTOR";
+}
+
 // Ключ перевода для каждой роли — используйте t(ROLE_LABEL_KEYS[role])
 export const ROLE_LABEL_KEYS: Record<Role, TranslationKey> = {
   ADMIN: "role_admin",
@@ -117,6 +124,11 @@ export function isRestrictedPathAllowed(pathname: string) {
   // (создавать задачи им по-прежнему нельзя — это проверяется отдельно, см. canCreateTasks)
   if (pathname === "/tasks" || pathname.startsWith("/tasks/")) return true;
   if (pathname === "/api/tasks" || pathname.startsWith("/api/tasks/")) return true;
+  // «Зарплаты и бонусы» — путь разрешён для ограниченных ролей, потому что директор
+  // относится к ним. Остальных (амбассадор, PR-менеджер) отсекает canAccessPayroll
+  // в middleware и в обработчиках.
+  if (pathname === "/payroll" || pathname.startsWith("/payroll/")) return true;
+  if (pathname === "/api/payroll" || pathname.startsWith("/api/payroll/")) return true;
   if (pathname.startsWith("/api/auth")) return true;
   if (STATIC_FILE.test(pathname)) return true;
   if (pathname === "/icon" || pathname === "/apple-icon") return true;
