@@ -2,7 +2,7 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { isViewRestrictedRole } from "@/lib/roles";
+import { canEditPosition, isViewRestrictedRole } from "@/lib/roles";
 import { AppShell } from "@/components/AppShell";
 import { ProfileForm } from "@/components/ProfileForm";
 
@@ -44,7 +44,11 @@ export default async function ProfilePage() {
       userName={session.user.name || session.user.email || ""}
       role={session.user.role}
     >
-      <ProfileForm user={user} fleetCounts={restricted ? undefined : counts} />
+      <ProfileForm
+        user={user}
+        canEditPosition={canEditPosition(session.user.role)}
+        fleetCounts={restricted ? undefined : counts}
+      />
     </AppShell>
   );
 }

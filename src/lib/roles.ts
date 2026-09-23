@@ -68,6 +68,12 @@ export function isViewRestrictedRole(role?: string | null) {
 // (VIEWER — «Наблюдатель» — в команду не входит.)
 export const TEAM_ROLES: Role[] = ["ADMIN", "MANAGER", "PR_MANAGER", "DIRECTOR", "AMBASSADOR"];
 
+// Менять должность (свою и чужую) могут только директор и администратор.
+// Остальные данные чужого профиля не редактирует никто — там только просмотр.
+export function canEditPosition(role?: string | null) {
+  return role === "ADMIN" || role === "DIRECTOR";
+}
+
 // Ключ перевода для каждой роли — используйте t(ROLE_LABEL_KEYS[role])
 export const ROLE_LABEL_KEYS: Record<Role, TranslationKey> = {
   ADMIN: "role_admin",

@@ -1,28 +1,34 @@
 import type { Metadata } from "next";
 import { getServerSession } from "next-auth";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { isViewRestrictedRole, TEAM_ROLES } from "@/lib/roles";
-import { AppShell } from "@/components/AppShell";
-import { TeamList } from "@/components/TeamList";
 import { avatarVersion } from "@/lib/avatar";
+import { canEditPosition, isViewRestrictedRole, TEAM_ROLES } from "@/lib/roles";
+import { AppShell } from "@/components/AppShell";
+import { TeamMemberProfile } from "@/components/TeamMemberProfile";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Моя команда",
+  title: "Профиль сотрудника",
 };
 
-export default async function TeamPage() {
+export default async function TeamMemberPage({ params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/login");
 
-  const users = await prisma.user.findMany({
-    where: { role: { in: TEAM_ROLES } },
+  // Свой профиль редактируется на обычной странице «Профиль»
+  if (params.id === session.user.id) redirect("/profile");
+
+  const member = await prisma.user.findFirst({
+    where: { id: params.id, role: { in: TEAM_ROLES } },
+    // Telegram Chat ID и прочие приватные поля в чужой профиль не отдаём
     select: {
       id: true,
       name: true,
+      firstName: true,
+      lastName: true,
       email: true,
       role: true,
       phone: true,
@@ -30,18 +36,11 @@ export default async function TeamPage() {
       city: true,
       avatarUrl: true,
     },
-    orderBy: { name: "asc" },
   });
+  if (!member) notFound();
 
-  // Саму картинку в браузер не отдаём (base64 тяжёлый) — только «версию» для URL
-  // /api/team/[id]/avatar, по которому браузер её загрузит и закэширует.
-  const members = users.map(({ avatarUrl, ...u }) => ({
-    ...u,
-    avatarV: avatarUrl ? avatarVersion(avatarUrl) : null,
-  }));
+  const { avatarUrl, ...rest } = member;
 
-  // Амбассадору, директору и PR-менеджеру статистику автопарка не показываем
-  // (и не отдаём в браузер)
   const vehicles = isViewRestrictedRole(session.user.role)
     ? []
     : await prisma.vehicle.findMany({ select: { status: true } });
@@ -57,7 +56,10 @@ export default async function TeamPage() {
       userName={session.user.name || session.user.email || ""}
       role={session.user.role}
     >
-      <TeamList members={members} currentUserId={session.user.id} />
+      <TeamMemberProfile
+        member={{ ...rest, avatarV: avatarUrl ? avatarVersion(avatarUrl) : null }}
+        canEditPosition={canEditPosition(session.user.role)}
+      />
     </AppShell>
   );
 }

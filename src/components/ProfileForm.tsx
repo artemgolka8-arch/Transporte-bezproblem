@@ -78,8 +78,10 @@ function CameraIcon({ small }: { small?: boolean }) {
 export function ProfileForm({
   user,
   fleetCounts,
+  canEditPosition = false,
 }: {
   user: ProfileData;
+  canEditPosition?: boolean;
   fleetCounts?: { AVAILABLE: number; WORKSHOP: number; RENTED: number };
 }) {
   const router = useRouter();
@@ -130,7 +132,8 @@ export function ProfileForm({
         firstName,
         lastName,
         phone,
-        position,
+        // Должность отправляем только тем, кто вправе её менять (директор / администратор)
+        ...(canEditPosition ? { position } : {}),
         city,
         telegramChatId,
         avatarUrl,
@@ -294,8 +297,12 @@ export function ProfileForm({
                 value={position}
                 onChange={(e) => setPosition(e.target.value)}
                 placeholder={t("position_placeholder")}
-                className={FIELD_CLASS}
+                disabled={!canEditPosition}
+                className={`${FIELD_CLASS} ${canEditPosition ? "" : "opacity-60"}`}
               />
+              {!canEditPosition && (
+                <p className="mt-1.5 text-[11px] text-faint">{t("position_admin_only_hint")}</p>
+              )}
             </div>
             <div>
               <label className="mb-1.5 block label-eyebrow">{t("field_city")}</label>

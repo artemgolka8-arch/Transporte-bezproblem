@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { canEditPosition } from "@/lib/roles";
 
 const PROFILE_SELECT = {
   id: true,
@@ -56,7 +57,8 @@ export async function PATCH(req: NextRequest) {
       ...(firstName !== undefined ? { firstName } : {}),
       ...(lastName !== undefined ? { lastName } : {}),
       ...(phone !== undefined ? { phone } : {}),
-      ...(position !== undefined ? { position } : {}),
+      // Должность меняют только директор и администратор — у остальных поле игнорируется
+      ...(position !== undefined && canEditPosition(session.user.role) ? { position } : {}),
       ...(city !== undefined ? { city } : {}),
       ...(telegramChatId !== undefined ? { telegramChatId: telegramChatId?.trim() || null } : {}),
       ...(avatarUrl !== undefined ? { avatarUrl: avatarUrl || null } : {}),

@@ -13,6 +13,7 @@ type TeamMember = {
   phone?: string | null;
   position?: string | null;
   city?: string | null;
+  avatarV?: string | null;
 };
 
 function initials(name: string) {
@@ -145,15 +146,25 @@ export function TeamList({
                   return (
                     <tr
                       key={m.id}
-                      onClick={isSelf ? () => router.push("/profile") : undefined}
-                      className={`border-b border-line/60 transition-colors last:border-0 hover:bg-panel2/40 ${isSelf ? "cursor-pointer" : ""}`}
+                      onClick={() => router.push(isSelf ? "/profile" : `/team/${m.id}`)}
+                      className="cursor-pointer border-b border-line/60 transition-colors last:border-0 hover:bg-panel2/40"
                     >
                       <td className="px-5 py-3.5">
                         <div className="flex items-center gap-3">
-                          <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${avatar.bg} ${avatar.text}`}>
-                            {initials(m.name)}
+                          <span className={`flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full text-xs font-semibold ${avatar.bg} ${avatar.text}`}>
+                            {m.avatarV ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={`/api/team/${m.id}/avatar?v=${m.avatarV}`}
+                                alt=""
+                                loading="lazy"
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              initials(m.name)
+                            )}
                           </span>
-                          <span className={`font-medium ${isSelf ? "text-cyan hover:underline" : "text-ink"}`}>
+                          <span className={`font-medium hover:underline ${isSelf ? "text-cyan" : "text-ink"}`}>
                             {m.name}
                           </span>
                           {m.position && <span className="hidden text-xs text-faint sm:inline">· {m.position}</span>}
