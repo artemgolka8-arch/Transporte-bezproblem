@@ -63,6 +63,11 @@ export function isViewRestrictedRole(role?: string | null) {
   return isRestrictedRole(role) || isPrManager(role);
 }
 
+// Кто отображается в разделе «Моя команда». Список один для всех ролей:
+// администратор, менеджер, PR-менеджер, директор и амбассадор видят друг друга.
+// (VIEWER — «Наблюдатель» — в команду не входит.)
+export const TEAM_ROLES: Role[] = ["ADMIN", "MANAGER", "PR_MANAGER", "DIRECTOR", "AMBASSADOR"];
+
 // Ключ перевода для каждой роли — используйте t(ROLE_LABEL_KEYS[role])
 export const ROLE_LABEL_KEYS: Record<Role, TranslationKey> = {
   ADMIN: "role_admin",

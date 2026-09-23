@@ -36,6 +36,8 @@ type ReportRow = {
   rentLeads: number;
   tiktokVideos: number;
   stories: number;
+  reelsPublished: number;
+  tiktokPublished: number;
   selfRating: ReportRating;
   createdAt: string;
 };
@@ -96,6 +98,16 @@ function TikTokIcon() {
   return (
     <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor">
       <path d="M16.6 3.5c.6 1.9 2 3.2 4 3.5v3a7.3 7.3 0 0 1-4-1.3v6.4a5.9 5.9 0 1 1-5.9-5.9c.3 0 .6 0 .9.1v3.1a2.8 2.8 0 1 0 2 2.7V3.5h3Z" />
+    </svg>
+  );
+}
+
+function ReelsIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3.5" y="3.5" width="17" height="17" rx="4.5" />
+      <path d="M3.8 8.5h16.4M9 3.7l2.6 4.8M14.6 3.7l2.6 4.8" />
+      <path d="m10.5 12.3 3.6 2.2-3.6 2.2Z" fill="currentColor" stroke="none" />
     </svg>
   );
 }
@@ -199,7 +211,7 @@ export function ReportsList({
       ) : (
         <div className="panel overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1080px] text-left text-sm">
+            <table className="w-full min-w-[1240px] text-left text-sm">
               <thead>
                 <tr className="border-b border-line text-muted">
                   {!ambassadorOnly && <th className="px-5 py-3.5 text-xs font-medium text-muted">{t("col_report_author")}</th>}
@@ -208,6 +220,7 @@ export function ReportsList({
                   <th className="px-5 py-3.5 text-xs font-medium text-muted">{t("col_report_partner")}</th>
                   <th className="px-5 py-3.5 text-xs font-medium text-muted">{t("col_report_rent")}</th>
                   <th className="px-5 py-3.5 text-xs font-medium text-muted">{t("col_report_content")}</th>
+                  <th className="px-5 py-3.5 text-xs font-medium text-muted">{t("col_report_published")}</th>
                   <th className="px-5 py-3.5 text-xs font-medium text-muted">{t("col_report_rating")}</th>
                   <th className="px-5 py-3.5 text-xs font-medium text-muted">{t("actions_label")}</th>
                 </tr>
@@ -250,6 +263,20 @@ export function ReportsList({
                           <TikTokIcon />
                           {r.tiktokVideos} / {r.stories}
                         </span>
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <div className="flex flex-col gap-1 whitespace-nowrap text-xs">
+                          <span className="inline-flex items-center gap-1.5 text-ink">
+                            <ReelsIcon />
+                            <span className="text-muted">Reels</span>
+                            <span className="font-medium">{r.reelsPublished}</span>
+                          </span>
+                          <span className="inline-flex items-center gap-1.5 text-ink">
+                            <TikTokIcon />
+                            <span className="text-muted">TikTok</span>
+                            <span className="font-medium">{r.tiktokPublished}</span>
+                          </span>
+                        </div>
                       </td>
                       <td className="px-5 py-3.5">
                         <span className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1 text-[11px] font-medium ${RATING_STYLE[r.selfRating]}`}>
@@ -391,6 +418,14 @@ export function ReportsList({
                 <div className="text-faint">{t("field_report_stories")}</div>
                 <div className="mt-0.5 font-medium text-ink">{detailRow.stories}</div>
               </div>
+              <div className="rounded-lg border border-line bg-bg2 px-3 py-2">
+                <div className="text-faint">{t("field_report_reels_published")}</div>
+                <div className="mt-0.5 font-medium text-ink">{detailRow.reelsPublished}</div>
+              </div>
+              <div className="rounded-lg border border-line bg-bg2 px-3 py-2">
+                <div className="text-faint">{t("field_report_tiktok_published")}</div>
+                <div className="mt-0.5 font-medium text-ink">{detailRow.tiktokPublished}</div>
+              </div>
             </div>
 
             {(admin || detailRow.authorId === currentUserId) && (
@@ -431,6 +466,8 @@ function NewReportModal({
   const [rentLeads, setRentLeads] = useState("");
   const [tiktokVideos, setTiktokVideos] = useState("");
   const [stories, setStories] = useState("");
+  const [reelsPublished, setReelsPublished] = useState("");
+  const [tiktokPublished, setTiktokPublished] = useState("");
   const [selfRating, setSelfRating] = useState<ReportRating>("NORMAL");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -456,6 +493,8 @@ function NewReportModal({
         rentLeads,
         tiktokVideos,
         stories,
+        reelsPublished,
+        tiktokPublished,
         selfRating,
       }),
     });
@@ -522,6 +561,8 @@ function NewReportModal({
           {numberField("field_report_rent_leads", rentLeads, setRentLeads)}
           {numberField("field_report_tiktok_videos", tiktokVideos, setTiktokVideos)}
           {numberField("field_report_stories", stories, setStories)}
+          {numberField("field_report_reels_published", reelsPublished, setReelsPublished)}
+          {numberField("field_report_tiktok_published", tiktokPublished, setTiktokPublished)}
         </div>
 
         <label className="mb-1.5 block label-eyebrow">{t("field_report_self_rating")}</label>

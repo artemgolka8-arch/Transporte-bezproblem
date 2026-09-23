@@ -39,6 +39,7 @@ const ROLE_STYLE: Partial<Record<Role, string>> = {
   ADMIN: "border border-violet/40 bg-violetDim/50 text-violet",
   DIRECTOR: "border border-amber/40 bg-amberDim/50 text-amber",
   MANAGER: "border border-cyan/40 bg-cyanDim/50 text-cyan",
+  PR_MANAGER: "border border-coral/40 bg-coralDim/50 text-coral",
   VIEWER: "border border-line bg-panel2/70 text-muted",
   AMBASSADOR: "border border-mint/40 bg-mintDim/50 text-mint",
 };

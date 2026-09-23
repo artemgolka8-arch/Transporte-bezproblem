@@ -114,6 +114,9 @@ model Report {
   rentLeads      Int          @default(0)
   tiktokVideos   Int          @default(0)
   stories        Int          @default(0)
+  // Сколько рилс / TikTok реально ОПУБЛИКОВАНО за день (отдельно от «снято»)
+  reelsPublished  Int         @default(0)
+  tiktokPublished Int         @default(0)
   selfRating     ReportRating
   createdAt      DateTime     @default(now())
 

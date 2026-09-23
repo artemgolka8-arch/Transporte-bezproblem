@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { isViewRestrictedRole } from "@/lib/roles";
+import { isViewRestrictedRole, TEAM_ROLES } from "@/lib/roles";
 import { AppShell } from "@/components/AppShell";
 import { TeamList } from "@/components/TeamList";
 
@@ -18,7 +18,7 @@ export default async function TeamPage() {
   if (!session) redirect("/login");
 
   const users = await prisma.user.findMany({
-    where: { role: { in: ["ADMIN", "MANAGER", "PR_MANAGER", "DIRECTOR"] } },
+    where: { role: { in: TEAM_ROLES } },
     select: {
       id: true,
       name: true,

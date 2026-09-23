@@ -36,6 +36,8 @@ export async function POST(req: NextRequest) {
     rentLeads,
     tiktokVideos,
     stories,
+    reelsPublished,
+    tiktokPublished,
     selfRating,
   } = body;
 
@@ -67,6 +69,8 @@ export async function POST(req: NextRequest) {
       rentLeads: Math.round(num(rentLeads)),
       tiktokVideos: Math.round(num(tiktokVideos)),
       stories: Math.round(num(stories)),
+      reelsPublished: Math.round(num(reelsPublished)),
+      tiktokPublished: Math.round(num(tiktokPublished)),
       selfRating,
     },
     include: { author: { select: { id: true, name: true } } },

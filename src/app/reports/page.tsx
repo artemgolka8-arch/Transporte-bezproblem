@@ -39,6 +39,8 @@ export default async function ReportsPage() {
     rentLeads: r.rentLeads,
     tiktokVideos: r.tiktokVideos,
     stories: r.stories,
+    reelsPublished: r.reelsPublished,
+    tiktokPublished: r.tiktokPublished,
     selfRating: r.selfRating,
     createdAt: r.createdAt.toISOString(),
   }));
