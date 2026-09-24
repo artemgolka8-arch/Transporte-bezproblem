@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { isAmbassador, isViewRestrictedRole } from "@/lib/roles";
 import { toReportRow } from "@/lib/reports";
+import { toPlanRow } from "@/lib/plans";
 import { AppShell } from "@/components/AppShell";
 import { ReportsList } from "@/components/ReportsList";
 
@@ -29,6 +30,14 @@ export default async function ReportsPage() {
 
   const rows = reports.map(toReportRow);
 
+  // Планы на день (вкладка «Планы»): амбассадор видит только свои, остальные — все
+  const plans = await prisma.plan.findMany({
+    where: ambassadorOnly ? { authorId: session.user.id } : undefined,
+    orderBy: [{ planDate: "desc" }, { createdAt: "desc" }],
+    include: { author: { select: { id: true, name: true } } },
+  });
+  const planRows = plans.map(toPlanRow);
+
   // Амбассадору, директору и PR-менеджеру статистику автопарка не показываем
   // (и не отдаём в браузер)
   const vehicles = isViewRestrictedRole(session.user.role)
@@ -46,7 +55,12 @@ export default async function ReportsPage() {
       userName={session.user.name || session.user.email || ""}
       role={session.user.role}
     >
-      <ReportsList reports={rows} role={session.user.role} currentUserId={session.user.id} />
+      <ReportsList
+        reports={rows}
+        plans={planRows}
+        role={session.user.role}
+        currentUserId={session.user.id}
+      />
     </AppShell>
   );
 }

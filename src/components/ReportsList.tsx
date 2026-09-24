@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { canDeleteAnyReport, canReviewReports, isAmbassador, Role } from "@/lib/roles";
 import type { ReportRow, ReviewStatus } from "@/lib/reports";
+import type { PlanRow } from "@/lib/plans";
+import { PlansPanel } from "./PlansPanel";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
 import { TranslationKey } from "@/lib/i18n/translations";
 
@@ -146,16 +148,21 @@ const PAGE_SIZE = 10;
 
 export function ReportsList({
   reports,
+  plans: initialPlans,
   role,
   currentUserId,
 }: {
   reports: ReportRow[];
+  plans: PlanRow[];
   role: Role;
   currentUserId: string;
 }) {
   const router = useRouter();
   const { t } = useTranslation();
   const [rows, setRows] = useState<ReportRow[]>(reports);
+  const [plans, setPlans] = useState<PlanRow[]>(initialPlans);
+  const [tab, setTab] = useState<"reports" | "plans">("reports");
+  const [planFormOpen, setPlanFormOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [detailRow, setDetailRow] = useState<ReportRow | null>(null);
@@ -181,6 +188,13 @@ export function ReportsList({
     for (const r of rows) counts[r.reviewStatus] += 1;
     return counts;
   }, [rows]);
+
+  const pendingReports = statusCounts.PENDING;
+  const pendingPlans = useMemo(() => plans.filter((p) => p.reviewStatus === "PENDING").length, [plans]);
+
+  function upsertPlan(row: PlanRow) {
+    setPlans((prev) => (prev.some((p) => p.id === row.id) ? prev.map((p) => (p.id === row.id ? row : p)) : [row, ...prev]));
+  }
 
   // Обновляет отчёт в списке (и в открытом окне) после проверки или исправления
   function upsertRow(row: ReportRow) {
@@ -215,15 +229,58 @@ export function ReportsList({
             <p className="mt-1 text-sm text-muted">{t("reports_page_subtitle")}</p>
           </div>
         </div>
-        <button
-          onClick={() => setFormOpen(true)}
-          className="btn-primary whitespace-nowrap rounded-full px-5 py-3 text-sm"
-        >
-          <span className="text-base leading-none">+</span>
-          {t("new_report_btn")}
-        </button>
+        <div className="flex flex-wrap items-center gap-2.5">
+          <button
+            onClick={() => {
+              setTab("plans");
+              setPlanFormOpen(true);
+            }}
+            className="inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-cyan/40 bg-cyanDim/40 px-5 py-3 text-sm font-medium text-cyan transition-colors hover:bg-cyanDim/70"
+          >
+            <span className="text-base leading-none">+</span>
+            {t("add_plan_btn")}
+          </button>
+          <button
+            onClick={() => setFormOpen(true)}
+            className="btn-primary whitespace-nowrap rounded-full px-5 py-3 text-sm"
+          >
+            <span className="text-base leading-none">+</span>
+            {t("new_report_btn")}
+          </button>
+        </div>
       </div>
 
+      {/* переключатель «Отчёты / Планы» */}
+      <div className="mb-5 inline-flex rounded-full border border-line bg-bg2 p-1">
+        {(
+          [
+            { id: "reports", label: t("plans_tab_reports"), pending: pendingReports },
+            { id: "plans", label: t("plans_tab_plans"), pending: pendingPlans },
+          ] as const
+        ).map((tb) => (
+          <button
+            key={tb.id}
+            onClick={() => setTab(tb.id)}
+            className={`inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-medium transition-colors ${
+              tab === tb.id ? "bg-cyan text-white shadow-glowCyan" : "text-muted hover:text-ink"
+            }`}
+          >
+            {tb.label}
+            {canReview && tb.pending > 0 && (
+              <span
+                className={`inline-flex min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-semibold ${
+                  tab === tb.id ? "bg-white/25 text-white" : "bg-amberDim/70 text-amber"
+                }`}
+              >
+                {tb.pending}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {tab === "reports" && (
+        <>
       <div className="mb-5 flex flex-wrap items-center gap-3">
         <div className="relative min-w-[240px] flex-1">
           <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-faint">
@@ -416,6 +473,20 @@ export function ReportsList({
             )}
           </div>
         </div>
+      )}
+        </>
+      )}
+
+      {tab === "plans" && (
+        <PlansPanel
+          plans={plans}
+          role={role}
+          currentUserId={currentUserId}
+          formOpen={planFormOpen}
+          onFormClose={() => setPlanFormOpen(false)}
+          onUpsert={upsertPlan}
+          onRemove={(id) => setPlans((prev) => prev.filter((p) => p.id !== id))}
+        />
       )}
 
       {(formOpen || editRow) && (

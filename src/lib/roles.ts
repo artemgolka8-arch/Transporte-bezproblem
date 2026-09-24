@@ -120,6 +120,8 @@ export function isRestrictedPathAllowed(pathname: string) {
   // «Отчёты» — амбассадор пишет туда ежедневный отчёт о проделанной работе
   if (pathname === "/reports" || pathname.startsWith("/reports/")) return true;
   if (pathname === "/api/reports" || pathname.startsWith("/api/reports/")) return true;
+  // Планы на день живут во вкладке «Отчёты»
+  if (pathname === "/api/plans" || pathname.startsWith("/api/plans/")) return true;
   // «Моя команда» — список менеджеров с аккаунтами, доступен и амбассадору/директору
   if (pathname === "/team" || pathname.startsWith("/team/")) return true;
   if (pathname === "/api/team" || pathname.startsWith("/api/team/")) return true;

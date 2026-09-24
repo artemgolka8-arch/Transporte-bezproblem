@@ -90,6 +90,8 @@ model User {
   referredClients ReferredClient[] @relation("AmbassadorReferred")
   // Ежедневные отчёты амбассадора о проделанной работе
   reports         Report[]         @relation("ReportAuthor")
+  // Планы на следующий день, которые пользователь (амбассадор) отправил на проверку
+  plans           Plan[]           @relation("PlanAuthor")
   // Выплаты (зарплаты и бонусы), полученные этим сотрудником (вкладка «Зарплаты и бонусы»)
   payrollEntries  PayrollEntry[]   @relation("PayrollRecipient")
 }
@@ -170,6 +172,39 @@ model Report {
   createdAt      DateTime     @default(now())
 
   @@index([authorId])
+}
+
+// План работы на день (вкладка «Отчёты» → «Планы»): амбассадор пишет, что планирует
+// сделать в выбранную дату и сколько часов будет работать; PR-менеджер, директор
+// или администратор подтверждает, не подтверждает (с причиной) или предлагает
+// что-то изменить / добавить.
+model Plan {
+  id             String           @id @default(cuid())
+  authorId       String
+  author         User             @relation("PlanAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  // На какую дату построен план (хранится как полночь UTC выбранного дня)
+  planDate       DateTime
+  description    String
+  plannedHours   Float
+  reviewStatus   PlanReviewStatus @default(PENDING)
+  // Причина отказа или предложение проверяющего (что изменить / добавить)
+  reviewComment  String?
+  reviewedById   String?
+  reviewedByName String?
+  reviewedAt     DateTime?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  @@index([authorId])
+  @@index([planDate])
+}
+
+enum PlanReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  // «Добавить» — проверяющий предложил что-то изменить или добавить в плане
+  SUGGESTION
 }
 
 enum ReportReviewStatus {
