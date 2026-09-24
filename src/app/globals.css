@@ -210,13 +210,54 @@
     }
   }
 
-  /* На телефоне даём окну больше воздуха по бокам и учитываем чёлку/шторку iOS */
+  /* Чуть меньше внешних отступов на узком экране у обычных (не sheet) модалок */
   @media (max-width: 640px) {
     .modal-overlay {
       padding: 0.625rem;
       padding-top: max(0.625rem, env(safe-area-inset-top));
       padding-bottom: max(0.625rem, env(safe-area-inset-bottom));
+    }
+  }
+
+  /* Длинная форма внутри модалки на телефоне: скроллится только средняя часть,
+     а шапка с крестиком и кнопка "Сохранить" всегда остаются на виду —
+     не нужно скроллить весь диалог, чтобы найти кнопку отправки. Включается
+     через <Modal sheet> — см. NewReportModal и т.п. */
+  .modal-sheet {
+    display: flex;
+    flex-direction: column;
+    max-height: 85vh;
+  }
+  .modal-sheet-header {
+    flex: none;
+  }
+  .modal-sheet-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+  .modal-sheet-footer {
+    flex: none;
+  }
+  @media (max-width: 640px) {
+    .modal-overlay--sheet {
+      padding: 0;
       align-items: flex-end;
+    }
+    .modal-overlay--sheet .modal-sheet {
+      width: 100%;
+      max-width: 100%;
+      max-height: 92dvh;
+      max-height: 92vh;
+      border-radius: 1.1rem 1.1rem 0 0;
+    }
+    .modal-overlay--sheet .modal-sheet-header {
+      padding-top: max(1.1rem, env(safe-area-inset-top));
+    }
+    .modal-overlay--sheet .modal-sheet-footer {
+      padding-bottom: max(1.1rem, env(safe-area-inset-bottom));
     }
   }
 

@@ -20,11 +20,16 @@ export function Modal({
   children,
   backdropClose = false,
   labelledBy,
+  sheet = false,
 }: {
   onClose?: () => void;
   children: React.ReactNode;
   backdropClose?: boolean;
   labelledBy?: string;
+  /** Длинные формы на телефоне: окно превращается в шторку снизу с
+   *  независимым скроллом середины — см. .modal-sheet-* классы в globals.css.
+   *  На десктопе выглядит как обычное центрированное окно. */
+  sheet?: boolean;
 }) {
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
@@ -58,7 +63,7 @@ export function Modal({
 
   return (
     <div
-      className="modal-overlay"
+      className={`modal-overlay${sheet ? " modal-overlay--sheet" : ""}`}
       role="dialog"
       aria-modal="true"
       aria-labelledby={labelledBy}

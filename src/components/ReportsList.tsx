@@ -834,79 +834,85 @@ function NewReportModal({
   );
 
   return (
-    <Modal onClose={onClose}>
-      
-      <form onSubmit={submit} className="panel w-full max-w-lg p-6 animate-rise">
-        <div className="mb-5 flex items-center justify-between">
+    <Modal onClose={onClose} sheet>
+      <form onSubmit={submit} className="modal-sheet panel w-full max-w-lg animate-rise">
+        <div className="modal-sheet-header flex items-center justify-between border-b border-line px-6 py-4">
           <h2 className="font-display text-lg font-semibold text-ink">
             {editing ? t("edit_report_title") : t("new_report_title")}
           </h2>
-          <button type="button" onClick={onClose} className="text-muted hover:text-ink">
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={t("close")}
+            className="tap-target -mr-2 inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted transition-colors hover:bg-panel2 hover:text-ink"
+          >
             ✕
           </button>
         </div>
 
-        <label className="mb-1 block label-eyebrow">{t("field_report_date")}</label>
-        <input
-          required
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          className="mb-4 w-full rounded-lg border border-line bg-bg2 px-3 py-2 text-sm text-ink outline-none focus:border-cyan/50"
-        />
+        <div className="modal-sheet-body px-6 py-4">
+          <label className="mb-1 block label-eyebrow">{t("field_report_date")}</label>
+          <input
+            required
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="mb-4 w-full rounded-lg border border-line bg-bg2 px-3 py-2 text-sm text-ink outline-none focus:border-cyan/50"
+          />
 
-        <label className="mb-1 block label-eyebrow">{t("field_report_description")}</label>
-        <textarea
-          required
-          autoFocus
-          rows={3}
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder={t("report_description_placeholder")}
-          className="mb-4 w-full resize-none rounded-lg border border-line bg-bg2 px-3 py-2 text-sm text-ink outline-none focus:border-cyan/50"
-        />
+          <label className="mb-1 block label-eyebrow">{t("field_report_description")}</label>
+          <textarea
+            required
+            autoFocus
+            rows={3}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder={t("report_description_placeholder")}
+            className="mb-4 w-full resize-none rounded-lg border border-line bg-bg2 px-3 py-2 text-sm text-ink outline-none focus:border-cyan/50"
+          />
 
-        <div className="mb-4 grid grid-cols-2 gap-3">
-          {numberField("field_report_hours", hoursWorked, setHoursWorked)}
-          {numberField("field_report_partner_visits", partnerVisits, setPartnerVisits)}
-          {numberField("field_report_rent_visits", rentVisits, setRentVisits)}
-          {numberField("field_report_partner_leads", partnerLeads, setPartnerLeads)}
-          {numberField("field_report_rent_leads", rentLeads, setRentLeads)}
-          {numberField("field_report_tiktok_videos", tiktokVideos, setTiktokVideos)}
-          {numberField("field_report_stories", stories, setStories)}
-          {numberField("field_report_reels_published", reelsPublished, setReelsPublished)}
-          {numberField("field_report_tiktok_published", tiktokPublished, setTiktokPublished)}
-        </div>
-
-        <label className="mb-1.5 block label-eyebrow">{t("field_report_self_rating")}</label>
-        <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
-          {RATINGS.map((r) => (
-            <button
-              key={r}
-              type="button"
-              onClick={() => setSelfRating(r)}
-              className={`rounded-lg border px-2.5 py-2 text-xs font-medium transition-colors ${
-                selfRating === r
-                  ? RATING_STYLE[r]
-                  : "border-line bg-bg2 text-muted hover:border-cyan/30 hover:text-ink"
-              }`}
-            >
-              {t(RATING_LABEL_KEYS[r])}
-            </button>
-          ))}
-        </div>
-
-        {error && (
-          <div className="mb-4 rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-xs text-danger">
-            {error}
+          <div className="mb-4 grid grid-cols-2 gap-3">
+            {numberField("field_report_hours", hoursWorked, setHoursWorked)}
+            {numberField("field_report_partner_visits", partnerVisits, setPartnerVisits)}
+            {numberField("field_report_rent_visits", rentVisits, setRentVisits)}
+            {numberField("field_report_partner_leads", partnerLeads, setPartnerLeads)}
+            {numberField("field_report_rent_leads", rentLeads, setRentLeads)}
+            {numberField("field_report_tiktok_videos", tiktokVideos, setTiktokVideos)}
+            {numberField("field_report_stories", stories, setStories)}
+            {numberField("field_report_reels_published", reelsPublished, setReelsPublished)}
+            {numberField("field_report_tiktok_published", tiktokPublished, setTiktokPublished)}
           </div>
-        )}
 
-        <button type="submit" disabled={loading} className="btn-primary w-full py-2.5 text-sm">
-          {loading ? t("creating") : editing ? t("report_resubmit_btn") : t("create")}
-        </button>
+          <label className="mb-1.5 block label-eyebrow">{t("field_report_self_rating")}</label>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {RATINGS.map((r) => (
+              <button
+                key={r}
+                type="button"
+                onClick={() => setSelfRating(r)}
+                className={`rounded-lg border px-2.5 py-2 text-xs font-medium transition-colors ${
+                  selfRating === r
+                    ? RATING_STYLE[r]
+                    : "border-line bg-bg2 text-muted hover:border-cyan/30 hover:text-ink"
+                }`}
+              >
+                {t(RATING_LABEL_KEYS[r])}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="modal-sheet-footer border-t border-line px-6 py-4">
+          {error && (
+            <div className="mb-3 rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-xs text-danger">
+              {error}
+            </div>
+          )}
+          <button type="submit" disabled={loading} className="btn-primary w-full py-2.5 text-sm">
+            {loading ? t("creating") : editing ? t("report_resubmit_btn") : t("create")}
+          </button>
+        </div>
       </form>
-      
     </Modal>
   );
 }
