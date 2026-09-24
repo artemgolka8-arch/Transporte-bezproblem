@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { canCreateTasks } from "@/lib/roles";
+import { createNotification } from "@/lib/notifications";
 
 const TASK_INCLUDE = {
   creator: { select: { id: true, name: true } },
@@ -67,6 +68,17 @@ export async function POST(req: NextRequest) {
     },
     include: TASK_INCLUDE,
   });
+
+  // Уведомляем исполнителя о новой задаче (если он назначил её не сам себе)
+  if (finalAssigneeId !== session.user.id) {
+    await createNotification({
+      userId: finalAssigneeId,
+      type: "TASK_ASSIGNED",
+      title: "Новая задача",
+      body: title.trim(),
+      link: "/tasks",
+    });
+  }
 
   return NextResponse.json(task, { status: 201 });
 }

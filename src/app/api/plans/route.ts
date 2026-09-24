@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { isAmbassador } from "@/lib/roles";
 import { parsePlanInput, toPlanRow } from "@/lib/plans";
+import { notifyReviewers } from "@/lib/notifications";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -31,5 +32,14 @@ export async function POST(req: NextRequest) {
     data: { authorId: session.user.id, ...parsed.data },
     include: { author: { select: { id: true, name: true } } },
   });
+
+  // Уведомляем проверяющих (PR-менеджер, директор, администратор) о новом плане
+  await notifyReviewers(session.user.id, {
+    type: "PLAN_SUBMITTED",
+    title: "Новый план на проверку",
+    body: session.user.name || session.user.email || "",
+    link: "/reports",
+  });
+
   return NextResponse.json(toPlanRow(plan), { status: 201 });
 }

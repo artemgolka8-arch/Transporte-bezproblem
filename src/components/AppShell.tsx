@@ -8,6 +8,7 @@ import { LANGUAGES } from "@/lib/i18n/translations";
 import { useTheme } from "@/lib/theme/ThemeProvider";
 import type { Role } from "@/lib/roles";
 import { Sidebar } from "./Sidebar";
+import { NotificationsBell } from "./NotificationsBell";
 
 function MenuIcon() {
   return (
@@ -55,15 +56,6 @@ function SunIcon() {
     <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
       <circle cx="12" cy="12" r="4" />
       <path d="M12 2.5v2.2M12 19.3v2.2M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6" />
-    </svg>
-  );
-}
-
-function BellIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M6 10a6 6 0 0 1 12 0c0 3.4 1 5 1.6 5.8H4.4C5 15 6 13.4 6 10Z" />
-      <path d="M9.5 18.5a2.5 2.5 0 0 0 5 0" />
     </svg>
   );
 }
@@ -201,10 +193,7 @@ export function AppShell({
                 {isDark ? <SunIcon /> : <MoonIcon />}
               </button>
 
-              <span className="tap-target relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-line text-muted transition-colors hover:border-cyan/40 hover:text-cyan">
-                <BellIcon />
-                <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full border border-panel bg-coral" />
-              </span>
+              <NotificationsBell />
 
               <button
                 onClick={() => signOut({ callbackUrl: "/login" })}

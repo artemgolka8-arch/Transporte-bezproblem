@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { isAmbassador } from "@/lib/roles";
 import { parseReportInput, toReportRow } from "@/lib/reports";
+import { notifyReviewers } from "@/lib/notifications";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -33,6 +34,14 @@ export async function POST(req: NextRequest) {
   const report = await prisma.report.create({
     data: { authorId: session.user.id, ...parsed.data },
     include: { author: { select: { id: true, name: true } } },
+  });
+
+  // Уведомляем проверяющих (PR-менеджер, директор, администратор) о новом отчёте
+  await notifyReviewers(session.user.id, {
+    type: "REPORT_SUBMITTED",
+    title: "Новый отчёт на проверку",
+    body: session.user.name || session.user.email || "",
+    link: "/reports",
   });
 
   return NextResponse.json(toReportRow(report), { status: 201 });

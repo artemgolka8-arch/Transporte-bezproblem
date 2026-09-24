@@ -128,6 +128,8 @@ export function isRestrictedPathAllowed(pathname: string) {
   // Свой профиль — доступен всем ролям, включая амбассадора/директора
   if (pathname === "/profile" || pathname.startsWith("/profile/")) return true;
   if (pathname === "/api/profile" || pathname.startsWith("/api/profile/")) return true;
+  // Уведомления (колокольчик в шапке) — доступны всем ролям
+  if (pathname === "/api/notifications" || pathname.startsWith("/api/notifications/")) return true;
   // «Задачи» — амбассадор и директор получают задачи от PR Manager и должны их видеть
   // (создавать задачи им по-прежнему нельзя — это проверяется отдельно, см. canCreateTasks)
   if (pathname === "/tasks" || pathname.startsWith("/tasks/")) return true;

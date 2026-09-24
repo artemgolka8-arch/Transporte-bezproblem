@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { createNotification } from "@/lib/notifications";
 
 const TASK_INCLUDE = {
   creator: { select: { id: true, name: true } },
@@ -56,6 +57,16 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       },
       include: TASK_INCLUDE,
     });
+    // Уведомляем автора задачи, что исполнитель отметил её выполненной / вернул в работу
+    if (task.creatorId !== session.user.id) {
+      await createNotification({
+        userId: task.creatorId,
+        type: "TASK_DONE",
+        title: done ? "Задача выполнена" : "Задача возвращена в работу",
+        body: task.title,
+        link: "/tasks",
+      });
+    }
     return NextResponse.json(updated);
   }
 
@@ -86,6 +97,16 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       },
       include: TASK_INCLUDE,
     });
+    // Уведомляем автора задачи, что исполнитель отметил её невыполненной
+    if (task.creatorId !== session.user.id) {
+      await createNotification({
+        userId: task.creatorId,
+        type: "TASK_DONE",
+        title: "Задача отмечена невыполненной",
+        body: task.title,
+        link: "/tasks",
+      });
+    }
     return NextResponse.json(updated);
   }
 
@@ -132,6 +153,16 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       },
       include: TASK_INCLUDE,
     });
+    // Уведомляем нового исполнителя, что задачу передали ему
+    if (toUserId !== session.user.id) {
+      await createNotification({
+        userId: toUserId,
+        type: "TASK_ASSIGNED",
+        title: "Вам передали задачу",
+        body: task.title,
+        link: "/tasks",
+      });
+    }
     return NextResponse.json(updated);
   }
 

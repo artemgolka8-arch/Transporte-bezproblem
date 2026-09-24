@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { canReviewReports } from "@/lib/roles";
 import { toReportRow } from "@/lib/reports";
+import { createNotification } from "@/lib/notifications";
 
 // Проверка отчёта: подтвердить (APPROVED) или не подтвердить (REJECTED).
 // Не подтверждая, проверяющий обязан написать, что не так и что нужно изменить.
@@ -47,5 +48,15 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     },
     include: { author: { select: { id: true, name: true } } },
   });
+
+  // Уведомляем автора отчёта о результате проверки
+  await createNotification({
+    userId: report.authorId,
+    type: "REPORT_REVIEWED",
+    title: decision === "APPROVED" ? "Отчёт подтверждён" : "Отчёт не подтверждён",
+    body: decision === "REJECTED" ? comment : null,
+    link: "/reports",
+  });
+
   return NextResponse.json(toReportRow(updated));
 }

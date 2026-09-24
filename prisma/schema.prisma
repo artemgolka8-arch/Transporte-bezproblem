@@ -94,6 +94,41 @@ model User {
   plans           Plan[]           @relation("PlanAuthor")
   // Выплаты (зарплаты и бонусы), полученные этим сотрудником (вкладка «Зарплаты и бонусы»)
   payrollEntries  PayrollEntry[]   @relation("PayrollRecipient")
+  // Уведомления в колокольчике (задачи, проверка отчётов/планов и т.д.)
+  notifications   Notification[]
+}
+
+// Тип события в колокольчике уведомлений (см. src/lib/notifications.ts)
+enum NotificationType {
+  // Амбассадору поставили задачу (или передали на него существующую)
+  TASK_ASSIGNED
+  // Амбассадор отправил отчёт за день — уходит PR-менеджеру/директору/администратору
+  REPORT_SUBMITTED
+  // Отчёт амбассадора подтверждён или не подтверждён
+  REPORT_REVIEWED
+  // Амбассадор отправил план на день — уходит PR-менеджеру/директору/администратору
+  PLAN_SUBMITTED
+  // План амбассадора подтверждён, не подтверждён или получил предложение изменить
+  PLAN_REVIEWED
+  // Задачу отметили выполненной или невыполненной — уходит автору задачи
+  TASK_DONE
+}
+
+// Уведомление в колокольчике (иконка в шапке). Один получатель на запись.
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType
+  title     String
+  body      String?
+  // Куда вести при клике (например, /tasks или /reports)
+  link      String?
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  @@index([userId, isRead])
+  @@index([userId, createdAt])
 }
 
 // Тип выплаты во вкладке «Зарплаты и бонусы»

@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { canReviewReports } from "@/lib/roles";
 import { toPlanRow } from "@/lib/plans";
+import { createNotification } from "@/lib/notifications";
 
 // Проверка плана: подтвердить (APPROVED), не подтвердить (REJECTED — с причиной)
 // или добавить предложение (SUGGESTION — что изменить / добавить в плане).
@@ -49,5 +50,17 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     },
     include: { author: { select: { id: true, name: true } } },
   });
+
+  // Уведомляем автора плана о результате проверки
+  const reviewTitle =
+    decision === "APPROVED" ? "План подтверждён" : decision === "REJECTED" ? "План не подтверждён" : "Есть предложение по плану";
+  await createNotification({
+    userId: plan.authorId,
+    type: "PLAN_REVIEWED",
+    title: reviewTitle,
+    body: decision === "APPROVED" ? null : comment,
+    link: "/reports",
+  });
+
   return NextResponse.json(toPlanRow(updated));
 }

@@ -817,6 +817,12 @@ const ru = {
   telegram_error_generic: "Не удалось загрузить данные",
   telegram_no_tasks: "Задач нет",
   telegram_open_site: "Открыть сайт",
+
+  // Уведомления (колокольчик в шапке)
+  notifications_title: "Уведомления",
+  notifications_empty: "Пока нет уведомлений",
+  notifications_mark_all: "Прочитать все",
+  notifications_loading: "Загрузка…",
 } as const;
 
 export type TranslationKey = keyof typeof ru;
@@ -1604,6 +1610,11 @@ const pl: Dict = {
   telegram_error_generic: "Nie udało się załadować danych",
   telegram_no_tasks: "Brak zadań",
   telegram_open_site: "Otwórz stronę",
+
+  notifications_title: "Powiadomienia",
+  notifications_empty: "Brak powiadomień",
+  notifications_mark_all: "Oznacz wszystkie jako przeczytane",
+  notifications_loading: "Ładowanie…",
 };
 
 const uk: Dict = {
@@ -2388,6 +2399,11 @@ const uk: Dict = {
   telegram_error_generic: "Не вдалося завантажити дані",
   telegram_no_tasks: "Завдань немає",
   telegram_open_site: "Відкрити сайт",
+
+  notifications_title: "Сповіщення",
+  notifications_empty: "Поки немає сповіщень",
+  notifications_mark_all: "Прочитати всі",
+  notifications_loading: "Завантаження…",
 };
 
 export const translations: Record<Lang, Dict> = { ru, pl, uk };
