@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
@@ -20,6 +20,19 @@ const mono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "BezProblem Sharks — Transport Control",
   description: "Панель учёта велосипедов и самокатов: статусы, ремонт, ключи",
+};
+
+// Явный viewport: корректный масштаб на телефоне, поддержка safe-area (чёлка/шторка iOS),
+// разрешаем пользователю зумить руками (доступность), но убираем случайный «прыжок» масштаба.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f4f6f9" },
+    { media: "(prefers-color-scheme: dark)", color: "#0c1016" },
+  ],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

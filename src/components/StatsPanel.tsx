@@ -96,7 +96,7 @@ export function StatsPanel({
 
       {open && (
         <div
-          className={`animate-rise scrollbar-thin panel z-40 mt-2 max-h-[70vh] w-[340px] overflow-y-auto p-4 ${
+          className={`animate-rise scrollbar-thin panel z-40 mt-2 max-h-[70vh] w-[340px] max-w-[calc(100vw-2rem)] overflow-y-auto p-4 ${
             sidebar ? "absolute left-2 top-full" : "absolute right-0 top-full"
           }`}
         >

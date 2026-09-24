@@ -17,6 +17,14 @@ function MenuIcon() {
   );
 }
 
+function CloseIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6 6l12 12M18 6 6 18" />
+    </svg>
+  );
+}
+
 function GlobeIcon() {
   return (
     <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -120,35 +128,46 @@ export function AppShell({
       {mobileOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
           <div className="absolute inset-0 bg-slate-950/55" onClick={() => setMobileOpen(false)} />
-          <div className="absolute left-0 top-0 h-full animate-rise">
-            <Sidebar counts={counts} userName={userName} role={role} onNavigate={() => setMobileOpen(false)} />
+          <div className="absolute left-0 top-0 h-full animate-rise safe-top safe-bottom">
+            <div className="relative h-full">
+              {/* Крупный крестик — закрыть можно тапом и здесь, не только по затемнённому фону */}
+              <button
+                type="button"
+                onClick={() => setMobileOpen(false)}
+                aria-label="Закрыть меню"
+                className="tap-target absolute right-2 top-2 z-10 inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted transition-colors hover:bg-panel2 hover:text-ink"
+              >
+                <CloseIcon />
+              </button>
+              <Sidebar counts={counts} userName={userName} role={role} onNavigate={() => setMobileOpen(false)} />
+            </div>
           </div>
         </div>
       )}
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 border-b border-line bg-panel">
-          <div className="flex h-14 items-center gap-3 px-5">
+        <header className="safe-top sticky top-0 z-30 border-b border-line bg-panel">
+          <div className="flex h-14 items-center gap-2 px-3 sm:gap-3 sm:px-5">
             <button
               type="button"
               onClick={() => setMobileOpen(true)}
-              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-line text-muted transition-colors hover:border-cyan/40 hover:text-cyan lg:hidden"
+              className="tap-target inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-line text-muted transition-colors hover:border-cyan/40 hover:text-cyan lg:hidden"
               aria-label="Menu"
             >
               <MenuIcon />
             </button>
 
-            <div className="font-display text-[15px] font-semibold text-ink">{title}</div>
+            <div className="min-w-0 flex-1 truncate font-display text-[15px] font-semibold text-ink sm:flex-initial">{title}</div>
 
-            <div className="ml-auto flex items-center gap-2">
+            <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
               <div className="relative">
                 <button
                   type="button"
                   onClick={() => setLangOpen((v) => !v)}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-panel px-3 py-1.5 text-xs font-medium text-ink transition-colors hover:border-cyan/40 hover:text-cyan"
+                  className="tap-target inline-flex items-center gap-1 rounded-lg border border-line bg-panel px-2 py-1.5 text-xs font-medium text-ink transition-colors hover:border-cyan/40 hover:text-cyan sm:gap-1.5 sm:px-3"
                 >
                   <GlobeIcon />
-                  {lang.toUpperCase()}
+                  <span className="hidden xs:inline">{lang.toUpperCase()}</span>
                   <ChevronDownIcon />
                 </button>
                 {langOpen && (
@@ -161,7 +180,7 @@ export function AppShell({
                           setLang(l.code);
                           setLangOpen(false);
                         }}
-                        className={`block w-full rounded-lg px-3 py-1.5 text-left text-sm transition-colors ${
+                        className={`block w-full rounded-lg px-3 py-2 text-left text-sm transition-colors ${
                           lang === l.code ? "bg-cyanDim/70 text-cyan font-medium" : "text-muted hover:bg-panel2/70 hover:text-ink"
                         }`}
                       >
@@ -177,28 +196,30 @@ export function AppShell({
                 onClick={toggleTheme}
                 title={isDark ? t("theme_light") : t("theme_dark")}
                 aria-label={isDark ? t("theme_light") : t("theme_dark")}
-                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-line text-muted transition-colors hover:border-cyan/40 hover:text-cyan"
+                className="tap-target inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-line text-muted transition-colors hover:border-cyan/40 hover:text-cyan"
               >
                 {isDark ? <SunIcon /> : <MoonIcon />}
               </button>
 
-              <span className="relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-line text-muted transition-colors hover:border-cyan/40 hover:text-cyan">
+              <span className="tap-target relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-line text-muted transition-colors hover:border-cyan/40 hover:text-cyan">
                 <BellIcon />
                 <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full border border-panel bg-coral" />
               </span>
 
               <button
                 onClick={() => signOut({ callbackUrl: "/login" })}
-                className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg border border-line bg-panel px-3.5 py-1.5 text-xs font-medium text-ink transition-colors hover:border-danger/40 hover:text-danger"
+                title={t("sign_out")}
+                aria-label={t("sign_out")}
+                className="tap-target inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg border border-line bg-panel px-2.5 py-1.5 text-xs font-medium text-ink transition-colors hover:border-danger/40 hover:text-danger sm:px-3.5"
               >
                 <LogoutIcon />
-                {t("sign_out")}
+                <span className="hidden sm:inline">{t("sign_out")}</span>
               </button>
             </div>
           </div>
         </header>
 
-        <main className="flex-1">{children}</main>
+        <main className="flex-1 safe-bottom">{children}</main>
       </div>
     </div>
   );

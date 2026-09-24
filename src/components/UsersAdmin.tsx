@@ -64,7 +64,8 @@ export function UsersAdmin({ users, currentUserId }: { users: UserRow[]; current
       </div>
 
       <div className="panel overflow-hidden">
-        <table className="w-full text-left text-sm">
+        <div className="overflow-x-auto table-scroll">
+        <table className="w-full min-w-[560px] text-left text-sm">
           <thead>
             <tr className="border-b border-line text-muted">
               <th className="px-5 py-3 font-normal label-eyebrow">{t("col_name")}</th>
@@ -121,6 +122,7 @@ export function UsersAdmin({ users, currentUserId }: { users: UserRow[]; current
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       {formOpen && (

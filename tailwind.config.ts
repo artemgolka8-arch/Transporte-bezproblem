@@ -11,6 +11,10 @@ const config: Config = {
   content: ["./src/**/*.{js,ts,jsx,tsx,mdx}"],
   theme: {
     extend: {
+      // Доп. точка останова для самых узких телефонов (iPhone SE и т.п.)
+      screens: {
+        xs: "400px",
+      },
       colors: {
         bg: withOpacity("--color-bg"),
         bg2: withOpacity("--color-bg2"),

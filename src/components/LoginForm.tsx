@@ -34,8 +34,8 @@ export function LoginForm() {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-bg px-4">
-      <div className="absolute top-4 right-4 z-10">
+    <div className="safe-top safe-bottom relative flex min-h-screen items-center justify-center bg-bg px-4 py-8">
+      <div className="safe-top absolute top-4 right-4 z-10">
         <HeaderControls />
       </div>
 

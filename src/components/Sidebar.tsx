@@ -241,7 +241,7 @@ export function Sidebar({
   }
 
   return (
-    <div className="flex h-full w-[264px] shrink-0 flex-col border-r border-line bg-panel">
+    <div className="flex h-full w-[85vw] max-w-[264px] shrink-0 flex-col border-r border-line bg-panel lg:w-[264px]">
       <Link href={restrictedView ? AMBASSADOR_HOME : "/"} onClick={onNavigate} className="flex items-center px-5 pb-2 pt-5">
         <Logo markSize={26} textClassName="text-[15px]" />
       </Link>
@@ -311,7 +311,7 @@ export function Sidebar({
           <Link
             href="/profile"
             onClick={onNavigate}
-            className="flex items-center gap-3 border-t border-line px-4 py-3.5 transition-colors hover:bg-panel2"
+            className="safe-bottom flex items-center gap-3 border-t border-line px-4 py-3.5 transition-colors hover:bg-panel2"
           >
             {inner}
           </Link>

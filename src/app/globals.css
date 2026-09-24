@@ -58,6 +58,36 @@
   html.dark {
     color-scheme: dark;
   }
+
+  /* ===== Мобильная адаптация: база ===== */
+
+  /* iOS не увеличивает шрифт сам, но страница не должна ехать вбок из-за
+     случайного переполнения ширины (широкие таблицы, длинные слова и т.п.) */
+  html, body {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  /* Не даём Safari произвольно увеличивать текст при повороте экрана */
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  /* Убираем серую вспышку при тапе и 300мс задержку перед реакцией на тап */
+  a, button, input, select, textarea, [role="button"] {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  /* Safari на iPhone зумит страницу при фокусе на поле, если шрифт < 16px —
+     на телефоне держим инпуты/селекты/textarea не мельче 16px, вне зависимости
+     от того, какой text-* класс им задан в компоненте. */
+  @media (max-width: 640px) {
+    input, select, textarea {
+      font-size: 16px !important;
+    }
+  }
   body {
     @apply bg-bg text-ink font-body antialiased;
     font-feature-settings: "cv11", "ss01";
@@ -177,6 +207,49 @@
   @supports (align-items: safe center) {
     .modal-overlay {
       align-items: safe center;
+    }
+  }
+
+  /* На телефоне даём окну больше воздуха по бокам и учитываем чёлку/шторку iOS */
+  @media (max-width: 640px) {
+    .modal-overlay {
+      padding: 0.625rem;
+      padding-top: max(0.625rem, env(safe-area-inset-top));
+      padding-bottom: max(0.625rem, env(safe-area-inset-bottom));
+      align-items: flex-end;
+    }
+  }
+
+  /* Горизонтальный скролл широких таблиц: инерционная прокрутка на iOS +
+     мягкое затемнение по краям, если есть что скроллить дальше. Класс
+     вешается на тот же div.overflow-x-auto, что оборачивает <table>. */
+  .table-scroll {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+  }
+  @media (max-width: 1024px) {
+    .table-scroll {
+      -webkit-mask-image: linear-gradient(to right, transparent 0, black 14px, black calc(100% - 14px), transparent 100%);
+      mask-image: linear-gradient(to right, transparent 0, black 14px, black calc(100% - 14px), transparent 100%);
+    }
+  }
+
+  /* Отступы под системные зоны iOS (чёлка сверху, шторка снизу) для элементов,
+     прижатых к краю экрана — липкий хедер и мобильная шторка меню. */
+  .safe-top {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* Тап-зона иконок в шапке на телефоне — 44px по рекомендациям Apple/Google,
+     вместо 36px, которые ок на десктопе, но мелковаты под палец. */
+  @media (max-width: 640px) {
+    .tap-target {
+      min-height: 44px;
+      min-width: 44px;
     }
   }
 }

@@ -332,7 +332,7 @@ export function ReportsList({
         </div>
       ) : (
         <div className="panel overflow-hidden">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto table-scroll">
             <table className="w-full min-w-[1380px] text-left text-sm">
               <thead>
                 <tr className="border-b border-line text-muted">

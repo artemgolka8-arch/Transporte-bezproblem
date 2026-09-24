@@ -413,7 +413,7 @@ export function DebtorsList({
         </div>
       ) : (
         <div className="panel overflow-hidden">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto table-scroll">
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-line text-muted">
