@@ -86,10 +86,8 @@ export function TeamMemberProfile({
         <p className="mt-1.5 text-sm text-muted">{t("team_view_only_hint")}</p>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-line bg-panel shadow-panelLg">
-        <div className="relative h-28 bg-brandGradient sm:h-32">
-          <div className="absolute inset-0 bg-brandRadial opacity-60" />
-        </div>
+      <div className="overflow-hidden rounded-xl border border-line bg-panel shadow-panelLg">
+        <div className="h-20 bg-cyanDim sm:h-24" />
 
         <div className="px-6 pb-6 sm:px-8 sm:pb-8">
           <div className="flex flex-col items-start gap-5 sm:flex-row sm:items-end sm:gap-6">
@@ -121,7 +119,7 @@ export function TeamMemberProfile({
         </div>
       </div>
 
-      <div className="mt-8 rounded-2xl border border-line bg-panel p-6 shadow-card sm:p-8">
+      <div className="mt-8 rounded-xl border border-line bg-panel p-6 shadow-card sm:p-8">
         <div className="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2">
           <div>
             <div className="mb-1.5 label-eyebrow">{t("field_email")}</div>

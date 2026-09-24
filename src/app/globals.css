@@ -4,49 +4,49 @@
 
 @layer base {
   :root {
-    /* Светлая тема — фирменная бирюза + глубокий графит-навy (BezProblem Sharks) */
-    --color-bg: 246 250 249;
+    /* Светлая тема — деловая: нейтральный холодный серый + глубокая бирюза BezProblem */
+    --color-bg: 244 246 249;
     --color-bg2: 255 255 255;
     --color-panel: 255 255 255;
-    --color-panel2: 234 245 243;
-    --color-line: 213 232 229;
-    --color-ink: 11 32 42;
-    --color-muted: 90 121 126;
-    --color-faint: 145 171 174;
-    --color-mint: 5 173 107;
-    --color-mint-dim: 210 249 231;
-    --color-amber: 217 126 4;
-    --color-amber-dim: 253 233 199;
-    --color-violet: 91 79 224;
-    --color-violet-dim: 227 224 253;
-    --color-cyan: 3 157 143;
-    --color-cyan-dim: 202 244 238;
-    --color-coral: 224 69 90;
-    --color-coral-dim: 253 222 227;
-    --color-danger: 214 58 78;
+    --color-panel2: 241 244 248;
+    --color-line: 226 231 238;
+    --color-ink: 15 23 42;
+    --color-muted: 91 104 124;
+    --color-faint: 139 150 168;
+    --color-mint: 21 128 61;
+    --color-mint-dim: 220 245 228;
+    --color-amber: 180 83 9;
+    --color-amber-dim: 254 240 205;
+    --color-violet: 79 70 229;
+    --color-violet-dim: 230 232 255;
+    --color-cyan: 15 118 110;
+    --color-cyan-dim: 210 244 239;
+    --color-coral: 200 40 60;
+    --color-coral-dim: 254 226 230;
+    --color-danger: 200 40 60;
   }
 
   .dark {
-    /* Тёмная тема — глубокий синий космос BezProblem Sharks, бирюзовые акценты */
-    --color-bg: 6 12 24;
-    --color-bg2: 10 19 36;
-    --color-panel: 13 24 44;
-    --color-panel2: 18 32 56;
-    --color-line: 32 50 82;
-    --color-ink: 236 244 250;
-    --color-muted: 148 168 196;
-    --color-faint: 92 112 144;
-    --color-mint: 52 227 170;
-    --color-mint-dim: 12 45 42;
-    --color-amber: 255 186 64;
-    --color-amber-dim: 54 40 14;
-    --color-violet: 138 150 255;
-    --color-violet-dim: 30 34 68;
-    --color-cyan: 45 214 235;
-    --color-cyan-dim: 10 42 56;
-    --color-coral: 255 126 160;
-    --color-coral-dim: 46 20 34;
-    --color-danger: 255 107 129;
+    /* Тёмная тема — спокойный графит, без «неона» */
+    --color-bg: 12 16 22;
+    --color-bg2: 18 24 32;
+    --color-panel: 22 29 39;
+    --color-panel2: 30 39 52;
+    --color-line: 42 53 68;
+    --color-ink: 234 239 245;
+    --color-muted: 152 165 184;
+    --color-faint: 104 118 138;
+    --color-mint: 74 205 122;
+    --color-mint-dim: 18 48 33;
+    --color-amber: 244 187 66;
+    --color-amber-dim: 56 42 14;
+    --color-violet: 158 170 255;
+    --color-violet-dim: 32 35 70;
+    --color-cyan: 45 200 182;
+    --color-cyan-dim: 14 46 46;
+    --color-coral: 248 120 130;
+    --color-coral-dim: 58 24 30;
+    --color-danger: 248 120 130;
   }
 
   * {
@@ -60,25 +60,15 @@
   }
   body {
     @apply bg-bg text-ink font-body antialiased;
-    background-image:
-      radial-gradient(circle at 12% -10%, rgb(var(--color-cyan) / 0.12), transparent 45%),
-      radial-gradient(circle at 88% 0%, rgb(var(--color-violet) / 0.09), transparent 40%),
-      radial-gradient(circle at 50% 110%, rgb(var(--color-cyan) / 0.07), transparent 55%);
-    background-attachment: fixed;
+    font-feature-settings: "cv11", "ss01";
     transition: background-color 0.2s ease, color 0.2s ease;
   }
-  /* Тёмная тема — фирменный «космический» фон BezProblem Sharks: глубокий тёмно-синий
-     холст с крупными переливающимися бирюзово-синими пятнами света, как на референсе. */
-  html.dark body {
-    background-color: rgb(var(--color-bg));
-    background-image:
-      radial-gradient(circle at 82% -6%, rgba(56, 214, 235, 0.32), transparent 42%),
-      radial-gradient(circle at 100% 10%, rgba(64, 130, 246, 0.22), transparent 38%),
-      radial-gradient(ellipse 90% 60% at 0% 115%, rgba(37, 99, 210, 0.30), transparent 60%),
-      radial-gradient(circle at 8% 55%, rgba(45, 214, 235, 0.10), transparent 45%),
-      linear-gradient(200deg, rgba(26, 58, 120, 0.16) 0%, transparent 35%),
-      linear-gradient(180deg, rgb(6, 12, 24) 0%, rgb(6, 12, 24) 100%);
-    background-attachment: fixed, fixed, fixed, fixed, fixed, fixed;
+  h1, h2, h3 {
+    letter-spacing: -0.012em;
+  }
+  /* Цифры одной ширины — суммы и таблицы читаются ровно */
+  table, .tabular {
+    font-variant-numeric: tabular-nums;
   }
   ::selection {
     background: rgb(var(--color-cyan) / 0.28);
@@ -127,60 +117,67 @@
   }
 
   .panel {
-    @apply bg-panel border border-line rounded-2xl shadow-panel dark:bg-panel/80 dark:backdrop-blur-xl dark:border-cyan/10;
+    @apply bg-panel border border-line rounded-xl shadow-panel;
   }
 
   .panel-elevated {
-    @apply bg-panel border border-line rounded-2xl shadow-panelLg dark:bg-panel/85 dark:backdrop-blur-xl dark:border-cyan/10;
+    @apply bg-panel border border-line rounded-xl shadow-panelLg;
   }
 
   .glass-surface {
-    @apply dark:bg-panel/70 dark:backdrop-blur-xl dark:border-cyan/10;
+    @apply bg-panel;
   }
 
   .card-hover {
-    @apply transition-all duration-200 hover:-translate-y-0.5 hover:border-cyan/35 hover:shadow-brand;
+    @apply transition-colors duration-150 hover:border-cyan/40 hover:shadow-card;
   }
 
+  /* Подписи полей и мелкие заголовки — спокойный sans, без «технического» моно */
   .label-eyebrow {
-    @apply font-mono text-[11px] tracking-[0.18em] uppercase text-faint;
+    @apply text-[11px] font-semibold tracking-[0.06em] uppercase text-muted;
   }
 
   .text-gradient-brand {
-    background-image: theme("backgroundImage.brandText");
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+    color: rgb(var(--color-cyan));
   }
 
   .btn-primary {
-    @apply relative isolate inline-flex items-center justify-center gap-2 overflow-hidden rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-brand transition-all duration-200 hover:brightness-110 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:pointer-events-none;
-    background-image: theme("backgroundImage.brandGradient");
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-cyan px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors duration-150 hover:brightness-110 active:brightness-95 disabled:opacity-50 disabled:pointer-events-none;
   }
-  /* Тонкие волнистые линии поверх градиента кнопки — фирменный штрих BezProblem Sharks */
-  .btn-primary::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    pointer-events: none;
-    opacity: 0.55;
-    mix-blend-mode: overlay;
-    background-repeat: repeat-x;
-    background-size: 120px 100%;
-    background-position: 0 center;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='48' viewBox='0 0 120 48'%3E%3Cpath d='M-10 34 Q 20 20 50 34 T 110 34 T 170 34' stroke='white' stroke-width='2.4' fill='none' opacity='0.55'/%3E%3Cpath d='M-10 14 Q 20 0 50 14 T 110 14 T 170 14' stroke='white' stroke-width='1.6' fill='none' opacity='0.35'/%3E%3C/svg%3E");
+  .dark .btn-primary {
+    @apply text-bg;
   }
-  .btn-primary > * {
-    position: relative;
-    z-index: 1;
+
+  /* В тёмной теме акценты светлые — на них читается тёмный текст, а не белый */
+  .dark .bg-brandGradient.text-white,
+  .dark .bg-cyan.text-white,
+  .dark .bg-mint.text-white,
+  .dark .bg-violet.text-white,
+  .dark .bg-coral.text-white {
+    color: rgb(var(--color-bg));
   }
 
   .icon-tile {
-    @apply flex h-10 w-10 shrink-0 items-center justify-center rounded-xl;
-    background-image: theme("backgroundImage.brandGradient");
-    color: white;
-    box-shadow: 0 8px 20px -8px rgb(var(--color-cyan) / 0.55);
+    @apply flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-cyanDim text-cyan;
+  }
+
+  /* Фон окон (модалок). «safe center» — если окно выше экрана, оно выравнивается
+     по верху и прокручивается, а не обрезается сверху. */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow-y: auto;
+    padding: 1rem;
+    background: rgb(8 12 20 / 0.55);
+  }
+  @supports (align-items: safe center) {
+    .modal-overlay {
+      align-items: safe center;
+    }
   }
 }
 

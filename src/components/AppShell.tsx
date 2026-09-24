@@ -119,7 +119,7 @@ export function AppShell({
       {/* Mobile sidebar overlay */}
       {mobileOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} />
+          <div className="absolute inset-0 bg-slate-950/55" onClick={() => setMobileOpen(false)} />
           <div className="absolute left-0 top-0 h-full animate-rise">
             <Sidebar counts={counts} userName={userName} role={role} onNavigate={() => setMobileOpen(false)} />
           </div>
@@ -127,28 +127,25 @@ export function AppShell({
       )}
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 border-b border-line/70 bg-bg2/85 backdrop-blur-md dark:border-transparent dark:bg-transparent dark:backdrop-blur-sm">
-          <div className="flex items-center gap-3 px-5 py-4">
+        <header className="sticky top-0 z-30 border-b border-line bg-panel">
+          <div className="flex h-14 items-center gap-3 px-5">
             <button
               type="button"
               onClick={() => setMobileOpen(true)}
-              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-line/70 text-muted transition-colors hover:border-cyan/40 hover:text-cyan lg:hidden"
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-line text-muted transition-colors hover:border-cyan/40 hover:text-cyan lg:hidden"
               aria-label="Menu"
             >
               <MenuIcon />
             </button>
 
-            <div className="flex items-center gap-2">
-              <span className="hidden h-1.5 w-1.5 rounded-full bg-cyan sm:block" />
-              <div className="font-display text-[15px] font-semibold tracking-wide text-ink">{title}</div>
-            </div>
+            <div className="font-display text-[15px] font-semibold text-ink">{title}</div>
 
             <div className="ml-auto flex items-center gap-2">
               <div className="relative">
                 <button
                   type="button"
                   onClick={() => setLangOpen((v) => !v)}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-line/70 bg-bg2 px-3 py-1.5 text-xs font-medium text-ink transition-colors hover:border-cyan/40 hover:text-cyan"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-panel px-3 py-1.5 text-xs font-medium text-ink transition-colors hover:border-cyan/40 hover:text-cyan"
                 >
                   <GlobeIcon />
                   {lang.toUpperCase()}
@@ -180,19 +177,19 @@ export function AppShell({
                 onClick={toggleTheme}
                 title={isDark ? t("theme_light") : t("theme_dark")}
                 aria-label={isDark ? t("theme_light") : t("theme_dark")}
-                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-line/70 text-muted transition-colors hover:border-cyan/40 hover:text-cyan"
+                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-line text-muted transition-colors hover:border-cyan/40 hover:text-cyan"
               >
                 {isDark ? <SunIcon /> : <MoonIcon />}
               </button>
 
-              <span className="relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-line/70 text-muted transition-colors hover:border-cyan/40 hover:text-cyan">
+              <span className="relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-line text-muted transition-colors hover:border-cyan/40 hover:text-cyan">
                 <BellIcon />
-                <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full border border-bg2 bg-coral" />
+                <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full border border-panel bg-coral" />
               </span>
 
               <button
                 onClick={() => signOut({ callbackUrl: "/login" })}
-                className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-line/70 bg-bg2 px-3.5 py-1.5 text-xs font-medium text-ink transition-colors hover:border-danger/40 hover:text-danger"
+                className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg border border-line bg-panel px-3.5 py-1.5 text-xs font-medium text-ink transition-colors hover:border-danger/40 hover:text-danger"
               >
                 <LogoutIcon />
                 {t("sign_out")}

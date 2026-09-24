@@ -170,10 +170,8 @@ export function ProfileForm({
 
       {/* Карточка профиля — «шапка» с крупным аватаром поверх лёгкого градиентного
           баннера, как в премиальных профилях, а не плоский ряд из мелких полей. */}
-      <div className="overflow-hidden rounded-2xl border border-line bg-panel shadow-panelLg">
-        <div className="relative h-28 bg-brandGradient sm:h-32">
-          <div className="absolute inset-0 bg-brandRadial opacity-60" />
-        </div>
+      <div className="overflow-hidden rounded-xl border border-line bg-panel shadow-panelLg">
+        <div className="h-20 bg-cyanDim sm:h-24" />
 
         <div className="px-6 pb-6 sm:px-8 sm:pb-8">
           <div className="flex flex-col items-start gap-5 sm:flex-row sm:items-end sm:gap-6">
@@ -257,7 +255,7 @@ export function ProfileForm({
       </div>
 
       <form onSubmit={submit} className="pt-10">
-        <div className="rounded-2xl border border-line bg-panel p-6 shadow-card sm:p-8">
+        <div className="rounded-xl border border-line bg-panel p-6 shadow-card sm:p-8">
           <div className="label-eyebrow mb-6">{t("profile_form_section_title")}</div>
           <div className="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2">
             <div>
@@ -316,7 +314,7 @@ export function ProfileForm({
           </div>
         </div>
 
-        <div className="mt-6 rounded-2xl border border-line bg-panel p-6 shadow-card sm:p-8">
+        <div className="mt-6 rounded-xl border border-line bg-panel p-6 shadow-card sm:p-8">
           <label className="mb-1.5 block label-eyebrow">{t("field_telegram_chat_id")}</label>
           <input
             value={telegramChatId}

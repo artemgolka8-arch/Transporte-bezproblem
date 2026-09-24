@@ -51,7 +51,7 @@ export function StatusBadge({ status }: { status: VehicleStatus }) {
   const c = STATUS_CONFIG[status];
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full border ${c.border} ${c.bg} px-2.5 py-1 font-mono text-[11px] uppercase tracking-wide ${c.text}`}
+      className={`inline-flex items-center gap-1.5 rounded-full border ${c.border} ${c.bg} px-2.5 py-1 text-[11px] font-medium ${c.text}`}
     >
       <span
         className={`h-1.5 w-1.5 rounded-full ${c.dot} ${

@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ROLE_LABEL_KEYS, Role } from "@/lib/roles";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
+import { Modal } from "./ui/Modal";
+import { useConfirm } from "./ui/ConfirmProvider";
 
 type UserRow = {
   id: string;
@@ -21,6 +23,7 @@ type UserRow = {
 export function UsersAdmin({ users, currentUserId }: { users: UserRow[]; currentUserId: string }) {
   const router = useRouter();
   const { t } = useTranslation();
+  const confirm = useConfirm();
   const [list, setList] = useState(users);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<UserRow | null>(null);
@@ -38,7 +41,7 @@ export function UsersAdmin({ users, currentUserId }: { users: UserRow[]; current
   }
 
   async function removeUser(id: string) {
-    if (!confirm(t("delete_user_confirm"))) return;
+    if (!await confirm(t("delete_user_confirm"))) return;
     const res = await fetch(`/api/users/${id}`, { method: "DELETE" });
     if (res.ok) {
       setList((prev) => prev.filter((u) => u.id !== id));
@@ -186,7 +189,7 @@ function NewUserModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/60 backdrop-blur-sm px-4 py-8">
+    <Modal onClose={onClose}>
       <form onSubmit={submit} className="panel w-full max-w-sm p-6 animate-rise">
         <div className="mb-5 flex items-center justify-between">
           <h2 className="font-display text-lg font-semibold text-ink">{t("new_user_title")}</h2>
@@ -299,7 +302,7 @@ function NewUserModal({
           {loading ? t("creating") : t("create")}
         </button>
       </form>
-    </div>
+    </Modal>
   );
 }
 
@@ -344,7 +347,7 @@ function EditUserModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/60 backdrop-blur-sm px-4 py-8">
+    <Modal onClose={onClose}>
       <form onSubmit={submit} className="panel w-full max-w-sm p-6 animate-rise">
         <div className="mb-5 flex items-center justify-between">
           <h2 className="font-display text-lg font-semibold text-ink">{t("edit_user_title")}</h2>
@@ -447,6 +450,6 @@ function EditUserModal({
           {loading ? t("saving") : t("save_changes")}
         </button>
       </form>
-    </div>
+    </Modal>
   );
 }

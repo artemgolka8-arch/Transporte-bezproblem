@@ -7,6 +7,7 @@ import { useTranslation } from "@/lib/i18n/LanguageProvider";
 import type { TranslationKey } from "@/lib/i18n/translations";
 import { DebtorsSummaryCard, type DebtorsSummary } from "./DebtorsSummaryCard";
 import { SMS_SENDERS, type SmsSender } from "@/lib/smsSenders";
+import { Modal } from "./ui/Modal";
 
 type DebtorMessage = {
   id: string;
@@ -732,7 +733,7 @@ function SmsModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/60 backdrop-blur-sm px-4 py-8">
+    <Modal onClose={onClose}>
       <div className="panel w-full max-w-sm p-6 animate-rise">
         <div className="mb-1 flex items-center justify-between">
           <h2 className="font-display text-lg font-semibold text-ink">{t("debtors_send_sms_btn")}</h2>
@@ -816,7 +817,7 @@ function SmsModal({
           </div>
         )}
       </div>
-    </div>
+    </Modal>
   );
 }
 
@@ -882,7 +883,7 @@ function DebtInfoModal({ row, onClose }: { row: DebtorRow; onClose: () => void }
   }, [row.id]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/60 backdrop-blur-sm px-4 py-8">
+    <Modal onClose={onClose}>
       <div className="panel w-full max-w-2xl p-6 animate-rise">
         <div className="mb-1 flex items-center justify-between">
           <h2 className="font-display text-lg font-semibold text-ink">{t("debtors_debt_info_title")}</h2>
@@ -979,7 +980,7 @@ function DebtInfoModal({ row, onClose }: { row: DebtorRow; onClose: () => void }
           </>
         )}
       </div>
-    </div>
+    </Modal>
   );
 }
 
@@ -1032,7 +1033,7 @@ function BulkSmsModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/60 backdrop-blur-sm px-4 py-8">
+    <Modal onClose={onClose}>
       <div className="panel w-full max-w-sm p-6 animate-rise">
         <div className="mb-1 flex items-center justify-between">
           <h2 className="font-display text-lg font-semibold text-ink">{t("debtors_bulk_send_title")}</h2>
@@ -1113,6 +1114,6 @@ function BulkSmsModal({
           </>
         )}
       </div>
-    </div>
+    </Modal>
   );
 }

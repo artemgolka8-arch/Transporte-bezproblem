@@ -33,20 +33,21 @@ const config: Config = {
         danger: withOpacity("--color-danger"),
       },
       fontFamily: {
-        display: ["var(--font-display)"],
+        display: ["var(--font-body)"],
         body: ["var(--font-body)"],
         mono: ["var(--font-mono)"],
       },
       boxShadow: {
-        glowCyan: "0 0 26px rgba(3,157,143,0.32)",
-        glowMint: "0 0 22px rgba(5,173,107,0.26)",
-        glowAmber: "0 0 22px rgba(217,126,4,0.26)",
-        glowViolet: "0 0 22px rgba(91,79,224,0.26)",
-        glowCoral: "0 0 22px rgba(224,69,90,0.26)",
-        panel: "0 1px 0 rgba(255,255,255,0.7) inset, 0 16px 36px -20px rgba(9,32,38,0.20)",
-        panelLg: "0 1px 0 rgba(255,255,255,0.7) inset, 0 28px 60px -24px rgba(9,32,38,0.28)",
-        card: "0 1px 0 rgba(255,255,255,0.6) inset, 0 10px 24px -16px rgba(9,32,38,0.16)",
-        brand: "0 18px 40px -18px rgba(3,157,143,0.55)",
+        // Деловые, еле заметные тени — без свечения
+        glowCyan: "0 1px 2px rgba(15,23,42,0.14)",
+        glowMint: "0 1px 2px rgba(15,23,42,0.14)",
+        glowAmber: "0 1px 2px rgba(15,23,42,0.14)",
+        glowViolet: "0 1px 2px rgba(15,23,42,0.14)",
+        glowCoral: "0 1px 2px rgba(15,23,42,0.14)",
+        panel: "0 1px 2px rgba(15,23,42,0.05), 0 1px 1px rgba(15,23,42,0.03)",
+        panelLg: "0 12px 32px -12px rgba(15,23,42,0.25), 0 2px 6px rgba(15,23,42,0.06)",
+        card: "0 1px 3px rgba(15,23,42,0.07)",
+        brand: "0 1px 2px rgba(15,23,42,0.14)",
       },
       keyframes: {
         pulseBeacon: {
@@ -62,24 +63,23 @@ const config: Config = {
           "50%": { transform: "rotate(4deg) translateY(-2px)" },
         },
         rise: {
-          "0%": { opacity: "0", transform: "translateY(8px)" },
+          "0%": { opacity: "0", transform: "translateY(4px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
       },
       animation: {
         pulseBeacon: "pulseBeacon 1.8s ease-in-out infinite",
-        scan: "scan 3s linear infinite",
-        floatKey: "floatKey 3.2s ease-in-out infinite",
-        rise: "rise 0.45s ease both",
+        scan: "none",
+        floatKey: "none",
+        rise: "rise 0.2s ease-out both",
       },
       backgroundImage: {
-        grid: "linear-gradient(rgba(12,34,45,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(12,34,45,0.05) 1px, transparent 1px)",
-        scanline:
-          "linear-gradient(90deg, transparent, rgba(20,166,153,0.55), transparent)",
-        brandRadial:
-          "radial-gradient(circle at 15% -10%, rgba(3,157,143,0.22), transparent 45%), radial-gradient(circle at 85% 0%, rgba(91,79,224,0.16), transparent 42%), radial-gradient(circle at 50% 120%, rgba(3,157,143,0.14), transparent 50%)",
-        brandGradient: "linear-gradient(135deg, #2dd6eb 0%, #35e3aa 100%)",
-        brandText: "linear-gradient(120deg, #2dd6eb 0%, #35e3aa 100%)",
+        // Декоративные фоны отключены (деловой стиль); имена оставлены, чтобы не ломать классы
+        grid: "none",
+        scanline: "none",
+        brandRadial: "none",
+        brandGradient: "linear-gradient(rgb(var(--color-cyan)), rgb(var(--color-cyan)))",
+        brandText: "linear-gradient(rgb(var(--color-cyan)), rgb(var(--color-cyan)))",
       },
       backgroundSize: {
         gridcell: "36px 36px",

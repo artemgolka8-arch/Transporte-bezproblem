@@ -241,15 +241,15 @@ export function Sidebar({
   }
 
   return (
-    <div className="glass-surface flex h-full w-[276px] shrink-0 flex-col border-r border-line/70 bg-bg2 dark:m-3 dark:h-[calc(100%-1.5rem)] dark:rounded-[28px] dark:border dark:shadow-panelLg">
-      <Link href={restrictedView ? AMBASSADOR_HOME : "/"} onClick={onNavigate} className="flex items-center px-5 py-6">
+    <div className="flex h-full w-[264px] shrink-0 flex-col border-r border-line bg-panel">
+      <Link href={restrictedView ? AMBASSADOR_HOME : "/"} onClick={onNavigate} className="flex items-center px-5 pb-2 pt-5">
         <Logo markSize={26} textClassName="text-[15px]" />
       </Link>
-      <div className="-mt-3 mb-2 px-5 text-[11px] font-medium uppercase tracking-[0.14em] text-faint">
+      <div className="mb-3 px-5 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">
         {tagline}
       </div>
 
-      <nav className="flex-1 space-y-1 overflow-y-auto scrollbar-thin px-3 pb-4">
+      <nav className="flex-1 space-y-0.5 overflow-y-auto scrollbar-thin border-t border-line px-3 pb-4 pt-3">
         {visibleItems.map((item) => {
           const active = isActive(item);
           const Icon = item.icon;
@@ -260,24 +260,21 @@ export function Sidebar({
               key={item.href}
               href={item.href}
               onClick={onNavigate}
-              className={`group flex items-center gap-3 rounded-2xl border px-3 py-2.5 text-sm transition-all duration-150 ${
+              aria-current={active ? "page" : undefined}
+              className={`group flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors duration-150 ${
                 active
-                  ? "border-cyan/30 bg-cyanDim/50 font-semibold text-cyan shadow-glowCyan"
-                  : "border-transparent text-muted hover:border-line hover:bg-panel2/70 hover:text-ink"
+                  ? "bg-cyanDim font-semibold text-cyan"
+                  : "text-muted hover:bg-panel2 hover:text-ink"
               }`}
             >
-              <span
-                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors ${
-                  active ? "bg-brandGradient text-white shadow-glowCyan" : "bg-panel2/60 text-faint group-hover:text-ink"
-                }`}
-              >
+              <span className={`flex h-5 w-5 shrink-0 items-center justify-center ${active ? "text-cyan" : "text-faint group-hover:text-ink"}`}>
                 <Icon />
               </span>
               <span className="min-w-0 flex-1 truncate">{t(item.labelKey)}</span>
               {count !== null && (
                 <span
-                  className={`inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[10px] font-semibold ${
-                    active ? "bg-cyan text-white" : "bg-panel2/80 text-faint"
+                  className={`inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-md px-1.5 text-[11px] font-semibold ${
+                    active ? "bg-cyan text-white" : "bg-panel2 text-muted"
                   }`}
                 >
                   {count}
@@ -293,7 +290,7 @@ export function Sidebar({
       {(() => {
         const inner = (
           <>
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brandGradient text-xs font-semibold text-white shadow-brand">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-cyanDim text-xs font-semibold text-cyan">
               {avatarUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
@@ -314,7 +311,7 @@ export function Sidebar({
           <Link
             href="/profile"
             onClick={onNavigate}
-            className="flex items-center gap-3 border-t border-line/70 px-4 py-3.5 transition-colors hover:bg-panel2/60"
+            className="flex items-center gap-3 border-t border-line px-4 py-3.5 transition-colors hover:bg-panel2"
           >
             {inner}
           </Link>

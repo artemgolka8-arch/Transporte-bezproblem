@@ -12,6 +12,8 @@ import {
   type PayrollMethod,
   type PayrollRow,
 } from "@/lib/payroll";
+import { Modal } from "./ui/Modal";
+import { useConfirm } from "./ui/ConfirmProvider";
 
 type Recipient = { id: string; name: string; role: Role };
 
@@ -299,7 +301,7 @@ export function PayrollList({ rows: initialRows, recipients }: { rows: PayrollRo
         </div>
         <button
           onClick={() => setModal({ row: null })}
-          className="btn-primary whitespace-nowrap rounded-full px-5 py-3 text-sm"
+          className="btn-primary whitespace-nowrap px-5 py-3 text-sm"
         >
           <span className="text-base leading-none">+</span>
           {t("payroll_add_btn")}
@@ -574,6 +576,7 @@ function PayrollModal({
   onDeleted: (id: string) => void;
 }) {
   const { t } = useTranslation();
+  const confirm = useConfirm();
   const editing = !!initial;
 
   const [recipientSel, setRecipientSel] = useState<string>(
@@ -632,7 +635,7 @@ function PayrollModal({
   }
 
   async function remove() {
-    if (!initial || !confirm(t("payroll_delete_confirm"))) return;
+    if (!initial || !await confirm(t("payroll_delete_confirm"))) return;
     setLoading(true);
     const res = await fetch(`/api/payroll/${initial.id}`, { method: "DELETE" });
     setLoading(false);
@@ -641,10 +644,7 @@ function PayrollModal({
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/60 px-4 py-8 backdrop-blur-sm"
-      onClick={onClose}
-    >
+    <Modal onClose={onClose} backdropClose>
       <form onSubmit={submit} onClick={(e) => e.stopPropagation()} className="panel w-full max-w-lg animate-rise p-6">
         <div className="mb-5 flex items-center justify-between">
           <h2 className="font-display text-lg font-semibold text-ink">
@@ -779,6 +779,6 @@ function PayrollModal({
           </>
         )}
       </form>
-    </div>
+    </Modal>
   );
 }

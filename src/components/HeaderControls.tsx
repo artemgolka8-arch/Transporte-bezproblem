@@ -21,7 +21,7 @@ export function HeaderControls({ className = "" }: { className?: string }) {
             type="button"
             title={l.label}
             onClick={() => setLang(l.code)}
-            className={`rounded-full px-2 py-1 font-mono text-[10px] font-medium uppercase tracking-wide transition-colors ${
+            className={`rounded-full px-2 py-1 text-[10px] font-medium uppercase tracking-wide transition-colors ${
               lang === l.code ? "bg-cyan/15 text-cyan" : "text-faint hover:text-ink"
             }`}
           >

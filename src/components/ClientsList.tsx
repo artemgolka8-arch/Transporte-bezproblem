@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { canEdit } from "@/lib/roles";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
 import type { Lang } from "@/lib/i18n/translations";
+import { Modal } from "./ui/Modal";
 
 type ClientVehicle = { id: string; code: string; name: string };
 
@@ -486,7 +487,7 @@ function NewClientModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/60 backdrop-blur-sm px-4 py-8">
+    <Modal onClose={onClose}>
       <form onSubmit={submit} className="panel w-full max-w-sm p-6 animate-rise">
         <div className="mb-5 flex items-center justify-between">
           <h2 className="font-display text-lg font-semibold text-ink">{t("new_client_title")}</h2>
@@ -552,6 +553,6 @@ function NewClientModal({
           {loading ? t("creating") : t("create")}
         </button>
       </form>
-    </div>
+    </Modal>
   );
 }

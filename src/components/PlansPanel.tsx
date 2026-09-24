@@ -6,6 +6,8 @@ import { canDeleteAnyReport, canReviewReports, isAmbassador, Role } from "@/lib/
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
 import type { Lang, TranslationKey } from "@/lib/i18n/translations";
 import { PLAN_MAX_LENGTH, PLAN_STATUSES, type PlanRow, type PlanStatus } from "@/lib/plans";
+import { Modal } from "./ui/Modal";
+import { useConfirm } from "./ui/ConfirmProvider";
 
 const LOCALE_MAP: Record<Lang, string> = { ru: "ru-RU", pl: "pl-PL", uk: "uk-UA" };
 const PAGE_SIZE = 10;
@@ -144,6 +146,7 @@ export function PlansPanel({
 }) {
   const router = useRouter();
   const { t, lang } = useTranslation();
+  const confirm = useConfirm();
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<PlanStatus | "ALL">("ALL");
   const [page, setPage] = useState(1);
@@ -173,7 +176,7 @@ export function PlansPanel({
   const paged = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   async function deletePlan(id: string) {
-    if (!confirm(t("delete_plan_confirm"))) return;
+    if (!await confirm(t("delete_plan_confirm"))) return;
     const res = await fetch(`/api/plans/${id}`, { method: "DELETE" });
     if (res.ok) {
       onRemove(id);
@@ -412,10 +415,7 @@ function PlanDetailModal({
       : null;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-3 py-4 backdrop-blur-sm sm:px-4"
-      onClick={onClose}
-    >
+    <Modal onClose={onClose} backdropClose>
       <div
         className="panel flex max-h-[calc(100dvh-2rem)] w-full max-w-lg animate-rise flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
@@ -588,7 +588,7 @@ function PlanDetailModal({
           </div>
         )}
       </div>
-    </div>
+    </Modal>
   );
 }
 
@@ -637,8 +637,8 @@ function PlanFormModal({
     "w-full rounded-lg border border-line bg-bg2 px-3 py-2.5 text-sm text-ink outline-none transition-colors focus:border-cyan/50";
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-sm">
-      <div className="flex min-h-full items-center justify-center px-4 py-8">
+    <Modal onClose={onClose}>
+      
         <form onSubmit={submit} className="panel w-full max-w-lg animate-rise p-6">
           <div className="mb-5 flex items-start justify-between gap-3">
             <div className="flex items-start gap-3">
@@ -703,7 +703,7 @@ function PlanFormModal({
             {loading ? t("creating") : editing ? t("plan_resubmit_btn") : t("plan_submit_btn")}
           </button>
         </form>
-      </div>
-    </div>
+      
+    </Modal>
   );
 }

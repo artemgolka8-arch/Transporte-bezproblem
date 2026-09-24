@@ -8,6 +8,8 @@ import { BRAND_LABEL_KEYS, BIKE_BRAND_OPTIONS, SCOOTER_BRAND_OPTIONS, VehicleBra
 import { SCOOTER_COLOR_OPTIONS, COLOR_LABEL_KEYS, COLOR_SWATCH, VehicleColor } from "@/lib/colors";
 import { canEdit, isAdmin } from "@/lib/roles";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
+import { Modal } from "./ui/Modal";
+import { useConfirm } from "./ui/ConfirmProvider";
 
 type StatusFilter = "ALL" | "AVAILABLE" | "WORKSHOP" | "RENTED";
 type TypeFilter = "ALL" | "BIKE" | "SCOOTER";
@@ -25,6 +27,7 @@ export function FleetDashboard({
 }) {
   const router = useRouter();
   const { t } = useTranslation();
+  const confirm = useConfirm();
   const [list, setList] = useState(vehicles);
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
@@ -76,7 +79,7 @@ export function FleetDashboard({
   }, [list, statusFilter, typeFilter, query]);
 
   async function deleteVehicle(id: string) {
-    if (!confirm(t("delete_vehicle_confirm"))) return;
+    if (!await confirm(t("delete_vehicle_confirm"))) return;
     const prev = list;
     setList((cur) => cur.filter((v) => v.id !== id));
     const res = await fetch(`/api/vehicles/${id}`, { method: "DELETE" });
@@ -279,7 +282,7 @@ function AddVehicleModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+    <Modal onClose={onClose}>
       <form onSubmit={submit} className="panel w-full max-w-md p-6 animate-rise">
         <div className="mb-5 flex items-center justify-between">
           <h2 className="font-display text-lg font-semibold text-ink">{t("new_vehicle_title")}</h2>
@@ -411,6 +414,6 @@ function AddVehicleModal({
           {loading ? t("creating") : t("add_to_system")}
         </button>
       </form>
-    </div>
+    </Modal>
   );
 }

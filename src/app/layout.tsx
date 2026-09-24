@@ -1,16 +1,10 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
-import { Chakra_Petch, Inter, JetBrains_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/Providers";
 import { isLang, DEFAULT_LANG } from "@/lib/i18n/translations";
 import type { Theme } from "@/lib/theme/ThemeProvider";
-
-const display = Chakra_Petch({
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
-  variable: "--font-display",
-});
 
 const body = Inter({
   subsets: ["latin", "cyrillic"],
@@ -38,7 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang={initialLang}
-      className={`${display.variable} ${body.variable} ${mono.variable} ${initialTheme === "dark" ? "dark" : ""}`}
+      className={`${body.variable} ${mono.variable} ${initialTheme === "dark" ? "dark" : ""}`}
       style={{ colorScheme: initialTheme }}
     >
       <body>

@@ -11,6 +11,8 @@ import { VehicleColor, COLOR_LABEL_KEYS, COLOR_SWATCH } from "@/lib/colors";
 import { canEdit, isAdmin } from "@/lib/roles";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
 import { Lang, TranslationKey } from "@/lib/i18n/translations";
+import { Modal } from "./ui/Modal";
+import { useConfirm } from "./ui/ConfirmProvider";
 
 type HistoryEntry = {
   id: string;
@@ -105,6 +107,7 @@ export function VehicleDetail({
 }) {
   const router = useRouter();
   const { t, lang } = useTranslation();
+  const confirm = useConfirm();
   const [tab, setTab] = useState<"overview" | "debt" | "history" | "keys" | "documents" | "notes">("overview");
   const [v, setV] = useState(vehicle);
   const [problemDraft, setProblemDraft] = useState(vehicle.problemDescription || "");
@@ -237,7 +240,7 @@ export function VehicleDetail({
   }
 
   async function deleteKey(id: string) {
-    if (!confirm(t("delete_key_confirm"))) return;
+    if (!await confirm(t("delete_key_confirm"))) return;
     const res = await fetch(`/api/keys/${id}`, { method: "DELETE" });
     if (res.ok) {
       setV((prev) => ({ ...prev, keys: prev.keys.filter((k) => k.id !== id) }));
@@ -245,7 +248,7 @@ export function VehicleDetail({
   }
 
   async function deleteVehicle() {
-    if (!confirm(t("delete_vehicle_confirm"))) return;
+    if (!await confirm(t("delete_vehicle_confirm"))) return;
     setDeleteError(null);
     setDeleting(true);
     const res = await fetch(`/api/vehicles/${v.id}`, { method: "DELETE" });
@@ -393,7 +396,7 @@ export function VehicleDetail({
             вкладках техники, а не только внутри вкладки "Информация о долге". */}
         {client && debtor && (
           <div
-            className={`flex items-center gap-3 rounded-2xl border px-4 py-3 shadow-glowViolet ${
+            className={`flex items-center gap-3 rounded-xl border px-4 py-3 shadow-glowViolet ${
               headerHasDebt
                 ? "border-violet/40 bg-gradient-to-br from-violet/25 via-violet/10 to-cyan/10"
                 : "border-mint/40 bg-mintDim/40"
@@ -867,7 +870,7 @@ function DebtTab({
 
         {debtor ? (
           <div
-            className={`flex items-center gap-4 rounded-2xl border px-5 py-3.5 shadow-glowViolet ${
+            className={`flex items-center gap-4 rounded-xl border px-5 py-3.5 shadow-glowViolet ${
               hasDebt ? "border-violet/40 bg-gradient-to-br from-violet/20 via-violet/10 to-cyan/10" : "border-mint/40 bg-mintDim/40"
             }`}
           >
@@ -882,7 +885,7 @@ function DebtTab({
             </div>
           </div>
         ) : (
-          <div className="rounded-2xl border border-mint/40 bg-mintDim/40 px-5 py-3.5">
+          <div className="rounded-xl border border-mint/40 bg-mintDim/40 px-5 py-3.5">
             <div className="text-sm font-medium text-mint">{t("vehicle_debt_no_debtor_title")}</div>
           </div>
         )}
@@ -1420,7 +1423,7 @@ function AddKeyForm({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+    <Modal onClose={onClose}>
       <form onSubmit={submit} className="panel w-full max-w-sm p-6 animate-rise">
         <div className="mb-5 flex items-center justify-between">
           <h2 className="font-display text-lg font-semibold text-ink">{t("new_key_title")}</h2>
@@ -1499,7 +1502,7 @@ function AddKeyForm({
           {loading ? t("creating") : t("add_to_board")}
         </button>
       </form>
-    </div>
+    </Modal>
   );
 }
 
@@ -1531,7 +1534,7 @@ function RentVehicleModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+    <Modal onClose={onClose}>
       <form onSubmit={submit} className="panel w-full max-w-sm p-6 animate-rise">
         <div className="mb-1 flex items-center justify-between">
           <h2 className="font-display text-lg font-semibold text-ink">{t("rent_modal_title")}</h2>
@@ -1594,7 +1597,7 @@ function RentVehicleModal({
           {saving ? t("saving") : t("rent_confirm_btn")}
         </button>
       </form>
-    </div>
+    </Modal>
   );
 }
 
@@ -1631,7 +1634,7 @@ function WorkshopVehicleModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+    <Modal onClose={onClose}>
       <form onSubmit={submit} className="panel w-full max-w-sm p-6 animate-rise">
         <div className="mb-1 flex items-center justify-between">
           <h2 className="font-display text-lg font-semibold text-ink">{t("workshop_modal_title")}</h2>
@@ -1701,6 +1704,6 @@ function WorkshopVehicleModal({
           {saving ? t("saving") : t("workshop_confirm_btn")}
         </button>
       </form>
-    </div>
+    </Modal>
   );
 }

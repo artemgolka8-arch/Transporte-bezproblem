@@ -9,6 +9,7 @@ import { useTranslation } from "@/lib/i18n/LanguageProvider";
 import { Lang } from "@/lib/i18n/translations";
 import { ProfileHeader } from "@/components/ProfileHeader";
 import { ClientNotifyPanel } from "@/components/ClientNotifyPanel";
+import { useConfirm } from "./ui/ConfirmProvider";
 
 type ClientVehicle = {
   id: string;
@@ -56,6 +57,7 @@ export function ClientProfile({
 }) {
   const router = useRouter();
   const { t, lang } = useTranslation();
+  const confirm = useConfirm();
   const editable = canEdit(role);
   const admin = isAdmin(role);
 
@@ -94,7 +96,7 @@ export function ClientProfile({
   }
 
   async function removeClient() {
-    if (!confirm(t("delete_client_confirm"))) return;
+    if (!await confirm(t("delete_client_confirm"))) return;
     setDeleting(true);
     const res = await fetch(`/api/clients/${client.id}`, { method: "DELETE" });
     if (res.ok) {

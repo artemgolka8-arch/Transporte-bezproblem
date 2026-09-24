@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { canCreateTasks, ROLE_LABEL_KEYS, Role } from "@/lib/roles";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
 import { Lang } from "@/lib/i18n/translations";
+import { Modal } from "./ui/Modal";
+import { useConfirm } from "./ui/ConfirmProvider";
 
 type TaskUser = { id: string; name: string };
 type AssignableUser = { id: string; name: string; role: Role };
@@ -50,6 +52,7 @@ export function TasksBoard({
 }) {
   const router = useRouter();
   const { t, lang } = useTranslation();
+  const confirm = useConfirm();
   const [tasks, setTasks] = useState<TaskRow[]>(initialTasks);
   const [filter, setFilter] = useState<Filter>("all");
   const [formOpen, setFormOpen] = useState(false);
@@ -90,7 +93,7 @@ export function TasksBoard({
   }
 
   async function deleteTask(taskId: string) {
-    if (!confirm(t("delete_task_confirm"))) return;
+    if (!await confirm(t("delete_task_confirm"))) return;
     const res = await fetch(`/api/tasks/${taskId}`, { method: "DELETE" });
     if (res.ok) {
       setTasks((prev) => prev.filter((task) => task.id !== taskId));
@@ -220,7 +223,7 @@ function TaskCard({
         <div className="min-w-[200px] flex-1">
           <div className="mb-1.5 flex flex-wrap items-center gap-2">
             <span
-              className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-[11px] uppercase tracking-wide ${
+              className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium ${
                 done
                   ? "border-mint/40 bg-mintDim/40 text-mint"
                   : notDone
@@ -444,7 +447,7 @@ function NewTaskModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/60 backdrop-blur-sm px-4 py-8">
+    <Modal onClose={onClose}>
       <form onSubmit={submit} className="panel w-full max-w-sm p-6 animate-rise">
         <div className="mb-5 flex items-center justify-between">
           <h2 className="font-display text-lg font-semibold text-ink">{t("new_task_title")}</h2>
@@ -516,7 +519,7 @@ function NewTaskModal({
           {loading ? t("creating") : t("create")}
         </button>
       </form>
-    </div>
+    </Modal>
   );
 }
 
@@ -543,7 +546,7 @@ function TransferModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/60 backdrop-blur-sm px-4 py-8">
+    <Modal onClose={onClose}>
       <form onSubmit={submit} className="panel w-full max-w-sm p-6 animate-rise">
         <div className="mb-5 flex items-center justify-between">
           <h2 className="font-display text-lg font-semibold text-ink">{t("transfer_task_title")}</h2>
@@ -582,7 +585,7 @@ function TransferModal({
           {loading ? t("saving") : t("transfer_confirm_btn")}
         </button>
       </form>
-    </div>
+    </Modal>
   );
 }
 
@@ -611,7 +614,7 @@ function NotDoneModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/60 backdrop-blur-sm px-4 py-8">
+    <Modal onClose={onClose}>
       <form onSubmit={submit} className="panel w-full max-w-sm p-6 animate-rise">
         <div className="mb-5 flex items-center justify-between">
           <h2 className="font-display text-lg font-semibold text-ink">{t("not_done_reason_title")}</h2>
@@ -645,6 +648,6 @@ function NotDoneModal({
           {loading ? t("saving") : t("not_done_confirm_btn")}
         </button>
       </form>
-    </div>
+    </Modal>
   );
 }

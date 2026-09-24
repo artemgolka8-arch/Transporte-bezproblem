@@ -112,7 +112,7 @@ export function VehicleCard({
         <div className="text-xs text-muted truncate">{t("location_label", { name: vehicle.location })}</div>
       )}
 
-      <div className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 transition-opacity group-hover:opacity-100 ring-1 ring-cyan/20" />
+      <div className="pointer-events-none absolute inset-0 rounded-xl opacity-0 transition-opacity group-hover:opacity-100 ring-1 ring-cyan/20" />
     </Link>
   );
 }

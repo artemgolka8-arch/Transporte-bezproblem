@@ -8,6 +8,8 @@ import type { PlanRow } from "@/lib/plans";
 import { PlansPanel } from "./PlansPanel";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
 import { TranslationKey } from "@/lib/i18n/translations";
+import { Modal } from "./ui/Modal";
+import { useConfirm } from "./ui/ConfirmProvider";
 
 type ReportRating = "BAD" | "NORMAL" | "GREAT" | "EXCELLENT";
 
@@ -159,6 +161,7 @@ export function ReportsList({
 }) {
   const router = useRouter();
   const { t } = useTranslation();
+  const confirm = useConfirm();
   const [rows, setRows] = useState<ReportRow[]>(reports);
   const [plans, setPlans] = useState<PlanRow[]>(initialPlans);
   const [tab, setTab] = useState<"reports" | "plans">("reports");
@@ -207,7 +210,7 @@ export function ReportsList({
   const paged = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   async function deleteRow(id: string) {
-    if (!confirm(t("delete_report_confirm"))) return;
+    if (!await confirm(t("delete_report_confirm"))) return;
     const res = await fetch(`/api/reports/${id}`, { method: "DELETE" });
     if (res.ok) {
       setRows((prev) => prev.filter((r) => r.id !== id));
@@ -235,14 +238,14 @@ export function ReportsList({
               setTab("plans");
               setPlanFormOpen(true);
             }}
-            className="inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-cyan/40 bg-cyanDim/40 px-5 py-3 text-sm font-medium text-cyan transition-colors hover:bg-cyanDim/70"
+            className="inline-flex items-center gap-2 whitespace-nowrap rounded-lg border border-cyan/40 bg-cyanDim/40 px-4 py-2.5 text-sm font-medium text-cyan transition-colors hover:bg-cyanDim/70"
           >
             <span className="text-base leading-none">+</span>
             {t("add_plan_btn")}
           </button>
           <button
             onClick={() => setFormOpen(true)}
-            className="btn-primary whitespace-nowrap rounded-full px-5 py-3 text-sm"
+            className="btn-primary whitespace-nowrap px-5 py-3 text-sm"
           >
             <span className="text-base leading-none">+</span>
             {t("new_report_btn")}
@@ -586,10 +589,7 @@ function ReportDetailModal({
   const showFooter = canReview || (isAuthor && row.reviewStatus === "REJECTED");
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-3 py-4 backdrop-blur-sm sm:px-4"
-      onClick={onClose}
-    >
+    <Modal onClose={onClose} backdropClose>
       <div
         className="panel flex max-h-[calc(100dvh-2rem)] w-full max-w-lg animate-rise flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
@@ -744,7 +744,7 @@ function ReportDetailModal({
           </div>
         )}
       </div>
-    </div>
+    </Modal>
   );
 }
 
@@ -834,8 +834,8 @@ function NewReportModal({
   );
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-sm">
-      <div className="flex min-h-full items-center justify-center px-4 py-8">
+    <Modal onClose={onClose}>
+      
       <form onSubmit={submit} className="panel w-full max-w-lg p-6 animate-rise">
         <div className="mb-5 flex items-center justify-between">
           <h2 className="font-display text-lg font-semibold text-ink">
@@ -906,7 +906,7 @@ function NewReportModal({
           {loading ? t("creating") : editing ? t("report_resubmit_btn") : t("create")}
         </button>
       </form>
-      </div>
-    </div>
+      
+    </Modal>
   );
 }

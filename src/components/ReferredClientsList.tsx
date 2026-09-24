@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { canManageReferredClients, canDeleteReferredClient, isAmbassador, Role } from "@/lib/roles";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
 import { TranslationKey } from "@/lib/i18n/translations";
+import { Modal } from "./ui/Modal";
+import { useConfirm } from "./ui/ConfirmProvider";
 
 type ReferredVehicle = { id: string; code: string; name: string };
 
@@ -410,6 +412,7 @@ export function ReferredClientsList({
 }) {
   const router = useRouter();
   const { t } = useTranslation();
+  const confirm = useConfirm();
   const [rows, setRows] = useState<ReferredRow[]>(referred);
   const [query, setQuery] = useState("");
   // "all" — все, "none" — без амбассадора, иначе id выбранного амбассадора
@@ -491,7 +494,7 @@ export function ReferredClientsList({
   const paged = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   async function deleteRow(id: string) {
-    if (!confirm(t("delete_referred_confirm"))) return;
+    if (!await confirm(t("delete_referred_confirm"))) return;
     const res = await fetch(`/api/referred-clients/${id}`, { method: "DELETE" });
     if (res.ok) {
       setRows((prev) => prev.filter((r) => r.id !== id));
@@ -515,7 +518,7 @@ export function ReferredClientsList({
         {canAdd && (
           <button
             onClick={() => setFormOpen(true)}
-            className="btn-primary whitespace-nowrap rounded-full px-5 py-3 text-sm"
+            className="btn-primary whitespace-nowrap px-5 py-3 text-sm"
           >
             <span className="text-base leading-none">+</span>
             {t("new_referred_btn")}
@@ -872,6 +875,7 @@ function PayoutModal({
   onChange: (payouts: Payout[]) => void;
 }) {
   const { t } = useTranslation();
+  const confirm = useConfirm();
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -904,7 +908,7 @@ function PayoutModal({
   }
 
   async function removePayout(id: string) {
-    if (!confirm(t("delete_payout_confirm"))) return;
+    if (!await confirm(t("delete_payout_confirm"))) return;
     const res = await fetch(`/api/referred-clients/${row.id}/payouts/${id}`, { method: "DELETE" });
     if (res.ok) {
       onChange(row.payouts.filter((p) => p.id !== id));
@@ -912,7 +916,7 @@ function PayoutModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/60 backdrop-blur-sm px-4 py-8">
+    <Modal onClose={onClose}>
       <div className="panel w-full max-w-sm p-6 animate-rise">
         <div className="mb-1 flex items-center justify-between">
           <h2 className="font-display text-lg font-semibold text-ink">{t("payout_label")}</h2>
@@ -996,7 +1000,7 @@ function PayoutModal({
           </form>
         )}
       </div>
-    </div>
+    </Modal>
   );
 }
 
@@ -1044,7 +1048,7 @@ function NewReferredModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/60 backdrop-blur-sm px-4 py-8">
+    <Modal onClose={onClose}>
       <form onSubmit={submit} className="panel w-full max-w-sm p-6 animate-rise">
         <div className="mb-5 flex items-center justify-between">
           <h2 className="font-display text-lg font-semibold text-ink">{t("new_referred_title")}</h2>
@@ -1147,6 +1151,6 @@ function NewReferredModal({
           {loading ? t("creating") : t("create")}
         </button>
       </form>
-    </div>
+    </Modal>
   );
 }

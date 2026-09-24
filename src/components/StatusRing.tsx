@@ -38,14 +38,6 @@ export function StatusRing({
           status === "WORKSHOP" ? "animate-pulseBeacon" : ""
         }`}
       />
-      {status === "RENTED" && (
-        <div className="absolute inset-0 overflow-hidden rounded-full">
-          <div
-            className="absolute inset-y-0 w-1/2 bg-gradient-to-r from-transparent via-violet/20 to-transparent animate-scan"
-            style={{ backgroundSize: "200% 100%" }}
-          />
-        </div>
-      )}
       {photo ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img

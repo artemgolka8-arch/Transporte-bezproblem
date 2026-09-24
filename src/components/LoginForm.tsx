@@ -34,27 +34,18 @@ export function LoginForm() {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-4">
-      {/* Ambient brand background */}
-      <div className="pointer-events-none absolute inset-0 bg-brandRadial" />
-      <div className="pointer-events-none absolute inset-0 bg-grid bg-gridcell opacity-[0.5] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_40%,black,transparent)]" />
-      <div className="pointer-events-none absolute -left-24 top-1/4 h-72 w-72 rounded-full bg-cyan/10 blur-[100px]" />
-      <div className="pointer-events-none absolute -right-24 bottom-1/4 h-72 w-72 rounded-full bg-violet/10 blur-[100px]" />
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-scanline animate-scan" />
-
+    <div className="relative flex min-h-screen items-center justify-center bg-bg px-4">
       <div className="absolute top-4 right-4 z-10">
         <HeaderControls />
       </div>
 
       <form
         onSubmit={handleSubmit}
-        className="panel-elevated relative z-10 w-full max-w-sm overflow-hidden p-8 animate-rise"
+        className="panel-elevated relative z-10 w-full max-w-sm p-8 animate-rise"
       >
-        <div className="pointer-events-none absolute -right-10 -top-16 h-40 w-40 rounded-full bg-brandGradient opacity-10 blur-2xl" />
-
         <div className="mb-7 flex flex-col items-center text-center">
           <LogoStacked className="mb-4" />
-          <div className="label-eyebrow">{t("login_tagline")}</div>
+          <div className="text-xs text-muted">{t("login_tagline")}</div>
         </div>
 
         <label className="mb-1 block label-eyebrow">{t("field_email")}</label>
@@ -63,7 +54,7 @@ export function LoginForm() {
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="mb-4 w-full rounded-xl border border-line bg-bg2 px-3.5 py-2.5 text-sm text-ink outline-none transition-all focus:border-cyan/60 focus:shadow-glowCyan"
+          className="mb-4 w-full rounded-lg border border-line bg-bg2 px-3.5 py-2.5 text-sm text-ink outline-none transition-colors focus:border-cyan focus:ring-2 focus:ring-cyan/20"
           placeholder="you@fleet.local"
         />
 
@@ -73,7 +64,7 @@ export function LoginForm() {
           required
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="mb-5 w-full rounded-xl border border-line bg-bg2 px-3.5 py-2.5 text-sm text-ink outline-none transition-all focus:border-cyan/60 focus:shadow-glowCyan"
+          className="mb-5 w-full rounded-lg border border-line bg-bg2 px-3.5 py-2.5 text-sm text-ink outline-none transition-colors focus:border-cyan focus:ring-2 focus:ring-cyan/20"
           placeholder="••••••••"
         />
 
