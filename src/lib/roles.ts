@@ -38,6 +38,12 @@ export function canDeleteAnyReport(role?: string | null) {
   return isAdmin(role) || isPrManager(role);
 }
 
+// Проверка отчётов: подтвердить отчёт или не подтвердить (с комментарием, что исправить)
+// могут PR-менеджер, директор и администратор. Свой отчёт проверять нельзя (см. API).
+export function canReviewReports(role?: string | null) {
+  return role === "ADMIN" || role === "DIRECTOR" || role === "PR_MANAGER";
+}
+
 // Кто может создавать задачи и назначать их другим (вкладка «Задачи»):
 // ADMIN и MANAGER — как раньше, плюс PR_MANAGER, который умеет ставить
 // задачи амбассадорам, другим PR-менеджерам, администраторам и директору.

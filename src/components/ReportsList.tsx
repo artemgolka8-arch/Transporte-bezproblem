@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { canDeleteAnyReport, isAmbassador, Role } from "@/lib/roles";
+import { canDeleteAnyReport, canReviewReports, isAmbassador, Role } from "@/lib/roles";
+import type { ReportRow, ReviewStatus } from "@/lib/reports";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
 import { TranslationKey } from "@/lib/i18n/translations";
 
@@ -23,24 +24,43 @@ const RATING_STYLE: Record<ReportRating, string> = {
   EXCELLENT: "border border-mint/35 bg-mintDim/60 text-mint",
 };
 
-type ReportRow = {
-  id: string;
-  authorId: string;
-  authorName: string;
-  date: string;
-  description: string;
-  hoursWorked: number;
-  partnerVisits: number;
-  rentVisits: number;
-  partnerLeads: number;
-  rentLeads: number;
-  tiktokVideos: number;
-  stories: number;
-  reelsPublished: number;
-  tiktokPublished: number;
-  selfRating: ReportRating;
-  createdAt: string;
+const REVIEW_STATUSES: ReviewStatus[] = ["PENDING", "APPROVED", "REJECTED"];
+const REVIEW_LABEL_KEYS: Record<ReviewStatus, TranslationKey> = {
+  PENDING: "report_status_pending",
+  APPROVED: "report_status_approved",
+  REJECTED: "report_status_rejected",
 };
+// Статус проверки: жёлтый — ждёт, зелёный — подтверждён, красный — не подтверждён
+const REVIEW_STYLE: Record<ReviewStatus, string> = {
+  PENDING: "border border-amber/35 bg-amberDim/60 text-amber",
+  APPROVED: "border border-mint/35 bg-mintDim/60 text-mint",
+  REJECTED: "border border-coral/35 bg-coralDim/60 text-coral",
+};
+
+function ReviewIcon({ status }: { status: ReviewStatus }) {
+  return (
+    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+      {status === "APPROVED" && <path d="m5 12.5 4.5 4.5L19 7.5" />}
+      {status === "REJECTED" && <path d="M6 6l12 12M18 6 6 18" />}
+      {status === "PENDING" && (
+        <>
+          <circle cx="12" cy="12" r="8.5" />
+          <path d="M12 7.5V12l3 2" />
+        </>
+      )}
+    </svg>
+  );
+}
+
+function ReviewBadge({ status }: { status: ReviewStatus }) {
+  const { t } = useTranslation();
+  return (
+    <span className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-medium ${REVIEW_STYLE[status]}`}>
+      <ReviewIcon status={status} />
+      {t(REVIEW_LABEL_KEYS[status])}
+    </span>
+  );
+}
 
 function initials(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -139,16 +159,34 @@ export function ReportsList({
   const [query, setQuery] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [detailRow, setDetailRow] = useState<ReportRow | null>(null);
+  const [editRow, setEditRow] = useState<ReportRow | null>(null);
+  const [statusFilter, setStatusFilter] = useState<ReviewStatus | "ALL">("ALL");
   const [menuRowId, setMenuRowId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const ambassadorOnly = isAmbassador(role);
   const admin = canDeleteAnyReport(role);
+  const canReview = canReviewReports(role);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return rows;
-    return rows.filter((r) => `${r.authorName} ${r.description}`.toLowerCase().includes(q));
-  }, [rows, query]);
+    return rows.filter((r) => {
+      if (statusFilter !== "ALL" && r.reviewStatus !== statusFilter) return false;
+      if (!q) return true;
+      return `${r.authorName} ${r.description}`.toLowerCase().includes(q);
+    });
+  }, [rows, query, statusFilter]);
+
+  const statusCounts = useMemo(() => {
+    const counts: Record<ReviewStatus, number> = { PENDING: 0, APPROVED: 0, REJECTED: 0 };
+    for (const r of rows) counts[r.reviewStatus] += 1;
+    return counts;
+  }, [rows]);
+
+  // Обновляет отчёт в списке (и в открытом окне) после проверки или исправления
+  function upsertRow(row: ReportRow) {
+    setRows((prev) => (prev.some((r) => r.id === row.id) ? prev.map((r) => (r.id === row.id ? row : r)) : [row, ...prev]));
+    setDetailRow((prev) => (prev && prev.id === row.id ? row : prev));
+  }
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
@@ -203,6 +241,30 @@ export function ReportsList({
         </div>
       </div>
 
+      <div className="mb-5 flex flex-wrap items-center gap-2">
+        {(["ALL", ...REVIEW_STATUSES] as const).map((st) => {
+          const active = statusFilter === st;
+          const count = st === "ALL" ? rows.length : statusCounts[st];
+          return (
+            <button
+              key={st}
+              onClick={() => {
+                setStatusFilter(st);
+                setPage(1);
+              }}
+              className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors ${
+                active
+                  ? "border-cyan/40 bg-cyanDim/50 text-cyan"
+                  : "border-line bg-bg2 text-muted hover:border-cyan/30 hover:text-ink"
+              }`}
+            >
+              {st === "ALL" ? t("report_filter_all") : t(REVIEW_LABEL_KEYS[st])}
+              <span className={active ? "text-cyan/80" : "text-faint"}>{count}</span>
+            </button>
+          );
+        })}
+      </div>
+
       {filtered.length === 0 ? (
         <div className="panel flex flex-col items-center gap-1 py-14 text-center">
           <div className="text-sm text-ink">{t("reports_empty_title")}</div>
@@ -211,7 +273,7 @@ export function ReportsList({
       ) : (
         <div className="panel overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1240px] text-left text-sm">
+            <table className="w-full min-w-[1380px] text-left text-sm">
               <thead>
                 <tr className="border-b border-line text-muted">
                   {!ambassadorOnly && <th className="px-5 py-3.5 text-xs font-medium text-muted">{t("col_report_author")}</th>}
@@ -222,6 +284,7 @@ export function ReportsList({
                   <th className="px-5 py-3.5 text-xs font-medium text-muted">{t("col_report_content")}</th>
                   <th className="px-5 py-3.5 text-xs font-medium text-muted">{t("col_report_published")}</th>
                   <th className="px-5 py-3.5 text-xs font-medium text-muted">{t("col_report_rating")}</th>
+                  <th className="px-5 py-3.5 text-xs font-medium text-muted">{t("col_report_status")}</th>
                   <th className="px-5 py-3.5 text-xs font-medium text-muted">{t("actions_label")}</th>
                 </tr>
               </thead>
@@ -283,6 +346,9 @@ export function ReportsList({
                           <span className="h-1.5 w-1.5 rounded-full bg-current" />
                           {t(RATING_LABEL_KEYS[r.selfRating])}
                         </span>
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <ReviewBadge status={r.reviewStatus} />
                       </td>
                       <td className="px-5 py-3.5" onClick={(e) => e.stopPropagation()}>
                         <div className="relative">
@@ -352,93 +418,261 @@ export function ReportsList({
         </div>
       )}
 
-      {formOpen && (
+      {(formOpen || editRow) && (
         <NewReportModal
-          onClose={() => setFormOpen(false)}
-          onCreated={(row) => {
+          key={editRow?.id ?? "new"}
+          initial={editRow}
+          onClose={() => {
             setFormOpen(false);
-            setRows((prev) => [row, ...prev]);
+            setEditRow(null);
+          }}
+          onSaved={(row) => {
+            upsertRow(row);
+            setFormOpen(false);
+            setEditRow(null);
             router.refresh();
           }}
         />
       )}
 
       {detailRow && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/60 backdrop-blur-sm px-4 py-8"
-          onClick={() => setDetailRow(null)}
-        >
-          <div className="panel w-full max-w-md p-6 animate-rise" onClick={(e) => e.stopPropagation()}>
-            <div className="mb-4 flex items-start justify-between gap-3">
-              <div>
-                <div className="font-display text-lg font-semibold text-ink">{detailRow.authorName}</div>
-                <div className="text-xs text-muted">{formatDate(detailRow.date)}</div>
-              </div>
-              <button type="button" onClick={() => setDetailRow(null)} className="text-muted hover:text-ink">
-                ✕
-              </button>
-            </div>
+        <ReportDetailModal
+          row={detailRow}
+          canReview={canReview && detailRow.authorId !== currentUserId}
+          isAuthor={detailRow.authorId === currentUserId}
+          canDelete={admin || detailRow.authorId === currentUserId}
+          onClose={() => setDetailRow(null)}
+          onDelete={() => deleteRow(detailRow.id)}
+          onUpdated={upsertRow}
+          onEdit={() => {
+            setEditRow(detailRow);
+            setDetailRow(null);
+          }}
+        />
+      )}
+    </div>
+  );
+}
 
-            <p className="mb-4 whitespace-pre-wrap rounded-xl border border-line bg-bg2 px-3.5 py-3 text-sm text-ink">
-              {detailRow.description}
-            </p>
+// Просмотр отчёта. Окно ограничено по высоте, а содержимое прокручивается внутри
+// (с заметным ползунком), поэтому отчёт любой длины можно пролистать целиком.
+// Шапка и нижняя панель с действиями остаются на месте.
+function ReportDetailModal({
+  row,
+  canReview,
+  isAuthor,
+  canDelete,
+  onClose,
+  onDelete,
+  onUpdated,
+  onEdit,
+}: {
+  row: ReportRow;
+  canReview: boolean;
+  isAuthor: boolean;
+  canDelete: boolean;
+  onClose: () => void;
+  onDelete: () => void;
+  onUpdated: (row: ReportRow) => void;
+  onEdit: () => void;
+}) {
+  const { t } = useTranslation();
+  const [rejecting, setRejecting] = useState(false);
+  const [comment, setComment] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-            <div className="mb-4 grid grid-cols-2 gap-2.5 text-xs">
-              <div className="rounded-lg border border-line bg-bg2 px-3 py-2">
-                <div className="text-faint">{t("field_report_hours")}</div>
-                <div className="mt-0.5 font-medium text-ink">{detailRow.hoursWorked}</div>
-              </div>
-              <div className="rounded-lg border border-line bg-bg2 px-3 py-2">
-                <div className="text-faint">{t("field_report_self_rating")}</div>
-                <span className={`mt-1 inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium ${RATING_STYLE[detailRow.selfRating]}`}>
-                  {t(RATING_LABEL_KEYS[detailRow.selfRating])}
-                </span>
-              </div>
-              <div className="rounded-lg border border-line bg-bg2 px-3 py-2">
-                <div className="text-faint">{t("field_report_partner_visits")}</div>
-                <div className="mt-0.5 font-medium text-ink">{detailRow.partnerVisits}</div>
-              </div>
-              <div className="rounded-lg border border-line bg-bg2 px-3 py-2">
-                <div className="text-faint">{t("field_report_rent_visits")}</div>
-                <div className="mt-0.5 font-medium text-ink">{detailRow.rentVisits}</div>
-              </div>
-              <div className="rounded-lg border border-line bg-bg2 px-3 py-2">
-                <div className="text-faint">{t("field_report_partner_leads")}</div>
-                <div className="mt-0.5 font-medium text-ink">{detailRow.partnerLeads}</div>
-              </div>
-              <div className="rounded-lg border border-line bg-bg2 px-3 py-2">
-                <div className="text-faint">{t("field_report_rent_leads")}</div>
-                <div className="mt-0.5 font-medium text-ink">{detailRow.rentLeads}</div>
-              </div>
-              <div className="rounded-lg border border-line bg-bg2 px-3 py-2">
-                <div className="text-faint">{t("field_report_tiktok_videos")}</div>
-                <div className="mt-0.5 font-medium text-ink">{detailRow.tiktokVideos}</div>
-              </div>
-              <div className="rounded-lg border border-line bg-bg2 px-3 py-2">
-                <div className="text-faint">{t("field_report_stories")}</div>
-                <div className="mt-0.5 font-medium text-ink">{detailRow.stories}</div>
-              </div>
-              <div className="rounded-lg border border-line bg-bg2 px-3 py-2">
-                <div className="text-faint">{t("field_report_reels_published")}</div>
-                <div className="mt-0.5 font-medium text-ink">{detailRow.reelsPublished}</div>
-              </div>
-              <div className="rounded-lg border border-line bg-bg2 px-3 py-2">
-                <div className="text-faint">{t("field_report_tiktok_published")}</div>
-                <div className="mt-0.5 font-medium text-ink">{detailRow.tiktokPublished}</div>
-              </div>
-            </div>
+  async function review(decision: "APPROVED" | "REJECTED") {
+    if (decision === "REJECTED" && !comment.trim()) {
+      setError(t("report_review_error_comment"));
+      return;
+    }
+    setError(null);
+    setBusy(true);
+    const res = await fetch(`/api/reports/${row.id}/review`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ decision, comment }),
+    });
+    setBusy(false);
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setError(data.error || t("report_review_failed"));
+      return;
+    }
+    onUpdated(await res.json());
+    setRejecting(false);
+    setComment("");
+  }
 
-            {(admin || detailRow.authorId === currentUserId) && (
-              <button
-                onClick={() => deleteRow(detailRow.id)}
-                className="w-full rounded-lg border border-danger/30 bg-danger/10 py-2.5 text-sm font-medium text-danger transition-opacity hover:opacity-80"
-              >
-                {t("delete_action")}
-              </button>
-            )}
+  const stat = (label: TranslationKey, value: React.ReactNode) => (
+    <div className="rounded-lg border border-line bg-bg2 px-3 py-2">
+      <div className="text-faint">{t(label)}</div>
+      <div className="mt-0.5 font-medium text-ink">{value}</div>
+    </div>
+  );
+
+  const showFooter = canReview || (isAuthor && row.reviewStatus === "REJECTED");
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-3 py-4 backdrop-blur-sm sm:px-4"
+      onClick={onClose}
+    >
+      <div
+        className="panel flex max-h-[calc(100dvh-2rem)] w-full max-w-lg animate-rise flex-col overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* шапка */}
+        <div className="flex shrink-0 items-start justify-between gap-3 border-b border-line px-6 py-4">
+          <div className="min-w-0">
+            <div className="truncate font-display text-lg font-semibold text-ink">{row.authorName}</div>
+            <div className="text-xs text-muted">{formatDate(row.date)}</div>
+          </div>
+          <div className="flex shrink-0 items-center gap-3">
+            <ReviewBadge status={row.reviewStatus} />
+            <button type="button" onClick={onClose} className="text-muted hover:text-ink">
+              ✕
+            </button>
           </div>
         </div>
-      )}
+
+        {/* прокручиваемое содержимое */}
+        <div className="scrollbar-visible min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-5">
+          {row.reviewStatus === "REJECTED" && (
+            <div className="mb-4 rounded-xl border border-coral/35 bg-coralDim/40 px-3.5 py-3">
+              <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-coral">
+                {t("report_rejected_note_title")}
+              </div>
+              <p className="whitespace-pre-wrap break-words text-sm text-ink">{row.reviewComment}</p>
+              {row.reviewedByName && row.reviewedAt && (
+                <div className="mt-2 text-[11px] text-muted">
+                  {t("report_review_by", { name: row.reviewedByName, date: formatDate(row.reviewedAt) })}
+                </div>
+              )}
+              {isAuthor && <div className="mt-2 text-xs text-muted">{t("report_rejected_author_hint")}</div>}
+            </div>
+          )}
+          {row.reviewStatus === "APPROVED" && row.reviewedByName && row.reviewedAt && (
+            <div className="mb-4 rounded-xl border border-mint/35 bg-mintDim/40 px-3.5 py-2.5 text-xs text-muted">
+              {t("report_review_by", { name: row.reviewedByName, date: formatDate(row.reviewedAt) })}
+            </div>
+          )}
+          {row.reviewStatus === "PENDING" && (
+            <div className="mb-4 rounded-xl border border-amber/30 bg-amberDim/30 px-3.5 py-2.5 text-xs text-muted">
+              {t("report_pending_hint")}
+            </div>
+          )}
+
+          <p className="mb-4 whitespace-pre-wrap break-words rounded-xl border border-line bg-bg2 px-3.5 py-3 text-sm text-ink">
+            {row.description}
+          </p>
+
+          <div className="grid grid-cols-2 gap-2.5 text-xs">
+            {stat("field_report_hours", row.hoursWorked)}
+            <div className="rounded-lg border border-line bg-bg2 px-3 py-2">
+              <div className="text-faint">{t("field_report_self_rating")}</div>
+              <span className={`mt-1 inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium ${RATING_STYLE[row.selfRating]}`}>
+                {t(RATING_LABEL_KEYS[row.selfRating])}
+              </span>
+            </div>
+            {stat("field_report_partner_visits", row.partnerVisits)}
+            {stat("field_report_rent_visits", row.rentVisits)}
+            {stat("field_report_partner_leads", row.partnerLeads)}
+            {stat("field_report_rent_leads", row.rentLeads)}
+            {stat("field_report_tiktok_videos", row.tiktokVideos)}
+            {stat("field_report_stories", row.stories)}
+            {stat("field_report_reels_published", row.reelsPublished)}
+            {stat("field_report_tiktok_published", row.tiktokPublished)}
+          </div>
+
+          {canDelete && (
+            <button
+              onClick={onDelete}
+              className="mt-5 w-full rounded-lg border border-danger/30 bg-danger/10 py-2.5 text-sm font-medium text-danger transition-opacity hover:opacity-80"
+            >
+              {t("delete_action")}
+            </button>
+          )}
+        </div>
+
+        {/* действия: проверка (PR-менеджер / директор / администратор) или исправление (автор) */}
+        {showFooter && (
+          <div className="shrink-0 border-t border-line bg-panel px-6 py-4">
+            {canReview && !rejecting && (
+              <div className="grid grid-cols-2 gap-2.5">
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => review("APPROVED")}
+                  className="inline-flex items-center justify-center gap-2 rounded-lg border border-mint/40 bg-mintDim/60 py-2.5 text-sm font-medium text-mint transition-opacity hover:opacity-80 disabled:opacity-50"
+                >
+                  <ReviewIcon status="APPROVED" />
+                  {t("report_review_approve")}
+                </button>
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => {
+                    setRejecting(true);
+                    setError(null);
+                  }}
+                  className="inline-flex items-center justify-center gap-2 rounded-lg border border-coral/40 bg-coralDim/60 py-2.5 text-sm font-medium text-coral transition-opacity hover:opacity-80 disabled:opacity-50"
+                >
+                  <ReviewIcon status="REJECTED" />
+                  {t("report_review_reject")}
+                </button>
+              </div>
+            )}
+
+            {canReview && rejecting && (
+              <div>
+                <label className="mb-1 block label-eyebrow">{t("report_review_comment_label")}</label>
+                <textarea
+                  autoFocus
+                  rows={3}
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  maxLength={1000}
+                  placeholder={t("report_review_comment_placeholder")}
+                  className="mb-3 w-full resize-none rounded-lg border border-line bg-bg2 px-3 py-2 text-sm text-ink outline-none focus:border-coral/50"
+                />
+                <div className="grid grid-cols-2 gap-2.5">
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => {
+                      setRejecting(false);
+                      setError(null);
+                    }}
+                    className="rounded-lg border border-line py-2.5 text-sm font-medium text-muted transition-colors hover:text-ink disabled:opacity-50"
+                  >
+                    {t("cancel")}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => review("REJECTED")}
+                    className="rounded-lg border border-coral/40 bg-coral py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+                  >
+                    {t("report_review_send_reject")}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {!canReview && isAuthor && row.reviewStatus === "REJECTED" && (
+              <button type="button" onClick={onEdit} className="btn-primary w-full py-2.5 text-sm">
+                {t("report_edit_btn")}
+              </button>
+            )}
+
+            {error && (
+              <div className="mt-3 rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-xs text-danger">{error}</div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -449,26 +683,31 @@ function todayISO() {
   return new Date(d.getTime() - tz * 60000).toISOString().slice(0, 10);
 }
 
+// Форма отчёта: создание нового и исправление не подтверждённого (initial)
 function NewReportModal({
+  initial,
   onClose,
-  onCreated,
+  onSaved,
 }: {
+  initial?: ReportRow | null;
   onClose: () => void;
-  onCreated: (row: ReportRow) => void;
+  onSaved: (row: ReportRow) => void;
 }) {
   const { t } = useTranslation();
-  const [date, setDate] = useState(todayISO());
-  const [description, setDescription] = useState("");
-  const [hoursWorked, setHoursWorked] = useState("");
-  const [partnerVisits, setPartnerVisits] = useState("");
-  const [rentVisits, setRentVisits] = useState("");
-  const [partnerLeads, setPartnerLeads] = useState("");
-  const [rentLeads, setRentLeads] = useState("");
-  const [tiktokVideos, setTiktokVideos] = useState("");
-  const [stories, setStories] = useState("");
-  const [reelsPublished, setReelsPublished] = useState("");
-  const [tiktokPublished, setTiktokPublished] = useState("");
-  const [selfRating, setSelfRating] = useState<ReportRating>("NORMAL");
+  const editing = !!initial;
+  const num = (v?: number) => (initial && v !== undefined ? String(v) : "");
+  const [date, setDate] = useState(initial ? initial.date.slice(0, 10) : todayISO());
+  const [description, setDescription] = useState(initial?.description ?? "");
+  const [hoursWorked, setHoursWorked] = useState(num(initial?.hoursWorked));
+  const [partnerVisits, setPartnerVisits] = useState(num(initial?.partnerVisits));
+  const [rentVisits, setRentVisits] = useState(num(initial?.rentVisits));
+  const [partnerLeads, setPartnerLeads] = useState(num(initial?.partnerLeads));
+  const [rentLeads, setRentLeads] = useState(num(initial?.rentLeads));
+  const [tiktokVideos, setTiktokVideos] = useState(num(initial?.tiktokVideos));
+  const [stories, setStories] = useState(num(initial?.stories));
+  const [reelsPublished, setReelsPublished] = useState(num(initial?.reelsPublished));
+  const [tiktokPublished, setTiktokPublished] = useState(num(initial?.tiktokPublished));
+  const [selfRating, setSelfRating] = useState<ReportRating>(initial?.selfRating ?? "NORMAL");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -480,8 +719,8 @@ function NewReportModal({
     }
     setError(null);
     setLoading(true);
-    const res = await fetch("/api/reports", {
-      method: "POST",
+    const res = await fetch(editing ? `/api/reports/${initial!.id}` : "/api/reports", {
+      method: editing ? "PATCH" : "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         date,
@@ -501,11 +740,11 @@ function NewReportModal({
     setLoading(false);
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      setError(data.error || t("report_create_failed"));
+      setError(data.error || t(editing ? "report_update_failed" : "report_create_failed"));
       return;
     }
     const row = await res.json();
-    onCreated(row);
+    onSaved(row);
   }
 
   const numberField = (label: TranslationKey, value: string, setValue: (v: string) => void) => (
@@ -524,10 +763,13 @@ function NewReportModal({
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/60 backdrop-blur-sm px-4 py-8">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-sm">
+      <div className="flex min-h-full items-center justify-center px-4 py-8">
       <form onSubmit={submit} className="panel w-full max-w-lg p-6 animate-rise">
         <div className="mb-5 flex items-center justify-between">
-          <h2 className="font-display text-lg font-semibold text-ink">{t("new_report_title")}</h2>
+          <h2 className="font-display text-lg font-semibold text-ink">
+            {editing ? t("edit_report_title") : t("new_report_title")}
+          </h2>
           <button type="button" onClick={onClose} className="text-muted hover:text-ink">
             ✕
           </button>
@@ -590,9 +832,10 @@ function NewReportModal({
         )}
 
         <button type="submit" disabled={loading} className="btn-primary w-full py-2.5 text-sm">
-          {loading ? t("creating") : t("create")}
+          {loading ? t("creating") : editing ? t("report_resubmit_btn") : t("create")}
         </button>
       </form>
+      </div>
     </div>
   );
 }

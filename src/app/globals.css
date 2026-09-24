@@ -103,6 +103,29 @@
     border-radius: 8px;
   }
 
+  /* Заметный ползунок для окон с длинным содержимым (например, просмотр отчёта) */
+  .scrollbar-visible {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(var(--color-muted) / 0.55) transparent;
+  }
+  .scrollbar-visible::-webkit-scrollbar {
+    width: 10px;
+  }
+  .scrollbar-visible::-webkit-scrollbar-track {
+    background: rgb(var(--color-line) / 0.35);
+    border-radius: 10px;
+  }
+  .scrollbar-visible::-webkit-scrollbar-thumb {
+    background: rgb(var(--color-muted) / 0.55);
+    border-radius: 10px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+  .scrollbar-visible::-webkit-scrollbar-thumb:hover {
+    background: rgb(var(--color-cyan) / 0.8);
+    background-clip: content-box;
+  }
+
   .panel {
     @apply bg-panel border border-line rounded-2xl shadow-panel dark:bg-panel/80 dark:backdrop-blur-xl dark:border-cyan/10;
   }

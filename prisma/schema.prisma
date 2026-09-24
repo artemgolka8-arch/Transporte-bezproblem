@@ -159,9 +159,23 @@ model Report {
   reelsPublished  Int         @default(0)
   tiktokPublished Int         @default(0)
   selfRating     ReportRating
+  // Проверка отчёта (PR-менеджер, директор, администратор):
+  // PENDING — ждёт проверки, APPROVED — подтверждён, REJECTED — не подтверждён
+  // (тогда в reviewComment написано, что не так и что нужно изменить).
+  reviewStatus   ReportReviewStatus @default(PENDING)
+  reviewComment  String?
+  reviewedById   String?
+  reviewedByName String?
+  reviewedAt     DateTime?
   createdAt      DateTime     @default(now())
 
   @@index([authorId])
+}
+
+enum ReportReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 enum TaskStatus {

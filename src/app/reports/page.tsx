@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { isAmbassador, isViewRestrictedRole } from "@/lib/roles";
+import { toReportRow } from "@/lib/reports";
 import { AppShell } from "@/components/AppShell";
 import { ReportsList } from "@/components/ReportsList";
 
@@ -26,24 +27,7 @@ export default async function ReportsPage() {
     include: { author: { select: { id: true, name: true } } },
   });
 
-  const rows = reports.map((r) => ({
-    id: r.id,
-    authorId: r.authorId,
-    authorName: r.author.name,
-    date: r.date.toISOString(),
-    description: r.description,
-    hoursWorked: r.hoursWorked,
-    partnerVisits: r.partnerVisits,
-    rentVisits: r.rentVisits,
-    partnerLeads: r.partnerLeads,
-    rentLeads: r.rentLeads,
-    tiktokVideos: r.tiktokVideos,
-    stories: r.stories,
-    reelsPublished: r.reelsPublished,
-    tiktokPublished: r.tiktokPublished,
-    selfRating: r.selfRating,
-    createdAt: r.createdAt.toISOString(),
-  }));
+  const rows = reports.map(toReportRow);
 
   // Амбассадору, директору и PR-менеджеру статистику автопарка не показываем
   // (и не отдаём в браузер)
