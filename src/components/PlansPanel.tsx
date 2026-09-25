@@ -320,6 +320,7 @@ export function PlansPanel({
         <PlanFormModal
           key={editRow?.id ?? "new"}
           initial={editRow}
+          asReviewer={!!editRow && editRow.authorId !== currentUserId}
           onClose={() => {
             onFormClose();
             setEditRow(null);
@@ -407,8 +408,8 @@ function PlanDetailModal({
     setComment("");
   }
 
-  const canEditPlan = isAuthor && (row.reviewStatus === "REJECTED" || row.reviewStatus === "SUGGESTION");
-  const showFooter = canReview || canEditPlan;
+  const canAuthorEdit = isAuthor && (row.reviewStatus === "REJECTED" || row.reviewStatus === "SUGGESTION");
+  const showFooter = canReview || canAuthorEdit;
   const reviewedBy =
     row.reviewedByName && row.reviewedAt
       ? t("report_review_by", { name: row.reviewedByName, date: formatStamp(row.reviewedAt, lang) })
@@ -534,6 +535,16 @@ function PlanDetailModal({
               </div>
             )}
 
+            {canReview && mode === null && (
+              <button
+                type="button"
+                onClick={onEdit}
+                className="mt-2.5 w-full rounded-lg border border-line py-2.5 text-[13px] font-medium text-ink transition-colors hover:border-cyan/40 hover:text-cyan"
+              >
+                {t("plan_reviewer_edit_btn")}
+              </button>
+            )}
+
             {canReview && mode !== null && (
               <div>
                 <label className="mb-1 block label-eyebrow">
@@ -576,7 +587,7 @@ function PlanDetailModal({
               </div>
             )}
 
-            {!canReview && canEditPlan && (
+            {!canReview && canAuthorEdit && (
               <button type="button" onClick={onEdit} className="btn-primary w-full py-2.5 text-sm">
                 {t("plan_edit_btn")}
               </button>
@@ -596,10 +607,12 @@ function PlanDetailModal({
 
 function PlanFormModal({
   initial,
+  asReviewer = false,
   onClose,
   onSaved,
 }: {
   initial?: PlanRow | null;
+  asReviewer?: boolean;
   onClose: () => void;
   onSaved: (row: PlanRow) => void;
 }) {
@@ -609,6 +622,8 @@ function PlanFormModal({
   const [plannedHours, setPlannedHours] = useState(initial ? String(initial.plannedHours) : "");
   const [description, setDescription] = useState(initial?.description ?? "");
   const [error, setError] = useState<string | null>(null);
+  const [smsWarning, setSmsWarning] = useState<string | null>(null);
+  const [savedData, setSavedData] = useState<PlanRow | null>(null);
   const [loading, setLoading] = useState(false);
 
   async function submit(e: React.FormEvent) {
@@ -630,15 +645,38 @@ function PlanFormModal({
       setError(data.error || t(editing ? "plan_update_failed" : "plan_create_failed"));
       return;
     }
-    onSaved(await res.json());
+    const data = await res.json();
+    if (asReviewer && data.smsSent === false) {
+      setSmsWarning(data.smsError ? t("plan_sms_failed_reason", { reason: data.smsError }) : t("plan_sms_failed"));
+      setSavedData(data);
+      return;
+    }
+    onSaved(data);
   }
 
   const inputClass =
     "w-full rounded-lg border border-line bg-bg2 px-3 py-2.5 text-sm text-ink outline-none transition-colors focus:border-cyan/50";
 
   return (
-    <Modal onClose={onClose}>
-      
+    <Modal onClose={savedData ? () => onSaved(savedData) : onClose}>
+      {savedData ? (
+        <div className="panel w-full max-w-lg animate-rise p-6">
+          <div className="mb-4 flex items-start gap-3">
+            <span className="icon-tile mt-0.5 h-10 w-10 !bg-amberDim !text-amber">!</span>
+            <div>
+              <h2 className="font-display text-lg font-semibold text-ink">{t("plan_saved_title")}</h2>
+              <p className="mt-1 text-sm text-muted">{smsWarning}</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => onSaved(savedData)}
+            className="btn-primary w-full py-2.5 text-sm"
+          >
+            {t("close")}
+          </button>
+        </div>
+      ) : (
         <form onSubmit={submit} className="panel w-full max-w-lg animate-rise p-6">
           <div className="mb-5 flex items-start justify-between gap-3">
             <div className="flex items-start gap-3">
@@ -647,9 +685,11 @@ function PlanFormModal({
               </span>
               <div>
                 <h2 className="font-display text-lg font-semibold text-ink">
-                  {editing ? t("edit_plan_title") : t("new_plan_title")}
+                  {asReviewer ? t("plan_reviewer_edit_title") : editing ? t("edit_plan_title") : t("new_plan_title")}
                 </h2>
-                <p className="mt-0.5 text-xs text-muted">{t("plan_form_subtitle")}</p>
+                <p className="mt-0.5 text-xs text-muted">
+                  {asReviewer ? t("plan_reviewer_edit_subtitle") : t("plan_form_subtitle")}
+                </p>
               </div>
             </div>
             <button type="button" onClick={onClose} className="text-muted hover:text-ink">
@@ -700,10 +740,16 @@ function PlanFormModal({
           )}
 
           <button type="submit" disabled={loading} className="btn-primary w-full py-2.5 text-sm">
-            {loading ? t("creating") : editing ? t("plan_resubmit_btn") : t("plan_submit_btn")}
+            {loading
+              ? t("creating")
+              : asReviewer
+              ? t("plan_save_changes_btn")
+              : editing
+              ? t("plan_resubmit_btn")
+              : t("plan_submit_btn")}
           </button>
         </form>
-      
+      )}
     </Modal>
   );
 }
