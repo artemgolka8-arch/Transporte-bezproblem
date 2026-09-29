@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+import bcrypt from "bcryptjs";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -22,7 +23,19 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     return NextResponse.json({ error: "Недостаточно прав" }, { status: 403 });
   }
   const body = await req.json();
-  const { role, name, email, firstName, lastName, phone, position, city } = body;
+  const { role, name, email, firstName, lastName, phone, position, city, password } = body;
+
+  // Смена пароля администратором: пароль хранится только в виде bcrypt-хеша
+  let hashedPassword: string | undefined;
+  if (password !== undefined) {
+    if (typeof password !== "string" || password.length < 8) {
+      return NextResponse.json({ error: "Пароль должен быть не короче 8 символов" }, { status: 400 });
+    }
+    if (password.length > 72) {
+      return NextResponse.json({ error: "Пароль слишком длинный (максимум 72 символа)" }, { status: 400 });
+    }
+    hashedPassword = await bcrypt.hash(password, 10);
+  }
 
   try {
     const user = await prisma.user.update({
@@ -36,6 +49,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         ...(phone !== undefined ? { phone } : {}),
         ...(position !== undefined ? { position } : {}),
         ...(city !== undefined ? { city } : {}),
+        ...(hashedPassword ? { password: hashedPassword } : {}),
       },
       select: USER_SELECT,
     });

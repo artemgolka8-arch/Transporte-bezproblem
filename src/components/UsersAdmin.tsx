@@ -27,6 +27,7 @@ export function UsersAdmin({ users, currentUserId }: { users: UserRow[]; current
   const [list, setList] = useState(users);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<UserRow | null>(null);
+  const [pwUser, setPwUser] = useState<UserRow | null>(null);
 
   async function updateRole(id: string, role: Role) {
     const res = await fetch(`/api/users/${id}`, {
@@ -65,7 +66,7 @@ export function UsersAdmin({ users, currentUserId }: { users: UserRow[]; current
 
       <div className="panel overflow-hidden">
         <div className="overflow-x-auto table-scroll">
-        <table className="w-full min-w-[560px] text-left text-sm">
+        <table className="w-full min-w-[640px] text-left text-sm">
           <thead>
             <tr className="border-b border-line text-muted">
               <th className="px-5 py-3 font-normal label-eyebrow">{t("col_name")}</th>
@@ -108,6 +109,12 @@ export function UsersAdmin({ users, currentUserId }: { users: UserRow[]; current
                     >
                       {t("edit_action")}
                     </button>
+                    <button
+                      onClick={() => setPwUser(u)}
+                      className="text-xs text-muted transition-colors hover:text-ink"
+                    >
+                      {t("password_change_action")}
+                    </button>
                     {u.id !== currentUserId && (
                       <button
                         onClick={() => removeUser(u.id)}
@@ -135,6 +142,8 @@ export function UsersAdmin({ users, currentUserId }: { users: UserRow[]; current
           }}
         />
       )}
+
+      {pwUser && <ChangePasswordModal user={pwUser} onClose={() => setPwUser(null)} />}
 
       {editing && (
         <EditUserModal
@@ -451,6 +460,162 @@ function EditUserModal({
         >
           {loading ? t("saving") : t("save_changes")}
         </button>
+      </form>
+    </Modal>
+  );
+}
+
+function generatePassword(length = 12) {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+  const bytes = new Uint32Array(length);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => chars[b % chars.length]).join("");
+}
+
+function ChangePasswordModal({ user, onClose }: { user: UserRow; onClose: () => void }) {
+  const { t } = useTranslation();
+  const [password, setPassword] = useState("");
+  const [confirmPw, setConfirmPw] = useState("");
+  const [visible, setVisible] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [done, setDone] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  function generate() {
+    const pw = generatePassword();
+    setPassword(pw);
+    setConfirmPw(pw);
+    setVisible(true);
+    setCopied(false);
+  }
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(password);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // буфер обмена недоступен — пароль можно скопировать вручную
+    }
+  }
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    if (password.length < 8) return setError(t("password_too_short"));
+    if (password !== confirmPw) return setError(t("password_mismatch"));
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/users/${user.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error || t("password_change_failed"));
+        return;
+      }
+      setDone(true);
+    } catch {
+      setError(t("network_error"));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const inputCls =
+    "w-full rounded-lg border border-line bg-bg2 px-3 py-2 text-sm text-ink outline-none focus:border-cyan/50";
+
+  return (
+    <Modal onClose={onClose}>
+      <form onSubmit={submit} className="panel w-full max-w-sm p-6 animate-rise">
+        <div className="mb-2 flex items-center justify-between">
+          <h2 className="font-display text-lg font-semibold text-ink">{t("password_change_title")}</h2>
+          <button type="button" onClick={onClose} className="text-muted hover:text-ink">
+            ✕
+          </button>
+        </div>
+        <p className="mb-5 text-sm text-muted">
+          {t("password_change_for", { name: user.name })}
+          <span className="block font-mono text-xs">{user.email}</span>
+        </p>
+
+        {done ? (
+          <>
+            <div className="mb-4 rounded-lg border border-cyan/30 bg-cyanDim/40 px-3 py-2 text-xs text-ink">
+              {t("password_changed_ok")}
+            </div>
+            <div className="mb-4 flex items-center gap-2">
+              <input readOnly value={password} className={`${inputCls} font-mono`} />
+              <button type="button" onClick={copy} className="btn-primary whitespace-nowrap">
+                {copied ? t("password_copied") : t("password_copy")}
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-full rounded-lg border border-line py-2.5 text-sm text-ink hover:bg-bg2"
+            >
+              {t("close")}
+            </button>
+          </>
+        ) : (
+          <>
+            <label className="mb-1 block label-eyebrow">{t("password_new_label")}</label>
+            <input
+              required
+              autoFocus
+              autoComplete="new-password"
+              type={visible ? "text" : "password"}
+              minLength={8}
+              maxLength={72}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className={`mb-4 ${inputCls}`}
+            />
+
+            <label className="mb-1 block label-eyebrow">{t("password_confirm_label")}</label>
+            <input
+              required
+              autoComplete="new-password"
+              type={visible ? "text" : "password"}
+              minLength={8}
+              maxLength={72}
+              value={confirmPw}
+              onChange={(e) => setConfirmPw(e.target.value)}
+              className={`mb-3 ${inputCls}`}
+            />
+
+            <div className="mb-5 flex items-center gap-4 text-xs">
+              <button type="button" onClick={generate} className="text-cyan hover:opacity-80">
+                {t("password_generate")}
+              </button>
+              <button
+                type="button"
+                onClick={() => setVisible((v) => !v)}
+                className="text-muted hover:text-ink"
+              >
+                {visible ? t("password_hide") : t("password_show")}
+              </button>
+            </div>
+
+            {error && (
+              <div className="mb-4 rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-xs text-danger">
+                {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full rounded-lg border border-cyan/40 bg-cyanDim/40 py-2.5 text-sm font-medium text-cyan transition-opacity hover:opacity-90 disabled:opacity-50"
+            >
+              {loading ? t("saving") : t("password_change_btn")}
+            </button>
+          </>
+        )}
       </form>
     </Modal>
   );
