@@ -50,6 +50,20 @@ export const authOptions: AuthOptions = {
       }
       return session;
     },
+    // По умолчанию next-auth после signOut/signIn подставляет домен из переменной
+    // NEXTAUTH_URL. На Railway она иногда указывает на старый/непривязанный поддомен —
+    // тогда после выхода браузер уводило на несуществующий *.railway.app и показывало
+    // страницу Railway «Not Found» вместо страницы входа. Здесь просто возвращаем
+    // относительный путь как есть — браузер сам подставит текущий (реальный) домен.
+    async redirect({ url, baseUrl }) {
+      if (url.startsWith("/")) return url;
+      try {
+        if (new URL(url).origin === baseUrl) return url;
+      } catch {
+        // некорректный url — уходим на дефолт ниже
+      }
+      return "/login";
+    },
   },
   secret: process.env.NEXTAUTH_SECRET,
 };
