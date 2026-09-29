@@ -109,11 +109,13 @@ export function AppShell({
 
   return (
     <div className="flex min-h-screen bg-bg">
-      {/* Desktop sidebar */}
-      <div className="hidden lg:block">
-        <div className="sticky top-0 h-screen">
-          <Sidebar counts={counts} userName={userName} role={role} />
-        </div>
+      {/* Desktop sidebar: зафиксирован через position:fixed, а не sticky — так надёжнее
+          не «едет» вместе со страницей при скролле длинных таблиц независимо от того,
+          что происходит внутри main. Спейсер ниже занимает то же место в раскладке,
+          чтобы контент не заезжал под зафиксированную панель. */}
+      <div className="hidden shrink-0 lg:block lg:w-[264px]" aria-hidden="true" />
+      <div className="fixed inset-y-0 left-0 z-20 hidden lg:block">
+        <Sidebar counts={counts} userName={userName} role={role} />
       </div>
 
       {/* Mobile sidebar overlay */}
