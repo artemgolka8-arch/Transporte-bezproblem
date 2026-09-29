@@ -18,8 +18,8 @@ const mono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "BezProblem Sharks — Transport Control",
-  description: "Панель учёта велосипедов и самокатов: статусы, ремонт, ключи",
+  title: "BezProblem Sharks",
+  description: "Панель учёта ведения работы амбассадоров",
 };
 
 // Явный viewport: корректный масштаб на телефоне, поддержка safe-area (чёлка/шторка iOS),
