@@ -226,9 +226,8 @@ export function Sidebar({
       cancelled = true;
     };
   }, []);
-  // На странице «Приглашённые клиенты» вместо «Transport Control» пишем «BezProblem Ambassador»
-  const onReferredPage = pathname === AMBASSADOR_HOME || !!pathname?.startsWith(AMBASSADOR_HOME + "/");
-  const tagline = onReferredPage ? AMBASSADOR_BRAND : t("tagline");
+  // Подпись под логотипом — везде «BezProblem Ambassador» (было «Transport Control»)
+  const tagline = AMBASSADOR_BRAND;
   const visibleItems = NAV_ITEMS.filter((item) => item.href !== "/payroll" || canAccessPayroll(role)).filter((item) =>
     restrictedView
       ? (!ambassador || item.href !== "/profile") && isRestrictedPathAllowed(item.href)
