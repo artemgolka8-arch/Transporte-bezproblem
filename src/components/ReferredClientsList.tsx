@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { canManageReferredClients, canDeleteReferredClient, isAmbassador, Role } from "@/lib/roles";
+import { canManageReferredClients, canEditInvitationType, canDeleteReferredClient, isAmbassador, Role } from "@/lib/roles";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
 import { TranslationKey } from "@/lib/i18n/translations";
 import { Modal } from "./ui/Modal";
@@ -399,6 +399,63 @@ function StatusCell({
   );
 }
 
+function InvitationTypeCell({
+  row,
+  editable,
+  onSaved,
+}: {
+  row: ReferredRow;
+  editable: boolean;
+  onSaved: (invitationType: InvitationType) => void;
+}) {
+  const { t } = useTranslation();
+  const [saving, setSaving] = useState(false);
+
+  const pill = (
+    <span className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-medium ${INVITATION_STYLE[row.invitationType]}`}>
+      {row.invitationType === "FLEET_PARTNER" ? <BoltIcon /> : <BikeIcon />}
+      {t(INVITATION_LABEL_KEYS[row.invitationType])}
+    </span>
+  );
+
+  if (!editable) return pill;
+
+  async function change(invitationType: InvitationType) {
+    if (invitationType === row.invitationType) return;
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/referred-clients/${row.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ invitationType }),
+      });
+      if (res.ok) onSaved(invitationType);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  // <select> поверх пилюли: та же пилюля, но кликабельна для тех, кому можно менять тип приглашения
+  return (
+    <div className="relative inline-flex">
+      <select
+        value={row.invitationType}
+        disabled={saving}
+        onChange={(e) => change(e.target.value as InvitationType)}
+        aria-label={t("col_invitation_type")}
+        className="absolute inset-0 h-full w-full cursor-pointer appearance-none opacity-0 disabled:cursor-wait"
+      >
+        {INVITATION_TYPES.map((it) => (
+          <option key={it} value={it}>
+            {t(INVITATION_LABEL_KEYS[it])}
+          </option>
+        ))}
+      </select>
+      {pill}
+    </div>
+  );
+}
+
 const PAGE_SIZE_OPTIONS = [10, 25, 50];
 
 export function ReferredClientsList({
@@ -426,6 +483,7 @@ export function ReferredClientsList({
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const editable = canManageReferredClients(role);
+  const canEditInvitation = canEditInvitationType(role);
   const canDelete = canDeleteReferredClient(role);
   // Добавлять клиентов может и амбассадор (они автоматически закрепляются за ним)
   const canAdd = editable || isAmbassador(role);
@@ -453,6 +511,10 @@ export function ReferredClientsList({
 
   function updateRowStatus(id: string, status: ReferredStatus) {
     setRows((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
+  }
+
+  function updateRowInvitationType(id: string, invitationType: InvitationType) {
+    setRows((prev) => prev.map((r) => (r.id === id ? { ...r, invitationType } : r)));
   }
 
   const hasUnassigned = rows.some((r) => !r.ambassadorId);
@@ -690,10 +752,11 @@ export function ReferredClientsList({
                         </a>
                       </td>
                       <td className="px-5 py-3.5">
-                        <span className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-medium ${INVITATION_STYLE[r.invitationType]}`}>
-                          {r.invitationType === "FLEET_PARTNER" ? <BoltIcon /> : <BikeIcon />}
-                          {t(INVITATION_LABEL_KEYS[r.invitationType])}
-                        </span>
+                        <InvitationTypeCell
+                          row={r}
+                          editable={canEditInvitation}
+                          onSaved={(invitationType) => updateRowInvitationType(r.id, invitationType)}
+                        />
                       </td>
                       <td className="px-5 py-3.5 text-muted">{r.city}</td>
                       {showAmbassadors && (

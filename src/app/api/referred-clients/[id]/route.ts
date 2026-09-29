@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { canManageReferredClients, canDeleteReferredClient } from "@/lib/roles";
+import { canManageReferredClients, canEditInvitationType, canDeleteReferredClient } from "@/lib/roles";
 
 const INVITATION_TYPES = ["FLEET_PARTNER", "RENT", "FLEET_PARTNER_RENT"];
 const STATUSES = ["ACTIVE", "PENDING", "IN_PROGRESS", "INACTIVE"];
@@ -20,7 +20,11 @@ const CITIES = [
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
-  if (!canManageReferredClients(session.user.role)) {
+
+  const fullAccess = canManageReferredClients(session.user.role);
+  // Директору отдельно можно менять только тип приглашения, остальные поля — нет
+  const invitationOnlyAccess = !fullAccess && canEditInvitationType(session.user.role);
+  if (!fullAccess && !invitationOnlyAccess) {
     return NextResponse.json({ error: "Недостаточно прав" }, { status: 403 });
   }
 
@@ -28,7 +32,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (!current) return NextResponse.json({ error: "Не найдено" }, { status: 404 });
 
   const body = await req.json();
-  const { firstName, lastName, phone, invitationType, city, link, ambassadorId, status } = body;
+  const { firstName, lastName, phone, invitationType, city, link, ambassadorId, status } = invitationOnlyAccess
+    ? { firstName: undefined, lastName: undefined, phone: undefined, invitationType: body.invitationType, city: undefined, link: undefined, ambassadorId: undefined, status: undefined }
+    : body;
 
   if (phone !== undefined && phone.trim() !== current.phone) {
     const clash = await prisma.referredClient.findUnique({ where: { phone: phone.trim() } });

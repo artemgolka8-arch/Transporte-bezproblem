@@ -30,6 +30,12 @@ export function canManageReferredClients(role?: string | null) {
   return canEdit(role) || isPrManager(role);
 }
 
+// Тип приглашения (Fleet Partner / Rent / Fleet Partner+Rent) — как и остальные поля,
+// плюс отдельно директор (у него нет общего доступа к управлению приглашёнными клиентами)
+export function canEditInvitationType(role?: string | null) {
+  return canManageReferredClients(role) || isDirector(role);
+}
+
 export function canDeleteReferredClient(role?: string | null) {
   return isAdmin(role) || isPrManager(role);
 }
