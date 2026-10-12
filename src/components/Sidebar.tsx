@@ -3,16 +3,16 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 import {
   AMBASSADOR_BRAND,
   AMBASSADOR_HOME,
-  canAccessPayroll,
-  isRestrictedPathAllowed,
   isRestrictedRole,
   isViewRestrictedRole,
   ROLE_LABEL_KEYS,
   type Role,
 } from "@/lib/roles";
+import { hasSection, type SectionKey } from "@/lib/sections";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
 import type { TranslationKey } from "@/lib/i18n/translations";
 import { StatsPanel } from "./StatsPanel";
@@ -147,6 +147,18 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/profile", labelKey: "nav_profile", icon: UserIcon },
 ];
 
+// Какая вкладка меню соответствует какому разделу доступа (см. src/lib/sections.ts)
+const HREF_SECTION: Record<string, SectionKey> = {
+  "/": "fleet",
+  "/clients": "clients",
+  "/referred-clients": "referred",
+  "/reports": "reports",
+  "/team": "team",
+  "/debtors": "debtors",
+  "/tasks": "tasks",
+  "/payroll": "payroll",
+};
+
 function initials(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return "?";
@@ -167,6 +179,9 @@ export function Sidebar({
 }) {
   const pathname = usePathname();
   const { t } = useTranslation();
+  // Вкладки, которые администратор выдал сверх роли (приходят из сессии)
+  const { data: sessionData } = useSession();
+  const extraSections = sessionData?.user?.extraSections;
 
   const ambassador = isRestrictedRole(role); // амбассадор или директор
   // PR-менеджер тоже видит только ограниченный набор разделов, но это не тот же
@@ -228,11 +243,14 @@ export function Sidebar({
   }, []);
   // Подпись под логотипом — везде «BezProblem Ambassador» (было «Transport Control»)
   const tagline = AMBASSADOR_BRAND;
-  const visibleItems = NAV_ITEMS.filter((item) => item.href !== "/payroll" || canAccessPayroll(role)).filter((item) =>
-    restrictedView
-      ? (!ambassador || item.href !== "/profile") && isRestrictedPathAllowed(item.href)
-      : !item.adminOnly || role === "ADMIN"
-  );
+  const visibleItems = NAV_ITEMS.filter((item) => {
+    const section = HREF_SECTION[item.href];
+    // Вкладка видна, если её даёт роль или администратор выдал её отдельно
+    if (section) return hasSection(role, extraSections, section);
+    if (item.adminOnly) return role === "ADMIN";
+    if (item.href === "/profile") return !ambassador;
+    return true;
+  });
 
   function isActive(item: NavItem) {
     if (item.exact) return pathname === item.href;

@@ -23,6 +23,7 @@ export default async function AdminUsersPage() {
       phone: true,
       position: true,
       city: true,
+      extraSections: true,
       createdAt: true,
     },
     orderBy: { createdAt: "asc" },

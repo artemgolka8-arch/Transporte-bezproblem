@@ -3,6 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ROLE_LABEL_KEYS, Role } from "@/lib/roles";
+import {
+  SECTION_KEYS,
+  SECTION_LABEL_KEYS,
+  roleHasSection,
+  sanitizeSections,
+  type SectionKey,
+} from "@/lib/sections";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
 import { Modal } from "./ui/Modal";
 import { useConfirm } from "./ui/ConfirmProvider";
@@ -17,6 +24,7 @@ type UserRow = {
   phone?: string | null;
   position?: string | null;
   city?: string | null;
+  extraSections?: string[];
   createdAt: string;
 };
 
@@ -28,6 +36,7 @@ export function UsersAdmin({ users, currentUserId }: { users: UserRow[]; current
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<UserRow | null>(null);
   const [pwUser, setPwUser] = useState<UserRow | null>(null);
+  const [accessUser, setAccessUser] = useState<UserRow | null>(null);
 
   async function updateRole(id: string, role: Role) {
     const res = await fetch(`/api/users/${id}`, {
@@ -66,7 +75,7 @@ export function UsersAdmin({ users, currentUserId }: { users: UserRow[]; current
 
       <div className="panel overflow-hidden">
         <div className="overflow-x-auto table-scroll">
-        <table className="w-full min-w-[640px] text-left text-sm">
+        <table className="w-full min-w-[720px] text-left text-sm">
           <thead>
             <tr className="border-b border-line text-muted">
               <th className="px-5 py-3 font-normal label-eyebrow">{t("col_name")}</th>
@@ -109,6 +118,19 @@ export function UsersAdmin({ users, currentUserId }: { users: UserRow[]; current
                     >
                       {t("edit_action")}
                     </button>
+                    {u.role !== "ADMIN" && (
+                      <button
+                        onClick={() => setAccessUser(u)}
+                        className="text-xs text-muted transition-colors hover:text-ink"
+                      >
+                        {t("access_action")}
+                        {(u.extraSections?.length ?? 0) > 0 && (
+                          <span className="ml-1 rounded bg-cyanDim px-1.5 py-0.5 text-[10px] font-semibold text-cyan">
+                            +{u.extraSections!.length}
+                          </span>
+                        )}
+                      </button>
+                    )}
                     <button
                       onClick={() => setPwUser(u)}
                       className="text-xs text-muted transition-colors hover:text-ink"
@@ -138,6 +160,18 @@ export function UsersAdmin({ users, currentUserId }: { users: UserRow[]; current
           onCreated={(u) => {
             setList((prev) => [...prev, u]);
             setFormOpen(false);
+            router.refresh();
+          }}
+        />
+      )}
+
+      {accessUser && (
+        <AccessModal
+          user={accessUser}
+          onClose={() => setAccessUser(null)}
+          onSaved={(u) => {
+            setList((prev) => prev.map((x) => (x.id === u.id ? u : x)));
+            setAccessUser(null);
             router.refresh();
           }}
         />
@@ -616,6 +650,115 @@ function ChangePasswordModal({ user, onClose }: { user: UserRow; onClose: () => 
             </button>
           </>
         )}
+      </form>
+    </Modal>
+  );
+}
+
+function AccessModal({
+  user,
+  onClose,
+  onSaved,
+}: {
+  user: UserRow;
+  onClose: () => void;
+  onSaved: (u: UserRow) => void;
+}) {
+  const { t } = useTranslation();
+  const [granted, setGranted] = useState<SectionKey[]>(sanitizeSections(user.extraSections));
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  function toggle(key: SectionKey) {
+    setGranted((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]));
+  }
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/users/${user.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ extraSections: granted }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error || t("access_save_failed"));
+        return;
+      }
+      onSaved(await res.json());
+    } catch {
+      setError(t("network_error"));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <Modal onClose={onClose}>
+      <form onSubmit={submit} className="panel w-full max-w-sm p-6 animate-rise">
+        <div className="mb-2 flex items-center justify-between">
+          <h2 className="font-display text-lg font-semibold text-ink">{t("access_title")}</h2>
+          <button type="button" onClick={onClose} className="text-muted hover:text-ink">
+            ✕
+          </button>
+        </div>
+        <p className="mb-4 text-sm text-muted">
+          {t("access_for", { name: user.name })}
+          <span className="block text-xs">{t(ROLE_LABEL_KEYS[user.role])}</span>
+        </p>
+
+        <ul className="mb-4 divide-y divide-line/60 rounded-lg border border-line">
+          {SECTION_KEYS.map((key) => {
+            const byRole = roleHasSection(user.role, key);
+            const checked = byRole || granted.includes(key);
+            return (
+              <li key={key}>
+                <label
+                  className={`flex items-center gap-3 px-3 py-2.5 text-sm ${
+                    byRole ? "cursor-default opacity-70" : "cursor-pointer hover:bg-panel2"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    disabled={byRole}
+                    onChange={() => toggle(key)}
+                    className="h-4 w-4 accent-cyan"
+                  />
+                  <span className="flex-1 text-ink">{t(SECTION_LABEL_KEYS[key])}</span>
+                  <span className="text-[11px] text-muted">
+                    {byRole ? t("access_by_role") : checked ? t("access_granted") : ""}
+                  </span>
+                </label>
+              </li>
+            );
+          })}
+        </ul>
+
+        <p className="mb-4 text-xs text-muted">{t("access_hint")}</p>
+
+        {granted.includes("payroll") && !roleHasSection(user.role, "payroll") && (
+          <div className="mb-4 rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-xs text-danger">
+            {t("access_payroll_warn")}
+          </div>
+        )}
+
+        {error && (
+          <div className="mb-4 rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-xs text-danger">
+            {error}
+          </div>
+        )}
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full rounded-lg border border-cyan/40 bg-cyanDim/40 py-2.5 text-sm font-medium text-cyan transition-opacity hover:opacity-90 disabled:opacity-50"
+        >
+          {loading ? t("saving") : t("access_save")}
+        </button>
       </form>
     </Modal>
   );

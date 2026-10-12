@@ -82,6 +82,9 @@ model User {
   city           String?
   telegramChatId String?
   avatarUrl      String?  @db.Text
+  // Дополнительные вкладки, которые администратор открыл сотруднику сверх его роли
+  // (ключи из src/lib/sections.ts). Пустой список = только то, что даёт роль.
+  extraSections  String[] @default([])
   createdAt      DateTime @default(now())
   createdTasks   Task[]   @relation("TaskCreator")
   assignedTasks  Task[]   @relation("TaskAssignee")

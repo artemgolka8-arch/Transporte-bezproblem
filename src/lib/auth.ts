@@ -31,6 +31,7 @@ export const authOptions: AuthOptions = {
           email: user.email,
           name: user.name,
           role: user.role,
+          extraSections: user.extraSections,
         } as any;
       },
     }),
@@ -40,6 +41,19 @@ export const authOptions: AuthOptions = {
       if (user) {
         token.role = (user as any).role;
         token.id = (user as any).id;
+        token.extraSections = (user as any).extraSections ?? [];
+      } else if (token.id) {
+        // Доступ к вкладкам, выданный администратором, берём из базы при каждом
+        // обращении к сессии — выдача и отзыв действуют сразу, без повторного входа.
+        try {
+          const fresh = await prisma.user.findUnique({
+            where: { id: token.id },
+            select: { extraSections: true },
+          });
+          if (fresh) token.extraSections = fresh.extraSections;
+        } catch {
+          // база недоступна — остаёмся на значении из токена
+        }
       }
       return token;
     },
@@ -47,6 +61,7 @@ export const authOptions: AuthOptions = {
       if (session.user) {
         (session.user as any).role = token.role;
         (session.user as any).id = token.id;
+        (session.user as any).extraSections = token.extraSections ?? [];
       }
       return session;
     },

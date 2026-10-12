@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { denySection } from "@/lib/sectionGuard";
 import { prisma } from "@/lib/prisma";
 import { fetchDebtorPayoffs } from "@/lib/ravapi";
 
@@ -10,6 +11,8 @@ import { fetchDebtorPayoffs } from "@/lib/ravapi";
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
+  const sectionDenied = denySection(session, "debtors");
+  if (sectionDenied) return sectionDenied;
 
   const debtor = await prisma.debtor.findUnique({ where: { id: params.id } });
   if (!debtor) return NextResponse.json({ error: "Должник не найден" }, { status: 404 });

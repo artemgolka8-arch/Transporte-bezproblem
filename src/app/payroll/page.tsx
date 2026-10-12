@@ -18,8 +18,8 @@ export default async function PayrollPage() {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/login");
 
-  // Раздел только для директора и администратора
-  if (!canAccessPayroll(session.user.role)) {
+  // Раздел для директора, администратора и тех, кому администратор открыл вкладку
+  if (!canAccessPayroll(session.user.role, session.user.extraSections)) {
     redirect(isViewRestrictedRole(session.user.role) ? AMBASSADOR_HOME : "/");
   }
 

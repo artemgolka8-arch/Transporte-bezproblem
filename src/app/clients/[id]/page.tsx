@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth";
 import { redirect, notFound } from "next/navigation";
 import { authOptions } from "@/lib/auth";
+import { sectionAllowed, sectionFallbackPath } from "@/lib/sectionGuard";
 import { prisma } from "@/lib/prisma";
 import { AppShell } from "@/components/AppShell";
 import { ClientProfile } from "@/components/ClientProfile";
@@ -10,6 +11,7 @@ export const dynamic = "force-dynamic";
 export default async function ClientProfilePage({ params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/login");
+  if (!sectionAllowed(session, "clients")) redirect(sectionFallbackPath(session));
 
   const client = await prisma.client.findUnique({
     where: { id: params.id },

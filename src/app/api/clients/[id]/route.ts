@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { denySection } from "@/lib/sectionGuard";
 import { prisma } from "@/lib/prisma";
 import { canEdit, isAdmin } from "@/lib/roles";
 
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
+  const sectionDenied = denySection(session, "clients");
+  if (sectionDenied) return sectionDenied;
 
   const client = await prisma.client.findUnique({
     where: { id: params.id },
@@ -24,6 +27,8 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
+  const sectionDenied = denySection(session, "clients");
+  if (sectionDenied) return sectionDenied;
   if (!canEdit(session.user.role)) {
     return NextResponse.json({ error: "Недостаточно прав" }, { status: 403 });
   }
@@ -73,6 +78,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
+  const sectionDenied = denySection(session, "clients");
+  if (sectionDenied) return sectionDenied;
   if (!isAdmin(session.user.role)) {
     return NextResponse.json({ error: "Недостаточно прав" }, { status: 403 });
   }

@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import bcrypt from "bcryptjs";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { sanitizeSections } from "@/lib/sections";
 
 const USER_SELECT = {
   id: true,
@@ -14,6 +15,7 @@ const USER_SELECT = {
   phone: true,
   position: true,
   city: true,
+  extraSections: true,
   createdAt: true,
 };
 
@@ -36,7 +38,7 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { email, password, name, role, firstName, lastName, phone, position, city } = body;
+  const { email, password, name, role, firstName, lastName, phone, position, city, extraSections } = body;
 
   if (!email || !password || !name || !role) {
     return NextResponse.json({ error: "Заполните все поля" }, { status: 400 });
@@ -59,6 +61,7 @@ export async function POST(req: NextRequest) {
         phone: phone || null,
         position: position || null,
         city: city || null,
+        extraSections: sanitizeSections(extraSections),
       },
       select: USER_SELECT,
     });

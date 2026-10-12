@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth";
 import { redirect, notFound } from "next/navigation";
 import { authOptions } from "@/lib/auth";
+import { sectionAllowed, sectionFallbackPath } from "@/lib/sectionGuard";
 import { prisma } from "@/lib/prisma";
 import { AppShell } from "@/components/AppShell";
 import { VehicleDetail } from "@/components/VehicleDetail";
@@ -11,6 +12,7 @@ export const dynamic = "force-dynamic";
 export default async function VehiclePage({ params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/login");
+  if (!sectionAllowed(session, "fleet")) redirect(sectionFallbackPath(session));
 
   const vehicle = await prisma.vehicle.findUnique({
     where: { id: params.id },

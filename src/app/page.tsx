@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
+import { sectionAllowed, sectionFallbackPath } from "@/lib/sectionGuard";
 import { prisma } from "@/lib/prisma";
 import { AppShell } from "@/components/AppShell";
 import { FleetDashboard } from "@/components/FleetDashboard";
@@ -10,6 +11,7 @@ export const dynamic = "force-dynamic";
 export default async function HomePage() {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/login");
+  if (!sectionAllowed(session, "fleet")) redirect(sectionFallbackPath(session));
 
   const vehicles = await prisma.vehicle.findMany({
     include: { keys: { select: { id: true } } },

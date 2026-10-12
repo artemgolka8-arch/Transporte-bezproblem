@@ -9,7 +9,7 @@ import { attachRecipients } from "@/lib/payrollServer";
 async function requireAccess() {
   const session = await getServerSession(authOptions);
   if (!session) return { error: NextResponse.json({ error: "Не авторизован" }, { status: 401 }) };
-  if (!canAccessPayroll(session.user.role)) {
+  if (!canAccessPayroll(session.user.role, session.user.extraSections)) {
     return { error: NextResponse.json({ error: "Недостаточно прав" }, { status: 403 }) };
   }
   return { session };

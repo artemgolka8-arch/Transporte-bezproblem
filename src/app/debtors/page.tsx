@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
+import { sectionAllowed, sectionFallbackPath } from "@/lib/sectionGuard";
 import { prisma } from "@/lib/prisma";
 import { AppShell } from "@/components/AppShell";
 import { DebtorsList } from "@/components/DebtorsList";
@@ -10,6 +11,7 @@ export const dynamic = "force-dynamic";
 export default async function DebtorsPage() {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/login");
+  if (!sectionAllowed(session, "debtors")) redirect(sectionFallbackPath(session));
 
   const debtors = await prisma.debtor.findMany({
     orderBy: { currentBalance: "asc" },

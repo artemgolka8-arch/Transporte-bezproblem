@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { denySection } from "@/lib/sectionGuard";
 import { prisma } from "@/lib/prisma";
 import { canEdit } from "@/lib/roles";
 
@@ -9,6 +10,8 @@ import { canEdit } from "@/lib/roles";
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
+  const sectionDenied = denySection(session, "debtors");
+  if (sectionDenied) return sectionDenied;
   if (!canEdit(session.user.role)) {
     return NextResponse.json({ error: "Недостаточно прав" }, { status: 403 });
   }

@@ -2,10 +2,10 @@ import { NextResponse } from "next/server";
 import { withAuth } from "next-auth/middleware";
 import {
   AMBASSADOR_HOME,
-  canAccessPayroll,
   isRestrictedPathAllowed,
   isViewRestrictedRole,
 } from "@/lib/roles";
+import { grantableSectionForPath } from "@/lib/sections";
 
 export default withAuth(
   function middleware(req) {
@@ -15,21 +15,12 @@ export default withAuth(
     const role = req.nextauth.token?.role;
     const { pathname } = req.nextUrl;
 
-    // «Зарплаты и бонусы» — только ADMIN и DIRECTOR (для всех остальных ролей закрыто)
-    const isPayrollPath =
-      pathname === "/payroll" ||
-      pathname.startsWith("/payroll/") ||
-      pathname === "/api/payroll" ||
-      pathname.startsWith("/api/payroll/");
-    if (isPayrollPath && !canAccessPayroll(role)) {
-      if (pathname.startsWith("/api/")) {
-        return NextResponse.json({ error: "Недостаточно прав" }, { status: 403 });
-      }
-      return NextResponse.redirect(new URL(isViewRestrictedRole(role) ? AMBASSADOR_HOME : "/", req.url));
-    }
+    // «Зарплаты и бонусы» и другие вкладки, которые администратор может выдать сверх роли:
+    // кто именно имеет доступ, решают сами страницы и API по свежим данным из базы
+    // (middleware видит только токен в cookie, а он может устареть).
 
     if (isViewRestrictedRole(role)) {
-      if (!isRestrictedPathAllowed(pathname)) {
+      if (!isRestrictedPathAllowed(pathname) && !grantableSectionForPath(pathname)) {
         if (pathname.startsWith("/api/")) {
           return NextResponse.json({ error: "Недостаточно прав" }, { status: 403 });
         }

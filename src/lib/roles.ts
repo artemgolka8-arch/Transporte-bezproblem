@@ -89,8 +89,10 @@ export function canEditPosition(role?: string | null) {
 // «Зарплаты и бонусы» — только директор и администратор. Для всех остальных
 // ролей (включая менеджера и PR-менеджера) раздел закрыт полностью: нет в меню,
 // страница и API отдают редирект / 403 (см. middleware.ts и сами обработчики).
-export function canAccessPayroll(role?: string | null) {
-  return role === "ADMIN" || role === "DIRECTOR";
+// Администратор может дополнительно открыть вкладку любому сотруднику
+// (extraSections, см. sections.ts) — тогда он тоже получает доступ.
+export function canAccessPayroll(role?: string | null, extraSections?: readonly string[] | null) {
+  return role === "ADMIN" || role === "DIRECTOR" || !!extraSections?.includes("payroll");
 }
 
 // Ключ перевода для каждой роли — используйте t(ROLE_LABEL_KEYS[role])

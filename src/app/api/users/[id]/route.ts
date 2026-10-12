@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import bcrypt from "bcryptjs";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { sanitizeSections } from "@/lib/sections";
 
 const USER_SELECT = {
   id: true,
@@ -14,6 +15,7 @@ const USER_SELECT = {
   phone: true,
   position: true,
   city: true,
+  extraSections: true,
   createdAt: true,
 };
 
@@ -23,7 +25,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     return NextResponse.json({ error: "Недостаточно прав" }, { status: 403 });
   }
   const body = await req.json();
-  const { role, name, email, firstName, lastName, phone, position, city, password } = body;
+  const { role, name, email, firstName, lastName, phone, position, city, password, extraSections } = body;
 
   // Смена пароля администратором: пароль хранится только в виде bcrypt-хеша
   let hashedPassword: string | undefined;
@@ -49,6 +51,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         ...(phone !== undefined ? { phone } : {}),
         ...(position !== undefined ? { position } : {}),
         ...(city !== undefined ? { city } : {}),
+        ...(extraSections !== undefined ? { extraSections: sanitizeSections(extraSections) } : {}),
         ...(hashedPassword ? { password: hashedPassword } : {}),
       },
       select: USER_SELECT,

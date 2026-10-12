@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { denySection } from "@/lib/sectionGuard";
 import { prisma } from "@/lib/prisma";
 import { canEdit } from "@/lib/roles";
 import { sendSms } from "@/lib/notify";
@@ -8,6 +9,8 @@ import { sendSms } from "@/lib/notify";
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
+  const sectionDenied = denySection(session, "debtors");
+  if (sectionDenied) return sectionDenied;
 
   const messages = await prisma.debtorMessage.findMany({
     where: { debtorId: params.id },
@@ -20,6 +23,8 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
+  const sectionDenied = denySection(session, "debtors");
+  if (sectionDenied) return sectionDenied;
   if (!canEdit(session.user.role)) {
     return NextResponse.json({ error: "Недостаточно прав" }, { status: 403 });
   }

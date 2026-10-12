@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/Providers";
@@ -35,7 +37,10 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Сессия с сервера — чтобы меню сразу показывало выданные вкладки, без «мигания»
+  const session = await getServerSession(authOptions);
+
   const cookieLang = cookies().get("fleet_lang")?.value;
   const initialLang = isLang(cookieLang) ? cookieLang : DEFAULT_LANG;
 
@@ -49,7 +54,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       style={{ colorScheme: initialTheme }}
     >
       <body>
-        <Providers initialLang={initialLang} initialTheme={initialTheme}>
+        <Providers initialLang={initialLang} initialTheme={initialTheme} session={session}>
           {children}
         </Providers>
       </body>

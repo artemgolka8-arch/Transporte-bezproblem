@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { denySection } from "@/lib/sectionGuard";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
+  const sectionDenied = denySection(session, "fleet");
+  if (sectionDenied) return sectionDenied;
 
   const vehicles = await prisma.vehicle.findMany({
     select: { type: true, status: true, brand: true, city: true },
